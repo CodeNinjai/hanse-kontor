@@ -157,7 +157,7 @@ HK.Scene = {
     items.push({ k: HK.GUARD_SHIP.x + HK.GUARD_SHIP.y + 0.6, f: c => this.drawShip(c, HK.GUARD_SHIP.x, HK.GUARD_SHIP.y, HK.GUARD_SHIP.heading, 1.05, 'guard', true, false) });
     items.push({ k: HK.WINDMILL.x + HK.WINDMILL.y + 1, f: c => this.drawWindmill(c, t, sv) });
     items.push({ k: HK.FARM.x + HK.FARM.w + HK.FARM.y + HK.FARM.d, f: c => this.drawFarm(c, season, sv) });
-    for (const p of HK.PIERS) items.push({ k: p.x + p.y1 + 0.5, f: c => this.drawPier(c, p, t) });
+    for (const p of HK.PIERS) for (let y = p.y0; y < p.y1; y += 0.6) { const seg = { x: p.x, y0: y, y1: Math.min(p.y1, y + 0.6), full: p, first: y === p.y0 }; items.push({ k: p.x + 0.25 + seg.y1, f: c => this.drawPier(c, seg, t) }); }
     st.ownShips.forEach((sh, i) => { if (sh.status === 'port') { const b = HK.OWN_BERTHS[i]; items.push({ k: b.x + b.y + 0.5, f: c => this.drawShip(c, b.x, b.y, HK.BERTH_HEADING + 0.3, 0.8, 'own', true, false), pick: { kind: 'building', building: HK.BUILDING.harbour, panel: 'harbour', label: sh.name } }); } });
     for (const id in this.shipAnim) { const a = this.shipAnim[id]; const sh = st.ships.find(x => String(x.id) === id); items.push({ k: a.x + a.y + 0.6, f: c => this.drawShip(c, a.x, a.y, a.heading, HK.SHIP_SCALE, a.origin, !a.leaving && Math.abs(a.x - a.tx) + Math.abs(a.y - a.ty) < 0.05, HK.UI.selectedVisitor === Number(id) && !a.leaving), pick: sh && !a.leaving ? { kind: 'visitor', id: sh.id, panel: 'harbour', label: sh.name + ' (' + HK.name(HK.ORIGIN[sh.origin]) + ')' } : null }); }
     const nBoats = Math.min(4, 2 + st.boats);
