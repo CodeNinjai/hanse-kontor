@@ -10,11 +10,11 @@ HK.facAvg = st => st.factions ? HK.FACTION_IDS.reduce((a, f) => a + st.factions[
 /* ---------- Titel: sechs Wege ---------- */
 HK.TITLES = [
   { id: 'merchant', name: { de: 'Handelsfürst', en: 'Merchant prince' }, conds: st => [
-    ['cond_worth', HK.netWorth(st), 500000], ['cond_volume', st.stats.volume, 600000], ['cond_monopoly', HK.law(st, 'monopoly') !== 'none' && st.town.monopolyHolder === 'player' ? 1 : 0, 1], ['cond_storages', st.storages.filter(s => s.owner === 'player').length, 2]] },
+    ['cond_worth', HK.netWorth(st), 500000], ['cond_volume', st.stats.volume, 600000], ['cond_monopoly', HK.law(st, 'monopoly') !== 'none' && st.town.monopolyHolder === 'player' ? 1 : 0, 1], ['cond_storages', st.storages.filter(s => s.owner === 'player').length, 2], ['cond_kontor', Object.keys(st.kontors || {}).length, 1]] },
   { id: 'mayor', name: { de: 'Bürgermeister auf Lebenszeit', en: 'Mayor for life' }, conds: st => [
     ['cond_mayorYears', st.seat === 'mayor' && st.mayorSince !== undefined ? Math.floor((st.day - st.mayorSince) / 365) : 0, 2], ['cond_loyalCouncil', HK.councillors().filter(c => st.persons[c.id].loyalty >= 70).length, 3], ['cond_staple', HK.law(st, 'staple') ? 1 : 0, 1], ['cond_factionsHigh', HK.FACTION_IDS.filter(f => st.factions[f] >= 60).length, 2]] },
   { id: 'shipowner', name: { de: 'Reeder der Hanse', en: 'Shipowner of the Hanse' }, conds: st => [
-    ['cond_ships', st.ownShips.length, 3], ['cond_voyages', st.stats.voyages || 0, 20], ['cond_rigging', (HK.hasVenture(st, 'ropewalk') ? 1 : 0) + (HK.hasVenture(st, 'sailmaker') ? 1 : 0), 2], ['cond_expedition', st.stats.expeditionRevenue || 0, 150000]] },
+    ['cond_ships', st.ownShips.length, 4], ['cond_voyages', st.stats.voyages || 0, 20], ['cond_rigging', (HK.hasVenture(st, 'ropewalk') ? 1 : 0) + (HK.hasVenture(st, 'sailmaker') ? 1 : 0), 2], ['cond_expedition', st.stats.expeditionRevenue || 0, 150000]] },
   { id: 'patron', name: { de: 'Stifter von St. Nikolai', en: 'Patron of St Nicholas' }, conds: st => [
     ['cond_piety', Math.round(st.piety), 90], ['cond_churchProjects', HK.CHURCH_PROJECTS.filter(p => st.church.projects[p.id]).length, 3], ['cond_relic', st.relicDay !== undefined ? 1 : 0, 1], ['cond_hospital', st.hospitalEndowed ? 1 : 0, 1]] },
   { id: 'alderman', name: { de: 'Ältermann der Zünfte', en: 'Alderman of the guilds' }, conds: st => [

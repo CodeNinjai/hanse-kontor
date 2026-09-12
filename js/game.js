@@ -556,13 +556,15 @@ HK.bribeBailiff = function (st) {
 
 /* ---------- Werft, eigene Schiffe, Fischerei ---------- */
 HK.shipPrice = st => Math.round(HK.CONST.SHIP_PRICE * (HK.hasVenture(st, 'timberyard') ? 0.85 : 1));
-HK.buyShip = function (st) {
-  if (st.money < HK.shipPrice(st)) return { ok: false, msg: 'notEnoughMoney' };
-  if (st.ownShips.length >= 3) return { ok: false, msg: 'maxShips' };
-  HK.book(st, 'investments', -HK.shipPrice(st));
+HK.shipTypePrice = (st, type) => Math.round((HK.SHIP_TYPE[type] || HK.SHIP_TYPE.kogge).price * (HK.hasVenture(st, 'timberyard') ? 0.85 : 1));
+HK.buyShip = function (st, type) {
+  type = HK.SHIP_TYPE[type] ? type : 'kogge'; const price = HK.shipTypePrice(st, type);
+  if (st.money < price) return { ok: false, msg: 'notEnoughMoney' };
+  if (st.ownShips.length >= HK.CONST.MAX_OWN_SHIPS) return { ok: false, msg: 'maxShips' };
+  HK.book(st, 'investments', -price);
   const avail = HK.SHIP_NAMES.filter(n => !st.usedNames.includes(n));
   const name = HK.pick(avail.length ? avail : HK.SHIP_NAMES); st.usedNames.push(name);
-  st.ownShips.push({ id: st.nextId++, name, status: 'port', dest: null, daysLeft: 0, cargo: {}, bringBack: null, hull: 100 });
+  st.ownShips.push({ id: st.nextId++, name, type, cap: HK.SHIP_TYPE[type].cap, status: 'port', dest: null, daysLeft: 0, cargo: {}, bringBack: null, hull: 100, captain: null });
   return { ok: true };
 };
 HK.repairShip = function (st, id) {
@@ -581,11 +583,12 @@ HK.sellOwnShip = function (st, id) {
   st.ownShips = st.ownShips.filter(x => x.id !== id);
   return { ok: true };
 };
+HK.shipCap = s => s.cap || 120;
 HK.loadShip = function (st, id, g, qty) {
   const s = st.ownShips.find(x => x.id === id); qty = Math.floor(qty);
   if (!s || s.status !== 'port' || qty <= 0) return { ok: false };
   if ((st.warehouse.stock[g] || 0) < qty) return { ok: false, msg: 'notEnoughCargo' };
-  if (HK.stockUsed(s.cargo) + qty > 120) return { ok: false, msg: 'shipFull' };
+  if (HK.stockUsed(s.cargo) + qty > HK.shipCap(s)) return { ok: false, msg: 'shipFull' };
   HK.addStock(st.warehouse.stock, g, -qty); HK.addStock(s.cargo, g, qty);
   return { ok: true };
 };
@@ -600,7 +603,9 @@ HK.sendShip = function (st, id, dest, bringBack) {
   const s = st.ownShips.find(x => x.id === id), o = HK.ORIGIN[dest];
   if (!s || s.status !== 'port' || !o || !o.sea) return { ok: false };
   if (s.hull < 30) return { ok: false, msg: 'shipDamaged' };
-  s.status = 'away'; s.dest = dest; s.daysLeft = o.days * 2 + 1 - (HK.hasVenture(st, 'ropewalk') && HK.hasVenture(st, 'sailmaker') ? 1 : 0); s.bringBack = bringBack && o.sell[bringBack] ? bringBack : null; s.phase = 'out'; st.stats.voyages = (st.stats.voyages || 0) + 1;
+  const delta = (HK.SHIP_TYPE[s.type] ? HK.SHIP_TYPE[s.type].delta : 0) - (s.captain && s.captain.trait === 'navigator' ? 1 : 0) + (s.captain && s.captain.trait === 'drunkard' && Math.random() < 0.3 ? 2 : 0);
+  s.convoy = st.ownShips.some(x => x !== s && x.status === 'away' && x.dest === dest && x.phase === 'out' && x.daysLeft >= o.days * 2 - 1);
+  s.status = 'away'; s.dest = dest; s.daysLeft = Math.max(3, o.days * 2 + 1 + delta - (HK.hasVenture(st, 'ropewalk') && HK.hasVenture(st, 'sailmaker') ? 1 : 0)); s.bringBack = bringBack && o.sell[bringBack] ? bringBack : null; s.phase = 'out'; st.stats.voyages = (st.stats.voyages || 0) + 1;
   HK.log(st, 'shipSent', { ship: s.name, dest: HK.name(o) }, 'info');
   return { ok: true };
 };
@@ -649,6 +654,12 @@ HK.upgradeVenture = function (st, id) {
   HK.book(st, 'investments', -cost); o.level++;
   return { ok: true };
 };
+HK.hireMaster = function (st, id) {
+  const o = st.ventures[id]; if (!o || o.owner || o.master) return { ok: false };
+  if (st.money < HK.CONST.MASTER_COST) return { ok: false, msg: 'notEnoughMoney' };
+  HK.book(st, 'wages', -HK.CONST.MASTER_COST); o.master = true;
+  return { ok: true };
+};
 HK.sellVenture = function (st, id) {
   const v = HK.VENTURE[id], o = st.ventures[id]; if (!v || !o || o.owner) return { ok: false };
   HK.book(st, 'investments', Math.round(v.cost * (0.5 + o.level * 0.1))); delete st.ventures[id];
@@ -659,6 +670,7 @@ HK.ventureIncome = function (st, id) {
   const v = HK.VENTURE[id], o = st.ventures[id]; if (!v || !o || o.owner) return 0;
   let inc = v.income * (0.6 + st.town.prosperity / 125) * (1 + 0.35 * (o.level - 1)) * HK.ventureSupply(st, v);
   if (st.apprenticesUntil > st.day) inc *= 1.1;
+  if (o.master) inc *= 1.25;
   if (v.effect === 'dive') inc += st.ships.length * 6;
   if (v.effect === 'ships') inc += (st.ships.length + st.ownShips.length) * 3;
   if (v.effect === 'inn' || v.effect === 'caravans') inc += st.caravans.length * 12;
@@ -1021,6 +1033,9 @@ HK.tick = function (st) {
       ws.idle = false; wages += w.wage;
     } else { ws.idle = true; wages += Math.round(w.wage / 2); }
   }
+  for (const sh of st.ownShips) if (sh.captain) wages += sh.captain.wage;
+  for (const id in st.ventures) if (st.ventures[id].master && !st.ventures[id].owner) wages += HK.CONST.MASTER_WAGE;
+  if (HK.hasVenture(st, 'dyer')) { const lv = st.ventures.dyer.level, n = Math.min(lv * 2, Math.floor((st.warehouse.stock.cloth || 0) / 2)); if (n > 0) { HK.addStock(st.warehouse.stock, 'cloth', -n * 2); HK.addStock(st.warehouse.stock, 'finecloth', Math.min(n, HK.whFree(st))); } }
   if (st.boats) { const q = Math.min(st.boats * HK.CONST.BOAT_FISH * (winter ? 0.5 : 1), HK.whFree(st)); if (q > 0) HK.addStock(st.warehouse.stock, 'fish', Math.floor(q)); wages += st.boats * 4; }
   st.hutFish = HK.rndi(10, 40);
   if (wages) HK.book(st, 'wages', -Math.round(wages * (st.wageModUntil > st.day ? 1.25 : 1)));
@@ -1068,11 +1083,12 @@ HK.tick = function (st) {
     const o = HK.ORIGIN[s.dest];
     if (s.phase === 'out' && s.daysLeft <= o.days + 1) {
       s.phase = 'back';
-      if (Math.random() < (st.blessedUntil > st.day ? 0.02 : 0.05) * (st.militia ? 0.7 : 1) * (HK.rivalAlly && HK.rivalAlly(st) ? 0.6 : 1)) { s.cargo = {}; s.hull = Math.max(5, s.hull - 25); HK.log(st, 'expeditionPirates', { ship: s.name }, 'bad'); }
+      if (Math.random() < (st.blessedUntil > st.day ? 0.02 : 0.05) * (st.militia ? 0.7 : 1) * (HK.rivalAlly && HK.rivalAlly(st) ? 0.6 : 1) * (s.captain && s.captain.trait === 'fighter' ? 0.5 : 1) * (s.convoy ? 0.5 : 1)) { s.cargo = {}; s.hull = Math.max(5, s.hull - 25); HK.log(st, 'expeditionPirates', { ship: s.name }, 'bad'); }
       let rev = 0;
       for (const g in s.cargo) rev += s.cargo[g] * Math.round(HK.GOOD[g].base * (o.want[g] ? 0.75 + o.want[g] * 0.4 : 0.8));
+      rev = Math.round(rev * (st.kontors && st.kontors[s.dest] ? 1.25 : 1) * (s.captain && s.captain.trait === 'smuggler' ? 1.1 : 1));
       s.cargo = {}; s.revenue = rev;
-      if (s.bringBack) { const price = Math.round(HK.GOOD[s.bringBack].base * o.sell[s.bringBack]); const q = Math.min(120, Math.floor(rev / price)); if (q > 0) { s.cargo[s.bringBack] = q; rev -= q * price; } }
+      if (s.bringBack) { const price = Math.round(HK.GOOD[s.bringBack].base * o.sell[s.bringBack] * (st.kontors && st.kontors[s.dest] ? 0.9 : 1)); const q = Math.min(HK.shipCap(s), Math.floor(rev / price)); if (q > 0) { s.cargo[s.bringBack] = q; rev -= q * price; } }
       s.cash = rev;
     }
     if (s.daysLeft <= 0) {

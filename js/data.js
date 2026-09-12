@@ -17,18 +17,19 @@ HK.GOODS = [
   { id: 'iron',       name: { de: 'Eisen',        en: 'Iron' },         base: 110, cons: 3,  prod: 0 },
   { id: 'tools',      name: { de: 'Werkzeug',     en: 'Tools' },        base: 150, cons: 2,  prod: 0.8 },
   { id: 'spices',     name: { de: 'Gewürze',      en: 'Spices' },       base: 420, cons: 0.6, prod: 0 },
+  { id: 'finecloth',  name: { de: 'Feintuch',     en: 'Fine cloth' },   base: 260, cons: 0.8, prod: 0 },
 ];
 HK.GOOD = {}; HK.GOODS.forEach(g => HK.GOOD[g.id] = g);
 
 /* Herkunftsorte der Schiffe und Karawanen: was sie günstig bringen (sell) und was sie suchen (want) */
 HK.ORIGINS = [
-  { id: 'luebeck',   name: { de: 'Lübeck', en: 'Lübeck' },     sea: true,  days: 4,  sell: { salt: 0.7, beer: 0.8 },                  want: { fish: 1.5, smokedfish: 1.6, wool: 1.4, timber: 1.5 } },
+  { id: 'luebeck',   name: { de: 'Lübeck', en: 'Lübeck' },     sea: true,  days: 4,  sell: { salt: 0.7, beer: 0.8 },                  want: { fish: 1.5, smokedfish: 1.6, wool: 1.4, timber: 1.5, finecloth: 1.3 } },
   { id: 'bruegge',   name: { de: 'Brügge', en: 'Bruges' },     sea: true,  days: 9,  sell: { cloth: 0.65, wine: 0.7, spices: 0.7 },    want: { smokedfish: 1.7, wax: 1.6, furs: 1.5, wool: 1.3 } },
-  { id: 'bergen',    name: { de: 'Bergen', en: 'Bergen' },     sea: true,  days: 8,  sell: { fish: 0.6, timber: 0.7 },                want: { grain: 1.8, beer: 1.6, salt: 1.5 } },
-  { id: 'danzig',    name: { de: 'Danzig', en: 'Danzig' },     sea: true,  days: 6,  sell: { grain: 0.6, timber: 0.6, wax: 0.8 },      want: { salt: 1.6, cloth: 1.5, tools: 1.6, wine: 1.4 } },
-  { id: 'riga',      name: { de: 'Riga', en: 'Riga' },         sea: true,  days: 10, sell: { furs: 0.65, wax: 0.7, timber: 0.7 },      want: { salt: 1.7, cloth: 1.6, beer: 1.5, tools: 1.5 } },
-  { id: 'stockholm', name: { de: 'Stockholm', en: 'Stockholm' }, sea: true, days: 8, sell: { iron: 0.65, timber: 0.75 },              want: { cloth: 1.5, salt: 1.5, beer: 1.4, wine: 1.5 } },
-  { id: 'london',    name: { de: 'London', en: 'London' },     sea: true,  days: 10, sell: { wool: 0.6, cloth: 0.75, tools: 0.8 },    want: { wine: 1.5, wax: 1.6, furs: 1.6, fish: 1.4 } },
+  { id: 'bergen',    name: { de: 'Bergen', en: 'Bergen' },     sea: true,  days: 8,  sell: { fish: 0.6, timber: 0.7 },                want: { grain: 1.8, beer: 1.6, salt: 1.5, finecloth: 1.4 } },
+  { id: 'danzig',    name: { de: 'Danzig', en: 'Danzig' },     sea: true,  days: 6,  sell: { grain: 0.6, timber: 0.6, wax: 0.8 },      want: { salt: 1.6, cloth: 1.5, tools: 1.6, wine: 1.4, finecloth: 1.6 } },
+  { id: 'riga',      name: { de: 'Riga', en: 'Riga' },         sea: true,  days: 10, sell: { furs: 0.65, wax: 0.7, timber: 0.7 },      want: { salt: 1.7, cloth: 1.6, beer: 1.5, tools: 1.5, finecloth: 1.5 } },
+  { id: 'stockholm', name: { de: 'Stockholm', en: 'Stockholm' }, sea: true, days: 8, sell: { iron: 0.65, timber: 0.75 },              want: { cloth: 1.5, salt: 1.5, beer: 1.4, wine: 1.5, finecloth: 1.4 } },
+  { id: 'london',    name: { de: 'London', en: 'London' },     sea: true,  days: 10, sell: { wool: 0.6, cloth: 0.75, tools: 0.8 },    want: { wine: 1.5, wax: 1.6, furs: 1.6, fish: 1.4, finecloth: 1.5 } },
   { id: 'koeln',     name: { de: 'Köln', en: 'Cologne' },      sea: false, days: 7,  sell: { wine: 0.65, iron: 0.75, tools: 0.7 },    want: { fish: 1.4, smokedfish: 1.6, furs: 1.5, wax: 1.4 } },
   { id: 'umland',    name: { de: 'Umland', en: 'Countryside' }, sea: false, days: 2, sell: { grain: 0.65, wool: 0.7, timber: 0.75 },  want: { salt: 1.5, tools: 1.6, cloth: 1.5, beer: 1.3 } },
 ];
@@ -37,6 +38,18 @@ HK.ORIGIN = {}; HK.ORIGINS.forEach(o => HK.ORIGIN[o.id] = o);
 HK.SHIP_NAMES = ['Maria', 'Adler', 'Sankt Nikolaus', 'Bunte Kuh', 'Löwe', 'Greif', 'Fortuna', 'Sankt Anna', 'Seehund', 'Roter Löwe', 'Katharina', 'Pelikan', 'Schwan', 'Morgenstern', 'Sankt Georg', 'Einhorn', 'Falke', 'Ursula', 'Hansa', 'Delphin', 'Sankt Jakob', 'Engel'];
 HK.CAPTAIN_NAMES = ['Hinrich Vos', 'Klaus Störtebeker', 'Jorgen Lund', 'Piet van Dyck', 'Arnd Sasse', 'Olaf Sjöberg', 'Wilkin Stade', 'Reyner Bock', 'Gerd Molenaar', 'Henning Kalsow', 'Magnus Ravn', 'Thomas Ashby'];
 HK.BORROWER_NAMES = ['Hans Möller', 'Elsebe Kröger', 'Wenzel Barth', 'Ludeke Sassen', 'Ilsabe Wulf', 'Jasper Tode', 'Metke Brand', 'Volrad Kule', 'Bertram Hoyer', 'Wobbeke Sund'];
+
+/* Schiffstypen, Kapitäne, Fernkontore */
+HK.SHIP_TYPES = [
+  { id: 'schnigge', name: { de: 'Schnigge', en: 'Snekkja' }, cap: 60,  price: 5000,  delta: -2, scale: 0.8 },
+  { id: 'kogge',    name: { de: 'Kogge',    en: 'Cog' },     cap: 120, price: 9000,  delta: 0,  scale: 0.95 },
+  { id: 'holk',     name: { de: 'Holk',     en: 'Hulk' },    cap: 200, price: 16000, delta: 2,  scale: 1.1 },
+];
+HK.SHIP_TYPE = {}; HK.SHIP_TYPES.forEach(t => HK.SHIP_TYPE[t.id] = t);
+HK.CAPTAIN_TRAITS = [
+  { id: 'navigator', wage: 9 }, { id: 'fighter', wage: 8 }, { id: 'smuggler', wage: 7 }, { id: 'drunkard', wage: 3 }, { id: 'steady', wage: 5 },
+];
+HK.KONTOR_CITIES = ['luebeck', 'bruegge', 'bergen'];
 
 /* Betriebe (Werkstätten) */
 HK.WORKSHOPS = [
@@ -168,5 +181,5 @@ HK.CONST = {
   HOSPITAL_DONATION: 1000, HOSPITAL_ENDOW: 8000, SCHOOL_DONATION: 1500, SCHOOL_ENDOW: 6000,
   HARBOUR_BOOK: 200, HARBOUR_BOOK_DAYS: 20, BERTH_PRIORITY: 800, EXTRA_BERTH: 15000, MAX_BERTHS: 5,
   APPRENTICES: 1000, APPRENTICE_DAYS: 60, MASTER_TITLE: 5000, FISHMARKET_CAP: 25,
-  WEIGH_FARM_DAYS: 365, BLESSING_COST: 300, BLESSING_DAYS: 60, MILITIA_COST: 4000, MILITIA_UPKEEP: 12,
+  WEIGH_FARM_DAYS: 365, MAX_OWN_SHIPS: 5, KONTOR_PRICE: 25000, KONTOR_UPKEEP: 15, MASTER_COST: 1500, MASTER_WAGE: 8, BLESSING_COST: 300, BLESSING_DAYS: 60, MILITIA_COST: 4000, MILITIA_UPKEEP: 12,
 };

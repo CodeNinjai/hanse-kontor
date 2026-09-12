@@ -71,7 +71,7 @@ HK.rivalHostile = function (st, r) {
   const a = HK.pick(acts), name = HK.rivalName(r.id);
   if (a === 'denounce') { st.suspicion = HK.clamp(st.suspicion + 8, 0, 100); HK.log(st, 'rivalDenounce', { rival: name }, 'bad'); }
   else if (a === 'undercut') { const g = HK.pick(HK.GOODS).id; st.town.stock[g] = (st.town.stock[g] || 0) + HK.desired(g) * 1.2; HK.log(st, 'rivalUndercut', { rival: name, good: HK.goodName(g) }, 'bad'); }
-  else if (a === 'poach') { const mine = Object.keys(st.ventures).filter(id => !st.ventures[id].owner && st.ventures[id].level > 1); if (mine.length) { const id = HK.pick(mine); st.ventures[id].level--; HK.log(st, 'rivalPoach', { rival: name, venture: HK.name(HK.VENTURE[id]) }, 'bad'); } else { st.suspicion = HK.clamp(st.suspicion + 4, 0, 100); HK.log(st, 'rivalDenounce', { rival: name }, 'bad'); } }
+  else if (a === 'poach') { const mine = Object.keys(st.ventures).filter(id => !st.ventures[id].owner && (st.ventures[id].master || st.ventures[id].level > 1)); if (mine.length) { const id = HK.pick(mine); if (st.ventures[id].master) st.ventures[id].master = false; else st.ventures[id].level--; HK.log(st, 'rivalPoach', { rival: name, venture: HK.name(HK.VENTURE[id]) }, 'bad'); } else { st.suspicion = HK.clamp(st.suspicion + 4, 0, 100); HK.log(st, 'rivalDenounce', { rival: name }, 'bad'); } }
   else if (a === 'arson') { for (const g in st.warehouse.stock) st.warehouse.stock[g] = Math.floor(st.warehouse.stock[g] * 0.94); HK.log(st, 'rivalArson', { rival: name }, 'bad'); }
 };
 HK.rivalFriendly = function (st, r) {

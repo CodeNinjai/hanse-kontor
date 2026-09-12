@@ -231,7 +231,7 @@ HK.UI = {
     const st = HK.state;
     if (!st.ownShips.length) return `<p class="hint">${HK.t('noOwnShips')}</p>`;
     let s = st.ownShips.find(x => x.id === this.selectedOwnShip); if (!s) { s = st.ownShips[0]; this.selectedOwnShip = s.id; }
-    let h = st.ownShips.map(x => `<div class="card ${x.id === s.id ? 'selected' : ''}" data-action="selown" data-id="${x.id}" style="cursor:pointer"><div class="card-head"><b>${this.esc(x.name)}</b><small>${x.status === 'port' ? HK.t('inPort') : HK.t('away', { dest: HK.name(HK.ORIGIN[x.dest]), days: x.daysLeft })} · ${HK.t('hull')} ${x.hull} %</small></div><small>${HK.t('cargo')}: ${Object.keys(x.cargo).map(g => x.cargo[g] + ' ' + HK.goodName(g)).join(', ') || '–'} (${HK.stockUsed(x.cargo)}/120)</small></div>`).join('');
+    let h = st.ownShips.map(x => `<div class="card ${x.id === s.id ? 'selected' : ''}" data-action="selown" data-id="${x.id}" style="cursor:pointer"><div class="card-head"><b>${this.esc(x.name)}</b> <small>${HK.name(HK.SHIP_TYPE[x.type] || HK.SHIP_TYPE.kogge)}${x.captain ? ' · ' + this.esc(x.captain.name) : ''}</small><small>${x.status === 'port' ? HK.t('inPort') : HK.t('away', { dest: HK.name(HK.ORIGIN[x.dest]), days: x.daysLeft })} · ${HK.t('hull')} ${x.hull} %</small></div><small>${HK.t('cargo')}: ${Object.keys(x.cargo).map(g => x.cargo[g] + ' ' + HK.goodName(g)).join(', ') || '–'} (${HK.stockUsed(x.cargo)}/120)</small></div>`).join('');
     if (s.status === 'port') {
       const seaDest = HK.ORIGINS.filter(o => o.sea);
       const dest = HK.ORIGIN[this.inputs.dest] && HK.ORIGIN[this.inputs.dest].sea ? this.inputs.dest : seaDest[0].id;
@@ -364,9 +364,11 @@ HK.UI = {
   },
   panel_shipyard() {
     const st = HK.state;
-    let h = this.head(HK.t('shipyard'), HK.t('shipyardHint', { name: HK.PERSON.shipwright.name })) + `<section>${this.personRow('shipwright')}<div class="btn-row"><button data-action="buyship" ${st.money >= HK.shipPrice(st) && st.ownShips.length < 3 ? '' : 'disabled'}>${HK.t('buyShip', { cost: HK.fmt(HK.shipPrice(st)) })}</button>
-      <button data-action="buyboat" ${st.money >= HK.CONST.BOAT_PRICE && st.boats < HK.CONST.BOAT_MAX ? '' : 'disabled'}>${HK.t('buyBoat', { cost: HK.fmt(HK.CONST.BOAT_PRICE), fish: HK.CONST.BOAT_FISH })}</button> <small>${HK.t('boats')}: ${st.boats}/${HK.CONST.BOAT_MAX}</small></div></section>`;
-    if (st.ownShips.length) h += `<section><h3>${HK.t('ownShips')}</h3><table class="plain">${st.ownShips.map(s => `<tr><td><b>${this.esc(s.name)}</b> <small>${HK.t('hull')} ${s.hull} %</small></td><td class="num">${s.status === 'port' ? `<button class="small" data-action="repairship" data-id="${s.id}" ${s.hull < 100 && st.money >= (100 - s.hull) * 30 ? '' : 'disabled'}>${HK.t('repairShip', { cost: HK.fmt((100 - s.hull) * 30) })}</button> <button class="small danger" data-action="sellship" data-id="${s.id}">${HK.t('sellShip', { price: HK.fmt(Math.round(HK.CONST.SHIP_PRICE * 0.6 * s.hull / 100)) })}</button>` : `<small>${HK.t('away', { dest: HK.name(HK.ORIGIN[s.dest]), days: s.daysLeft })}</small>`}</td></tr>`).join('')}</table></section>`;
+    let h = this.head(HK.t('shipyard'), HK.t('shipyardHint', { name: HK.PERSON.shipwright.name })) + `<section>${this.personRow('shipwright')}<p class="hint">${HK.t('shipTypesHint', { n: st.ownShips.length, max: HK.CONST.MAX_OWN_SHIPS })}</p><table class="plain">${HK.SHIP_TYPES.map(t => `<tr><td><b>${HK.name(t)}</b><br><small>${HK.t('shipTypeInfo', { cap: t.cap, delta: t.delta > 0 ? '+' + t.delta : t.delta })}</small></td><td class="num"><button class="small" data-action="buyship" data-type="${t.id}" ${st.money >= HK.shipTypePrice(st, t.id) && st.ownShips.length < HK.CONST.MAX_OWN_SHIPS ? '' : 'disabled'}>${HK.t('build', { cost: HK.fmt(HK.shipTypePrice(st, t.id)) })}</button></td></tr>`).join('')}</table>
+      <div class="btn-row"><button data-action="buyboat" ${st.money >= HK.CONST.BOAT_PRICE && st.boats < HK.CONST.BOAT_MAX ? '' : 'disabled'}>${HK.t('buyBoat', { cost: HK.fmt(HK.CONST.BOAT_PRICE), fish: HK.CONST.BOAT_FISH })}</button> <small>${HK.t('boats')}: ${st.boats}/${HK.CONST.BOAT_MAX}</small></div></section>`;
+    if (st.ownShips.length) h += `<section><h3>${HK.t('ownShips')}</h3><table class="plain">${st.ownShips.map(s => `<tr><td><b>${this.esc(s.name)}</b> <small>${HK.name(HK.SHIP_TYPE[s.type] || HK.SHIP_TYPE.kogge)} · ${HK.shipCap(s)} ${HK.t('unitLast')} · ${HK.t('hull')} ${s.hull} %</small><br><small>${s.captain ? HK.t('captainOnBoard', { captain: this.esc(s.captain.name), trait: HK.t('trait_' + s.captain.trait), wage: s.captain.wage }) : HK.t('noCaptain')}</small></td><td class="num">${s.status === 'port' ? `<button class="small" data-action="repairship" data-id="${s.id}" ${s.hull < 100 && st.money >= Math.round((100 - s.hull) * 30 * HK.shipRepairFactor(st)) ? '' : 'disabled'}>${HK.t('repairShip', { cost: HK.fmt(Math.round((100 - s.hull) * 30 * HK.shipRepairFactor(st))) })}</button> ${s.captain ? `<button class="small" data-action="dismisscaptain" data-id="${s.id}">${HK.t('dismissCaptain')}</button>` : ''} <button class="small danger" data-action="sellship" data-id="${s.id}">${HK.t('sellShip', { price: HK.fmt(Math.round(HK.SHIP_TYPE[s.type || 'kogge'].price * 0.6 * s.hull / 100)) })}</button>` : `<small>${HK.t('away', { dest: HK.name(HK.ORIGIN[s.dest]), days: s.daysLeft })}</small>`}</td></tr>`).join('')}</table></section>`;
+    const inPort = st.ownShips.filter(s => s.status === 'port' && !s.captain);
+    h += `<section><h3>${HK.t('captains')}</h3><p class="hint">${HK.t('captainsHint')}</p>${st.captainOffers.length ? `<table class="plain">${st.captainOffers.map(c => `<tr><td><b>${this.esc(c.name)}</b> <small>${HK.t('trait_' + c.trait)}</small><br><small>${HK.t('traitHint_' + c.trait)} · ${HK.t('captainWage', { wage: c.wage })}</small></td><td class="num">${inPort.length ? `<select data-field="hireship">${inPort.map(s => `<option value="${s.id}" ${String(this.inputs.hireship) === String(s.id) ? 'selected' : ''}>${this.esc(s.name)}</option>`).join('')}</select> <button class="small" data-action="hirecaptain" data-id="${c.id}" ${st.money >= c.fee ? '' : 'disabled'}>${HK.t('hireCaptain', { fee: c.fee })}</button>` : `<small>${HK.t('noShipForCaptain')}</small>`}</td></tr>`).join('')}</table>` : `<p class="hint">${HK.t('noCaptains')}</p>`}</section>`;
     return h;
   },
   panel_fishermen() {
@@ -391,6 +393,7 @@ HK.UI = {
     else if (!o) h += `<button data-action="buyventure" data-id="${v.id}" ${st.money >= cost && (!v.craft || st.craftGuild) ? '' : 'disabled'}>${HK.t('buyVenture', { cost: HK.fmt(cost) })}</button>${v.craft && !st.craftGuild ? `<p class="hint">${HK.t('needCraftGuild')}</p>` : ''}`;
     else {
       h += `<p><span class="tag gold">${HK.t('yours')}</span> ${HK.t('ventureLevel', { level: o.level })} · <b>${HK.t('ventureIncome', { income: HK.ventureIncome(st, v.id) })}</b>${v.inp && HK.ventureSupply(st, v) < 0.8 ? ` · <span class="demand shortage">${HK.t('supplyLow', { good: HK.goodName(v.inp) })}</span>` : ''}</p><div class="btn-row">`;
+      h += o.master ? `<span class="tag">${HK.t('masterHired')}</span>` : `<button class="small" data-action="hiremaster" data-id="${v.id}" ${st.money >= HK.CONST.MASTER_COST ? '' : 'disabled'}>${HK.t('hireMaster', { cost: HK.fmt(HK.CONST.MASTER_COST), wage: HK.CONST.MASTER_WAGE })}</button>`;
       if (o.level < HK.CONST.VENTURE_MAX_LEVEL) h += `<button class="small" data-action="upgradeventure" data-id="${v.id}" ${st.money >= Math.round(v.cost * HK.CONST.VENTURE_UPGRADE) ? '' : 'disabled'}>${HK.t('upgradeVenture', { cost: HK.fmt(Math.round(v.cost * HK.CONST.VENTURE_UPGRADE)) })}</button>`;
       h += `<button class="small danger" data-action="sellventure" data-id="${v.id}">${HK.t('sellVenture', { price: HK.fmt(Math.round(v.cost * (0.5 + o.level * 0.1))) })}</button></div>`;
     }
@@ -629,11 +632,15 @@ HK.UI = {
       case 'repayloan': this.result(HK.repayLoan(st, parseInt(this.inputs.loan, 10))); break;
       case 'lend': this.result(HK.lend(st, parseInt(d.id, 10))); break;
       case 'bribebailiff': this.result(HK.bribeBailiff(st)); break;
-      case 'buyship': this.result(HK.buyShip(st)); break;
+      case 'buyship': this.result(HK.buyShip(st, d.type)); break;
+      case 'hirecaptain': this.result(HK.hireCaptain(st, parseInt(this.inputs.hireship || (st.ownShips.find(x => x.status === 'port' && !x.captain) || {}).id, 10), parseInt(d.id, 10))); break;
+      case 'dismisscaptain': this.result(HK.dismissCaptain(st, parseInt(d.id, 10))); break;
+      case 'buykontor': this.result(HK.buyKontor(st, d.city)); break;
+      case 'hiremaster': this.result(HK.hireMaster(st, d.id)); break;
       case 'buyboat': this.result(HK.buyBoat(st)); break;
       case 'repairship': this.result(HK.repairShip(st, parseInt(d.id, 10))); break;
       case 'sellship': if (confirm(HK.t('sellShip', { price: '' }) + '?')) HK.sellOwnShip(st, parseInt(d.id, 10)); break;
-      case 'load': if (ship) this.result(HK.loadShip(st, ship.id, d.good, Math.min(q, Math.floor(st.warehouse.stock[d.good] || 0), 120 - HK.stockUsed(ship.cargo)))); break;
+      case 'load': if (ship) this.result(HK.loadShip(st, ship.id, d.good, Math.min(q, Math.floor(st.warehouse.stock[d.good] || 0), HK.shipCap(ship) - HK.stockUsed(ship.cargo)))); break;
       case 'unload': if (ship) this.result(HK.unloadShip(st, ship.id, d.good, Math.min(q, ship.cargo[d.good] || 0, HK.whFree(st)))); break;
       case 'send': if (ship) this.result(HK.sendShip(st, ship.id, this.inputs.dest, this.inputs.bring)); break;
       case 'hutfish': r = HK.buyFishFromHuts(st, Math.min(q, st.hutFish || 0, HK.whFree(st))); if (this.result(r)) this.toast(HK.t('bought', { qty: '', good: HK.goodName('fish'), cost: HK.fmt(r.cost) }), 'good', 1800); break;
