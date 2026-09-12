@@ -1,155 +1,226 @@
 /* Sprachen / Languages */
 'use strict';
-
 HK.LANG = 'de';
 HK.I18N = {
   de: {
-    title: 'Hanse-Kontor', subtitle: 'Eine Handelssimulation im Hansebund, anno 1370',
-    newGame: 'Neues Spiel', continueGame: 'Spiel fortsetzen', save: 'Speichern', load: 'Laden', exportSave: 'Exportieren', importSave: 'Importieren',
-    help: 'Hilfe', language: 'Sprache', saved: 'Spielstand gespeichert.', loaded: 'Spielstand geladen.', noSave: 'Kein Spielstand vorhanden.',
-    importError: 'Die Datei konnte nicht gelesen werden.', confirmNewGame: 'Aktuelles Spiel verwerfen und neu beginnen?',
-    playerName: 'Dein Name', homeCity: 'Heimatstadt', difficulty: 'Schwierigkeit', easy: 'Leicht', normal: 'Normal', hard: 'Schwer',
-    start: 'Aufbrechen!', defaultName: 'Hinrich Castorp',
-    diffHint_easy: '15.000 Mark, eine Kogge, seltene Ereignisse.', diffHint_normal: '8.000 Mark, eine Kogge.', diffHint_hard: '4.000 Mark, nur eine Schnigge, raue See.',
-    day: 'Tag', money: 'Vermögen', rank: 'Rang', pause: 'Pause', speed1: 'Langsam', speed2: 'Normal', speed3: 'Schnell', stepDay: 'Einen Tag weiter',
-    tabCity: 'Stadt', tabShips: 'Schiffe', tabKontors: 'Kontore', tabBank: 'Bank & Rat', tabLog: 'Chronik', tabStats: 'Statistik',
-    population: 'Einwohner', reputation: 'Ansehen', market: 'Markt', good: 'Ware', stock: 'Vorrat', buy: 'Kaufen', sell: 'Verkaufen',
-    buyPrice: 'Kauf', sellPrice: 'Verkauf', trend: 'Bedarf', shortage: 'Mangel', surplus: 'Überschuss', normalDemand: 'gedeckt',
-    qty: 'Menge', all: 'Alles', max: 'Max', shipsHere: 'Schiffe im Hafen', noShipHere: 'Kein eigenes Schiff im Hafen.', selectShip: 'Handelndes Schiff',
-    cargo: 'Ladung', capacity: 'Laderaum', free: 'frei', hull: 'Zustand', crew: 'Mannschaft', weapons: 'Bewaffnung', speed: 'Geschwindigkeit',
-    sailTo: 'Segeln nach', depart: 'Ablegen', travelDays: '{days} Tage', arrivesIn: 'Ankunft in {days} Tagen', atSea: 'Auf See nach {city}', docked: 'Im Hafen von {city}',
-    noShips: 'Du besitzt keine Schiffe.', shipyard: 'Werft', buildShip: 'Schiff bauen', repair: 'Reparieren', repairCost: 'Reparatur ({cost} Mark)',
-    buyWeapons: 'Aufrüsten ({cost} Mark)', sellShip: 'Schiff verkaufen ({price} Mark)', rename: 'Umbenennen', newShipName: 'Name des Schiffes',
-    noShipyard: 'In dieser Stadt gibt es keine Werft.', notEnoughMoney: 'Nicht genug Geld.', shipFull: 'Nicht genug Laderaum.', notEnoughStock: 'Die Stadt hat nicht genug Vorrat.',
-    notEnoughCargo: 'Nicht genug Ladung.', bought: '{qty} Last {good} für {cost} Mark gekauft.', sold: '{qty} Last {good} für {cost} Mark verkauft.',
-    kontor: 'Kontor', buildKontor: 'Kontor errichten ({cost} Mark)', kontorNeedsRep: 'Ein Kontor erfordert Ansehen von mindestens {rep}.', noKontor: 'Du hast hier kein Kontor.',
-    storage: 'Lager', storageCap: 'Lagerplatz', expandStorage: 'Lager erweitern (+{qty} Last, {cost} Mark)', toKontor: 'Ins Kontor', toShip: 'Aufs Schiff',
-    storageFull: 'Das Lager ist voll.', manager: 'Verwalter', managerHint: 'Der Verwalter handelt täglich bis zu {qty} Last je Ware zu deinen Grenzpreisen.',
-    modeNone: '–', modeBuy: 'Kaufen unter', modeSell: 'Verkaufen über', limit: 'Grenzpreis', perDay: 'Last/Tag',
-    buildings: 'Betriebe', build: 'Bauen', buildingCost: '{cost} Mark, Unterhalt {upkeep} Mark/Tag', produces: 'erzeugt {qty} Last {good}/Tag',
-    consumes: 'verbraucht {qty} Last {good}/Tag', maxBuildings: 'Höchstens {n} Betriebe je Kontor.', demolish: 'Abreißen', noBuildingsHere: 'Hier kann kein Betrieb errichtet werden.',
-    noInput: 'Rohstoff fehlt', built: '{building} in {city} errichtet.', kontorBuilt: 'Kontor in {city} errichtet.',
-    donate: 'Spenden', donateChurch: 'Kirchenspende ({cost} Mark)', donatePoor: 'Armenspeisung ({cost} Mark)', donated: 'Das Ansehen in {city} steigt.',
-    bank: 'Bank', loan: 'Darlehen', loanLimit: 'Kreditrahmen', takeLoan: 'Aufnehmen', repayLoan: 'Zurückzahlen', interest: 'Zins {pct} % pro Jahr',
-    loanTaken: 'Darlehen über {amount} Mark aufgenommen.', loanRepaid: '{amount} Mark zurückgezahlt.', loanTooHigh: 'Der Kreditrahmen reicht nicht.',
-    council: 'Rat der Hanse', rankReq: 'Voraussetzung für {rank}', netWorth: 'Reinvermögen', reqRep: 'Ansehen in {city}', reqKontors: 'Kontore', promoted: 'Du wurdest zum {rank} ernannt!',
-    homeCityLabel: 'Heimatstadt', kontorCount: 'Kontore', shipCount: 'Schiffe', profitTotal: 'Handelsgewinn gesamt', tradeVolume: 'Umsatz gesamt', daysPlayed: 'Tage gespielt',
-    chart: 'Reinvermögen im Verlauf', log: 'Chronik', noLog: 'Noch nichts geschehen.',
-    ev_famine: 'Hungersnot in {city}! Getreide und Fisch sind gefragt.', ev_plague: 'Die Pest wütet in {city}.', ev_festival: 'Fest in {city} – Bier und Wein fließen.',
-    ev_fire: 'Großbrand in {city}! Bauholz wird dringend gebraucht.', ev_goodHarvest: 'Reiche Ernte in {city}.', ev_fair: 'Jahrmarkt in {city} – Tuch und Pelze begehrt.',
-    evn_famine: 'Hungersnot', evn_plague: 'Pest', evn_festival: 'Fest', evn_fire: 'Großbrand', evn_goodHarvest: 'Reiche Ernte', evn_fair: 'Jahrmarkt',
-    arrived: '{ship} ist in {city} eingelaufen.', storm: 'Sturm! {ship} nimmt {dmg} % Schaden.', sunk: '{ship} ist mit Mann und Maus gesunken!', hullWarning: '{ship} ist schwer beschädigt – dringend in eine Werft!',
-    piratesRepelled: '{ship} hat Piraten abgewehrt.', piratesLoot: 'Piraten haben {ship} geplündert und Ladung geraubt.', piratesRansom: '{ship} zahlt {amount} Mark Lösegeld an Piraten.',
-    routeTrade: '{ship} in {city}: {sold} Last verkauft, {bought} Last gekauft.', bankrupt: 'Du bist bankrott. Die Gläubiger übernehmen dein Kontor.',
-    won: 'Du bist Eldermann der Hanse! Dein Name wird in Lübeck in Stein gemeißelt.', continuePlay: 'Weiterspielen', gameOver: 'Spiel vorbei',
-    managerSold: 'Verwalter in {city}: {qty} Last {good} verkauft.', managerBought: 'Verwalter in {city}: {qty} Last {good} gekauft.',
-    route: 'Handelsroute', routeEdit: 'Route bearbeiten', routeStart: 'Route starten', routeStop: 'Route anhalten', routeActive: 'Route aktiv', routeNone: 'Keine Route',
-    routeStops: 'Stationen', addStop: 'Station hinzufügen', removeStop: 'Entfernen', routeHint: 'An jeder Station wird zuerst verkauft/entladen, dann gekauft/geladen. Die Route wird endlos wiederholt.',
-    modeUnload: 'Ins Kontor', modeLoad: 'Aus Kontor', maxPrice: 'max. Preis', minPrice: 'min. Preis', apply: 'Übernehmen', cancel: 'Abbrechen', close: 'Schließen', ok: 'OK',
-    routeNeedsStops: 'Eine Route braucht mindestens zwei Stationen.', ship: 'Schiff', location: 'Ort', status: 'Zustand', value: 'Wert',
-    weaponsLevel: 'Stufe {lvl}', maxWeapons: 'Bereits voll aufgerüstet.', shipSold: '{ship} für {price} Mark verkauft.', shipBuilt: '{ship} in {city} vom Stapel gelaufen.',
-    cargoValue: 'Ladung (Basiswert)', selectCity: 'Wähle eine Stadt auf der Karte.', yes: 'Ja', no: 'Nein',
-    unitLast: 'Last', mark: 'Mark', perLast: 'Mark/Last', helpTitle: 'Wie man Hansekaufmann wird',
-    helpText: `<p><b>Ziel:</b> Werde Eldermann der Hanse. Dafür brauchst du ein Reinvermögen von 1.000.000 Mark, hohes Ansehen in deiner Heimatstadt und Kontore in sechs Städten.</p>
-<p><b>Handel:</b> Klicke eine Stadt auf der Karte an. Liegt ein Schiff im Hafen, kannst du Waren kaufen und verkaufen. Städte erzeugen manche Waren günstig (Überschuss) und brauchen andere dringend (Mangel). Kaufe billig, segle, verkaufe teuer. Jeder Kauf treibt den Preis, jeder Verkauf senkt ihn.</p>
-<p><b>Schiffe:</b> Wähle unter „Schiffe“ ein Ziel und lege ab. Schnelle Schiffe tragen weniger. Auf See drohen Stürme und Piraten – Bewaffnung hilft. Repariere beschädigte Schiffe in der Werft.</p>
-<p><b>Kontore:</b> Mit genug Ansehen errichtest du in einer Stadt ein Kontor mit Lager. Ein Verwalter handelt dort täglich zu deinen Grenzpreisen. Betriebe erzeugen Waren direkt ins Lager.</p>
-<p><b>Routen:</b> Gib einem Schiff eine Handelsroute mit Stationen und Aufträgen, dann fährt es von allein.</p>
-<p><b>Ansehen:</b> Steigt, wenn du Mangelwaren lieferst oder spendest. Es senkt Einkaufspreise und öffnet höhere Ränge.</p>
-<p><b>Bank:</b> Darlehen helfen beim Wachsen, kosten aber täglich Zinsen. Bist du 60 Tage lang zahlungsunfähig, ist das Spiel verloren.</p>
-<p><b>Speichern:</b> Das Spiel speichert automatisch im Browser. Über „Exportieren“ sicherst du den Spielstand als Datei.</p>`,
-    season: { 0: 'Winter', 1: 'Frühling', 2: 'Sommer', 3: 'Herbst' }, welcome: 'Willkommen in {city}, {name}! Deine {ship} liegt im Hafen. Viel Erfolg.',
-    toastArrival: 'Ankunft', eventsHere: 'Ereignis', ships: 'Schiffe', cities: 'Städte', legend: 'Legende', legendCity: 'Stadt', legendKontor: 'Stadt mit Kontor', legendShip: 'Eigenes Schiff',
-    confirmSellShip: 'Schiff {ship} wirklich verkaufen?', confirmDemolish: 'Betrieb wirklich abreißen?', noRouteStopsHint: 'Noch keine Stationen.', stop: 'Station',
-    orders: 'Aufträge', capacityHint: '{used} / {cap} Last', dailyCost: 'Tägliche Kosten', wages: 'Heuer', upkeep: 'Unterhalt', interestCost: 'Zinsen',
-    lastsDays: 'noch {days} Tage', shipTypeInfo: '{capacity} Last, {speed} km/Tag, {crew} Mann',
+    title: 'Hanse-Kontor', subtitle: 'Sundhaven, anno 1372. Eine kleine Hansestadt, ein Hafen, und dein Weg zur Macht.',
+    newGame: 'Neues Spiel', continueGame: 'Spiel fortsetzen', continuePlay: 'Weiterspielen', save: 'Speichern', load: 'Laden', exportSave: 'Exportieren', importSave: 'Importieren',
+    help: 'Hilfe', saved: 'Spielstand gespeichert.', loaded: 'Spielstand geladen.', noSave: 'Kein Spielstand vorhanden.', importError: 'Die Datei konnte nicht gelesen werden.',
+    confirmNewGame: 'Aktuelles Spiel verwerfen und neu beginnen?', playerName: 'Dein Name', difficulty: 'Schwierigkeit', easy: 'Leicht', normal: 'Normal', hard: 'Schwer', defaultName: 'Hinrich Castorp',
+    diffHint_easy: '12.000 Mark, ruhige Zeiten, viele Schiffe.', diffHint_normal: '6.000 Mark.', diffHint_hard: '3.000 Mark, raue Zeiten, wenige Schiffe.',
+    day: 'Tag', money: 'Kasse', rank: 'Rang', pause: 'Pause', speed1: 'Langsam', speed2: 'Normal', speed3: 'Schnell', stepDay: 'Einen Tag weiter', mark: 'Mark', unitLast: 'Last',
+    rep: 'Ruf', influence: 'Einfluss', piety: 'Frömmigkeit', suspicion: 'Verdacht', prosperity: 'Wohlstand', population: 'Einwohner', netWorth: 'Reinvermögen',
+    tabOverview: 'Übersicht', tabLog: 'Chronik', tabHelp: 'Hilfe', back: 'Zurück', close: 'Schließen', cancel: 'Abbrechen', ok: 'OK', yes: 'Ja', no: 'Nein', none: 'keins',
+    shortage: 'Mangel', surplus: 'Überschuss', normalDemand: 'gedeckt', good: 'Ware', qty: 'Menge', price: 'Preis', stock: 'Vorrat', buy: 'Kaufen', sell: 'Verkaufen', max: 'Max',
+    warehouse: 'Lager', warehouseCap: 'Lagerplatz', capacityHint: '{used} / {cap} Last', expandWarehouse: 'Lager erweitern (+{qty} Last, {cost} Mark)', empty: 'leer',
+    notEnoughStock: 'Nicht genug Vorrat.', warehouseFull: 'Das Lager ist voll.', notEnoughMoney: 'Nicht genug Geld.', notWanted: 'So viel wird nicht gesucht.', notEnoughCargo: 'Nicht genug im Lager.',
+    monopolyBlocked: 'Ein Konkurrent hält das Monopol auf diese Ware.', marketSaturated: 'Mehr nehmen die Bürger heute nicht ab.', marketCapHint: 'heute noch', pietyTooLow: 'Die Kirche handelt nur mit frommen Kaufleuten (Frömmigkeit 40).', needLoyalty: 'Dafür müsste er dir wohlgesonnener sein.',
+    needInfluence: 'Du brauchst 20 Einfluss für einen Antrag.', needRep: 'Dein Ruf reicht dafür nicht.', needGuild: 'Nur Gildemitglieder erhalten Lizenzen.', needLicense: 'Dafür fehlt die Gildelizenz.',
+    loanTooHigh: 'Der Kreditrahmen reicht nicht.', maxShips: 'Mehr als drei Schiffe kann der Hafen nicht aufnehmen.', shipDamaged: 'Das Schiff muss erst repariert werden.', shipFull: 'Das Schiff ist voll (120 Last).',
+    /* Hafen */
+    harbour: 'Hafen', shipsInPort: 'Schiffe im Hafen', noShips: 'Zurzeit liegt kein fremdes Schiff im Hafen.', fromOrigin: 'aus {origin}', captain: 'Kapitän', leavesIn: 'legt in {days} Tagen ab',
+    offers: 'Bietet an', wants: 'Sucht', tariffInfo: 'Zoll: {rate} % (dein Nachlass durch den Zöllner: {disc} %)', smuggle: 'Nachts schmuggeln (ohne Zoll)', smuggleHint: 'Ohne Zoll, aber der Zöllner könnte dich erwischen.',
+    bought: '{qty} Last {good} für {cost} Mark gekauft.', sold: '{qty} Last {good} für {cost} Mark verkauft.', smuggledOk: 'Geschmuggelt, {saved} Mark Zoll gespart.',
+    ownShips: 'Deine Schiffe', noOwnShips: 'Du besitzt kein Schiff. Die Werft baut dir eines.', inPort: 'im Hafen', away: 'unterwegs nach {dest}, zurück in {days} Tagen', cargo: 'Ladung',
+    loadShip: 'Laden', unloadShip: 'Löschen', sendShip: 'Auf Fahrt schicken', destination: 'Ziel', bringBack: 'Rückfracht', expeditionHint: 'Das Schiff verkauft seine Ladung am Ziel (gesuchte Waren bringen bis zum 1,5-fachen Grundpreis) und kauft mit dem Erlös die Rückfracht günstig ein.',
+    daysTrip: '{days} Tage Fahrt', repairShip: 'Reparieren ({cost} Mark)', sellShip: 'Verkaufen ({price} Mark)', hull: 'Zustand',
+    /* Markt */
+    market: 'Marktplatz', marketHint: 'Hier verkaufst du an die Bürger und kaufst, was die Stadt erzeugt. Die Bürger nehmen täglich nur begrenzte Mengen ab; Marktstände erhöhen Absatz und Preis. Marktgebühr: {fee} %.', stalls: 'Marktstände', buyStall: 'Stand pachten ({cost} Mark, +4 % Preis, +50 % Absatz)',
+    monopolyYours: 'Du hältst das Monopol auf {good} (+35 % Preis).', demand: 'Bedarf', buyPrice: 'Kauf', sellPrice: 'Verkauf',
+    /* Kontor */
+    kontor: 'Kontor', ledger: 'Kassenbuch (letzte 30 Tage)', income: 'Einnahmen', expenses: 'Ausgaben', balance: 'Saldo', assets: 'Besitz',
+    src_shipTrade: 'Schiffs- & Karawanenhandel', src_market: 'Markthandel', src_tariffs: 'Zölle', src_rent: 'Mieten', src_tavern: 'Taverne', src_bathhouse: 'Badehaus', src_lending: 'Geldverleih', src_expedition: 'Handelsfahrten',
+    src_taxFarm: 'Zollpacht', src_office: 'Amt', src_gambling: 'Glücksspiel', src_church: 'Kirche & Almosen', src_wages: 'Löhne', src_interest: 'Zinsen', src_bribes: 'Geschenke & Bestechung', src_fines: 'Strafen',
+    src_investments: 'Käufe & Bauten', src_politics: 'Politik', src_loans: 'Darlehen',
+    /* Rathaus */
+    townhall: 'Rathaus', council: 'Der Rat', yourSeat: 'Dein Sitz', seat_none: 'kein Sitz', seat_councillor: 'Ratsherr', seat_mayor: 'Bürgermeister', loyalty: 'Wohlwollen', faction: 'Fraktion',
+    giveGift: 'Geschenk ({cost} Mark)', giftDone: '{name} nimmt dein Geschenk wohlwollend an.', laws: 'Gesetze', current: 'derzeit', propose: 'Antrag stellen (20 Einfluss)',
+    motionPassed: 'Antrag angenommen: {law} → {value} ({yes}:{no}).', motionFailed: 'Antrag abgelehnt: {law} → {value} ({yes}:{no}).', lawHint_tariff: 'Niedriger Zoll macht deinen Schiffshandel billiger; hoher Zoll füllt die Zollpacht.',
+    lawHint_marketFee: 'Wird von jedem Marktverkauf abgezogen.', lawHint_usuryBan: 'Geldverleih wird verdächtig, wenn das Verbot gilt.', lawHint_staple: 'Mehr Schiffe laufen den Hafen an.',
+    lawHint_bathBan: 'Schließt das Badehaus.', lawHint_monopoly: 'Nur der Monopolinhaber darf diese Ware verkaufen – zum Aufpreis.',
+    runCouncillor: 'Um einen Ratssitz bewerben (3.000 Mark, Ruf 35, drei wohlgesonnene Ratsherren)', runMayor: 'Zum Bürgermeister kandidieren (6.000 Mark, Ruf 55, vier wohlgesonnene Ratsherren)',
+    becameCouncillor: 'Du sitzt nun im Rat von Sundhaven.', becameMayor: 'Du bist Bürgermeister von Sundhaven!', electionLost: 'Die Wahl ging verloren: nur {support} von {need} Ratsherren stimmten für dich.',
+    acceptBribes: 'Als Amtsträger Bestechungsgelder annehmen (+Geld, +Verdacht)', projects: 'Städtische Vorhaben', fund: 'Stiften ({cost} Mark)', funded: 'gestiftet', projectDone: '{project} vollendet.',
+    taxFarm: 'Zollpacht', taxFarmHint: 'Kaufe das Recht, ein Jahr lang alle Hafenzölle einzunehmen.', buyTaxFarm: 'Zollpacht erwerben ({cost} Mark)', taxFarmActive: 'Du hältst die Zollpacht noch {days} Tage.',
+    taxFarmBought: 'Du hast die Zollpacht für {days} Tage erworben.', taxFarmEnded: 'Deine Zollpacht ist abgelaufen.', bathClosed: 'Das Badehausverbot schließt dein Badehaus.',
+    levy: 'Der Rat verlangt eine Abgabe von {amount} Mark (noch {days} Tage).', payLevy: 'Abgabe zahlen', levyDemand: 'Der Rat erhebt eine Sonderabgabe von {amount} Mark.', levyIgnored: 'Du hast die Abgabe nicht gezahlt. Dein Ruf leidet.',
+    /* Kirche */
+    church: 'Kirche St. Nikolai', churchHint: 'Frömmigkeit öffnet Türen: die Kirche kauft Wachs und Wein, der Bischof lobt dich, und Ablässe tilgen Verdacht.',
+    donate: 'Spenden', donateAmount: 'Spende ({amount} Mark)', indulgence: 'Ablass kaufen ({cost} Mark, −20 Verdacht)', churchSupply: 'Die Kirche braucht diese Woche', supply: 'Liefern ({qty} Last, {price} Mark/Last)',
+    churchProjects: 'Stiftungen', sermonFavor: 'Predigt zu deinen Gunsten (500 Mark, +8 Ruf)', sermonAgainst: 'Predigt gegen einen Konkurrenten (800 Mark)',
+    sermonAgainstLog: 'Pater Anselm predigt gegen {rival}.', bishopPleased: 'Der Bischof besucht Sundhaven und lobt deine Frömmigkeit.', bishopDispleased: 'Der Bischof besucht Sundhaven und rügt deinen Lebenswandel.',
+    /* Zoll */
+    customs: 'Zollhaus', customsHint: 'Der Zöllner {name} erhebt {rate} % Zoll auf Einfuhren und die Hälfte auf Ausfuhren. Je mehr er dich mag, desto mehr drückt er ein Auge zu (derzeit {disc} % Nachlass).',
+    smuggleStats: 'Bisher am Zoll vorbeigeschmuggelt: {amount} Mark.', smuggleCaught: 'Beim Schmuggeln erwischt! Strafe: {fine} Mark.',
+    /* Gilde */
+    guild: 'Gildehaus', guildHint: 'Die Gilde vergibt Lizenzen für Werkstätten. Mitgliedschaft: {fee} Mark.', joinGuild: 'Der Gilde beitreten ({fee} Mark)', member: 'Mitglied', licenses: 'Lizenzen', buyLicense: 'Lizenz ({cost} Mark)', licensed: 'lizenziert',
+    /* Werkstatt */
+    workshop: 'Werkstatt', workshopEmpty: 'Unbebautes Grundstück. Mit Gildelizenz kannst du hier einen Betrieb errichten.', build: 'Bauen ({cost} Mark)', produces: 'erzeugt {qty} Last {good}/Tag', consumes: 'verbraucht {inp}',
+    wage: 'Löhne {wage} Mark/Tag', idle: 'steht still – Rohstoffe fehlen im Lager', running: 'in Betrieb', demolish: 'Abreißen', workshopBuilt: '{workshop} errichtet.',
+    /* Haus */
+    house: 'Wohnhaus', houseOwnerNpc: 'Im Besitz eines Bürgers. Kaufpreis: {price} Mark.', buyHouse: 'Kaufen ({price} Mark)', rentPerDay: 'Miete {rent} Mark/Tag', level: 'Ausbaustufe {level}',
+    upgradeHouse: 'Ausbauen ({cost} Mark, +12 Mark/Tag)', sellHouse: 'Verkaufen ({price} Mark)', damaged: 'Brandschaden – keine Miete', repairHouse: 'Reparieren (800 Mark)', yours: 'Dein Besitz',
+    /* Taverne */
+    tavern: 'Taverne „Zum Goldenen Hering“', tavernHint: 'Hier gibt es Gerüchte, Würfel und Leute, die für Geld alles tun.', rumor: 'Gerücht kaufen ({cost} Mark)', rumors: 'Was man so hört',
+    rumorShip: 'Ein Schiff aus {origin} soll in {days} Tagen einlaufen, mit {goods}.', rumorCaravan: 'Eine Karawane aus {origin} wird in {days} Tagen erwartet, mit {goods}.', rumorNothing: 'Nichts Neues – nur Klatsch über den Bürgermeister.',
+    gamble: 'Würfeln', bet: 'Einsatz', gambleWon: 'Gewonnen! {bet} Mark dazu.', gambleLost: 'Verloren. {bet} Mark weg.', hire: 'Anheuern', hireSpy: 'Spitzel (600 Mark, 60 Tage): zeigt das wahre Wohlwollen des Rats',
+    spyActive: 'Dein Spitzel berichtet noch {days} Tage.', hireThugsCollect: 'Schläger: säumigen Schuldner eintreiben (900 Mark)', hireThugsSabotage: 'Schläger: {rival} schaden (900 Mark)',
+    thugsCollected: 'Die Schläger haben {amount} Mark von {name} eingetrieben.', thugsFailed: '{name} ist untergetaucht – die Schläger kamen mit leeren Händen.', thugsNothing: 'Es gibt keinen säumigen Schuldner.',
+    sabotageOk: 'Ein Lagerbrand hat {rival} schwer getroffen.', sabotageFailed: 'Die Schläger wurden gefasst und haben dich verraten – {rival} weiß Bescheid.',
+    buyTavern: 'Taverne kaufen ({cost} Mark)', tavernOwned: 'Deine Taverne bringt {income} Mark/Tag (mehr, wenn Schiffe im Hafen liegen).',
+    /* Geldwechsler */
+    bank: 'Geldwechsler', yourLoan: 'Dein Darlehen', loanLimit: 'Kreditrahmen', takeLoan: 'Aufnehmen', repay: 'Zurückzahlen', interestInfo: 'Zins {pct} % pro Jahr',
+    lending: 'Geld verleihen', lendingHint: 'Bürger suchen Kredit. Hoher Zins heißt hohes Risiko. Bei geltendem Wucherverbot macht dich jedes Darlehen verdächtig.', lend: 'Verleihen',
+    borrower: 'Schuldner', interest: 'Zins', term: 'Laufzeit {days} Tage', risk: 'Risiko', risk_low: 'gering', risk_mid: 'mittel', risk_high: 'hoch', outstanding: 'Laufende Darlehen', dueIn: 'fällig in {days} Tagen',
+    defaulted: 'säumig', loanDefault: '{name} kann {amount} Mark nicht zurückzahlen.', loanRepaid: '{name} zahlt {amount} Mark zurück.', usuryWarning: 'Wucherverbot gilt!',
+    /* Vogtei */
+    bailiff: 'Vogtei', bailiffHint: 'Der Vogt {name} wacht über Recht und Ordnung. Bei hohem Verdacht ermittelt er; ab 85 kommt es zum Prozess.', noInvestigation: 'Gegen dich liegt nichts vor.',
+    investigation: 'Der Vogt ermittelt gegen dich – noch {days} Tage bis zum Urteil.', bribeBailiff: 'Vogt bestechen ({cost} Mark)', investigationOpened: 'Der Vogt hat Ermittlungen gegen dich eröffnet.',
+    investigationDropped: 'Die Ermittlungen wurden eingestellt.', bribeRefused: 'Der Vogt weist dein Geld zurück – und merkt es sich.', investigationFine: 'Der Vogt verurteilt dich zu {fine} Mark Strafe.',
+    trial: 'Prozess vor dem Rat! {fine} Mark Strafe, Ämter verloren, Ruf ruiniert.',
+    /* Werft, Fischer, Tor */
+    shipyard: 'Werft', shipyardHint: 'Werftmeister {name} baut Koggen für Handelsfahrten und Fischerboote.', buyShip: 'Kogge bauen ({cost} Mark, 120 Last)', buyBoat: 'Fischerboot ({cost} Mark, {fish} Fisch/Tag)', boats: 'Fischerboote',
+    fishermen: 'Fischerhütten', fishermenHint: 'Die Fischer verkaufen ihren Fang billig direkt vom Steg. Heute: {qty} Last zu {price} Mark.', buyFish: 'Fisch kaufen',
+    gate: 'Stadttor', gateHint: 'Karawanen vom Landweg lagern vor dem Tor.', caravans: 'Karawanen', noCaravans: 'Vor dem Tor lagert zurzeit niemand.', caravanFrom: 'Karawane aus {origin}',
+    /* Ereignisse */
+    shipArrived: '{ship} aus {origin} ist eingelaufen.', caravanArrived: 'Eine Karawane aus {origin} hat das Tor erreicht.', shipLeftNoBerth: 'Ein Schiff aus {origin} fand keinen Liegeplatz und segelte weiter.',
+    ev_famine: 'Hungersnot in Sundhaven! Getreide und Fisch sind gefragt.', ev_plague: 'Die Pest ist in der Stadt. Die Straßen leeren sich.', ev_goodCatch: 'Reicher Fang! Fisch ist billig.', ev_fair: 'Jahrmarkt in Sundhaven – Tuch, Pelze und Gewürze gefragt.',
+    evn_famine: 'Hungersnot', evn_plague: 'Pest', evn_goodCatch: 'Reicher Fang', evn_fair: 'Jahrmarkt', fireHouse: 'Feuer! {house} ist ausgebrannt.', fireWarehouse: 'Feuer im Hafenviertel – ein Zehntel deines Lagers ist verbrannt.',
+    piratesRepelled: 'Vitalienbrüder vor der Küste! Die Stadtmauer hält sie fern.', piratesRaid: 'Vitalienbrüder plündern den Hafen! Schiffe fliehen, Lager brennen.', stormEvent: 'Schwerer Sturm auf See. Schiffe verspäten sich.',
+    expeditionPirates: '{ship} wurde von Piraten ausgeraubt.', shipSent: '{ship} segelt nach {dest}.', shipReturned: '{ship} ist zurück: {revenue} Mark Erlös, Rückfracht {cargo}.',
+    season_lent: 'Fastenzeit', season_easter: 'Ostern', season_midsummer: 'Johannisfest', season_michaelmas: 'Michaelis', season_christmas: 'Weihnachten',
+    promoted: 'Man nennt dich nun {rank}.', won: 'Du bist Bürgermeister, reichster Mann der Stadt und Herr von Sundhaven!', bankrupt: 'Du bist bankrott. Die Gläubiger übernehmen dein Kontor.', gameOver: 'Spiel vorbei',
+    welcome: 'Willkommen in Sundhaven, {name}! Zwei Schiffe liegen im Hafen, eine Karawane vor dem Tor. Klicke auf Gebäude und Menschen.',
+    /* Begegnungen */
+    encBeggar: 'Ein Bettler streckt dir die Hand entgegen. „Ein Almosen, Herr, um Gottes willen.“', encMonk: 'Ein Bettelmönch bittet um eine Gabe für das Kloster.', alms: 'Geben ({cost} Mark)',
+    encMerchantTip: 'Ein Kaufmann raunt: „{good}? Auf dem Markt herrscht {label}.“', encMerchant: 'Ein Kaufmann grüßt knapp und eilt zum Hafen.', encFisher: 'Ein Fischer bietet dir 10 Last Fisch unter der Hand an.', cheapFish: 'Nehmen ({cost} Mark)',
+    encFisherTalk: 'Ein Fischer klagt über die Vitalienbrüder und die Preise für Salz.', encGuard: 'Die Stadtwache nickt dir zu.', encGuardSuspicious: 'Die Wache mustert dich lange. Man redet über dich.', encChild: 'Kinder spielen Fangen und rennen dir fast in die Beine.',
+    encGossip: 'Eine Bürgerin tuschelt: Ratsherr {name} sei dir {loyalty}.', gossipFriendly: 'wohlgesonnen', gossipCold: 'nicht grün', encCitizenRep: 'Ein Bürger grüßt. Dein Ruf in der Stadt liegt bei {rep}.', encCitizen: 'Ein Bürger wünscht einen guten Tag.', bathhouse: 'Badehaus', buyBathhouse: 'Badehaus kaufen ({cost} Mark)', leader: 'Karawanenführer', movesOn: 'zieht in {days} Tagen weiter',
+    enc_citizen_label: 'Bürger', enc_merchant_label: 'Kaufmann', enc_fisher_label: 'Fischer', enc_beggar_label: 'Bettler', enc_monk_label: 'Mönch', enc_guard_label: 'Stadtwache', enc_child_label: 'Kinder',
+    /* Übersicht */
+    overview: 'Übersicht', goals: 'Ziel: Werde Bürgermeister, häufe 500.000 Mark Reinvermögen an und überflügle alle Konkurrenten.', richest: 'Die Reichsten der Stadt', you: 'du', incomeSources: 'Deine Einnahmequellen',
+    dailyIncome: 'Ø Tageseinnahmen', chart: 'Reinvermögen im Verlauf', noLog: 'Noch nichts geschehen.', activeEvents: 'Zurzeit in der Stadt', personsTitle: 'Wichtige Leute',
+    legend: 'Klicke auf Gebäude, Schiffe, Karawanen und Passanten.', timeOfDay: 'Tageszeit', night: 'Nacht', morning: 'Morgen', noon: 'Mittag', evening: 'Abend',
+    helpTitle: 'Wie man Herr von Sundhaven wird',
+    helpText: `<p><b>Das Spiel:</b> Du bist Kaufmann in Sundhaven. Klicke auf Gebäude, Schiffe, Karawanen und Passanten, um zu handeln, zu verhandeln und zu intrigieren. Die Zeit läuft in Tagen; mit den Knöpfen oben regelst du das Tempo.</p>
+<p><b>Handel:</b> Schiffe und Karawanen bringen Waren billig und suchen andere teuer. Kaufe ihre Ware, verkaufe sie auf dem Markt an die Bürger – oder liefere Marktware an die Schiffe. Der Zoll frisst einen Teil; ein wohlgesonnener Zöllner oder nächtlicher Schmuggel hilft.</p>
+<p><b>Geld verdienen:</b> Handel, eigene Kogge auf Fahrt, Werkstätten (Gildelizenz nötig), Mietshäuser, Marktstände, Fischerboote, Geldverleih, Taverne, Badehaus, Zollpacht, Ämter, Würfelspiel und Lieferungen an die Kirche.</p>
+<p><b>Macht:</b> Im Rathaus sitzen sechs Ratsherren. Geschenke heben ihr Wohlwollen, Einfluss stellt Anträge zu Zoll, Marktgebühr, Wucherverbot, Stapelrecht, Badehausverbot und Monopolen. Mit Ruf und Freunden im Rat wirst du Ratsherr und Bürgermeister.</p>
+<p><b>Kirche:</b> Spenden, Stiftungen und Lieferungen heben deine Frömmigkeit. Der Pfarrer predigt für dich – oder gegen deine Konkurrenten. Ablässe tilgen Verdacht.</p>
+<p><b>Verdacht:</b> Bestechung, Schmuggel, Wucher und Schläger fallen auf. Ab 50 ermittelt der Vogt, ab 85 gibt es einen Prozess. Der Vogt lässt sich bestechen – meistens.</p>
+<p><b>Ziel:</b> Bürgermeister werden, 500.000 Mark Reinvermögen und reicher als alle Konkurrenten. Bankrott nach 60 Tagen mit leerer Kasse.</p>`,
   },
   en: {
-    title: 'Hanse-Kontor', subtitle: 'A trading simulation in the Hanseatic League, anno 1370',
-    newGame: 'New game', continueGame: 'Continue', save: 'Save', load: 'Load', exportSave: 'Export', importSave: 'Import',
-    help: 'Help', language: 'Language', saved: 'Game saved.', loaded: 'Game loaded.', noSave: 'No saved game found.',
-    importError: 'The file could not be read.', confirmNewGame: 'Discard the current game and start over?',
-    playerName: 'Your name', homeCity: 'Home city', difficulty: 'Difficulty', easy: 'Easy', normal: 'Normal', hard: 'Hard',
-    start: 'Set sail!', defaultName: 'Hinrich Castorp',
-    diffHint_easy: '15,000 marks, a cog, rare events.', diffHint_normal: '8,000 marks, a cog.', diffHint_hard: '4,000 marks, only a snekkja, rough seas.',
-    day: 'Day', money: 'Funds', rank: 'Rank', pause: 'Pause', speed1: 'Slow', speed2: 'Normal', speed3: 'Fast', stepDay: 'Advance one day',
-    tabCity: 'City', tabShips: 'Ships', tabKontors: 'Offices', tabBank: 'Bank & Council', tabLog: 'Chronicle', tabStats: 'Statistics',
-    population: 'Population', reputation: 'Reputation', market: 'Market', good: 'Good', stock: 'Stock', buy: 'Buy', sell: 'Sell',
-    buyPrice: 'Buy', sellPrice: 'Sell', trend: 'Demand', shortage: 'shortage', surplus: 'surplus', normalDemand: 'covered',
-    qty: 'Quantity', all: 'All', max: 'Max', shipsHere: 'Ships in port', noShipHere: 'None of your ships is in port.', selectShip: 'Trading ship',
-    cargo: 'Cargo', capacity: 'Hold', free: 'free', hull: 'Condition', crew: 'Crew', weapons: 'Armament', speed: 'Speed',
-    sailTo: 'Sail to', depart: 'Depart', travelDays: '{days} days', arrivesIn: 'Arrives in {days} days', atSea: 'At sea to {city}', docked: 'In port at {city}',
-    noShips: 'You own no ships.', shipyard: 'Shipyard', buildShip: 'Build ship', repair: 'Repair', repairCost: 'Repair ({cost} marks)',
-    buyWeapons: 'Arm ship ({cost} marks)', sellShip: 'Sell ship ({price} marks)', rename: 'Rename', newShipName: 'Name of the ship',
-    noShipyard: 'This city has no shipyard.', notEnoughMoney: 'Not enough money.', shipFull: 'Not enough hold space.', notEnoughStock: 'The city does not have enough stock.',
-    notEnoughCargo: 'Not enough cargo.', bought: 'Bought {qty} lasts of {good} for {cost} marks.', sold: 'Sold {qty} lasts of {good} for {cost} marks.',
-    kontor: 'Trading office', buildKontor: 'Establish office ({cost} marks)', kontorNeedsRep: 'An office requires a reputation of at least {rep}.', noKontor: 'You have no office here.',
-    storage: 'Warehouse', storageCap: 'Storage', expandStorage: 'Expand warehouse (+{qty} lasts, {cost} marks)', toKontor: 'To warehouse', toShip: 'To ship',
-    storageFull: 'The warehouse is full.', manager: 'Steward', managerHint: 'The steward trades up to {qty} lasts per good each day at your limit prices.',
-    modeNone: '–', modeBuy: 'Buy below', modeSell: 'Sell above', limit: 'Limit price', perDay: 'lasts/day',
-    buildings: 'Workshops', build: 'Build', buildingCost: '{cost} marks, upkeep {upkeep} marks/day', produces: 'produces {qty} lasts of {good}/day',
-    consumes: 'consumes {qty} lasts of {good}/day', maxBuildings: 'At most {n} workshops per office.', demolish: 'Demolish', noBuildingsHere: 'No workshop can be built here.',
-    noInput: 'missing input', built: '{building} built in {city}.', kontorBuilt: 'Office established in {city}.',
-    donate: 'Donations', donateChurch: 'Donate to the church ({cost} marks)', donatePoor: 'Feed the poor ({cost} marks)', donated: 'Your reputation in {city} rises.',
-    bank: 'Bank', loan: 'Loan', loanLimit: 'Credit limit', takeLoan: 'Borrow', repayLoan: 'Repay', interest: 'Interest {pct} % per year',
-    loanTaken: 'Borrowed {amount} marks.', loanRepaid: 'Repaid {amount} marks.', loanTooHigh: 'Your credit limit is insufficient.',
-    council: 'Hanseatic council', rankReq: 'Requirements for {rank}', netWorth: 'Net worth', reqRep: 'Reputation in {city}', reqKontors: 'Offices', promoted: 'You have been named {rank}!',
-    homeCityLabel: 'Home city', kontorCount: 'Offices', shipCount: 'Ships', profitTotal: 'Total trading profit', tradeVolume: 'Total turnover', daysPlayed: 'Days played',
-    chart: 'Net worth over time', log: 'Chronicle', noLog: 'Nothing has happened yet.',
-    ev_famine: 'Famine in {city}! Grain and fish are in demand.', ev_plague: 'The plague rages in {city}.', ev_festival: 'Festival in {city} – beer and wine flow.',
-    ev_fire: 'Great fire in {city}! Timber is urgently needed.', ev_goodHarvest: 'Rich harvest in {city}.', ev_fair: 'Fair in {city} – cloth and furs are sought after.',
-    evn_famine: 'Famine', evn_plague: 'Plague', evn_festival: 'Festival', evn_fire: 'Great fire', evn_goodHarvest: 'Rich harvest', evn_fair: 'Fair',
-    arrived: '{ship} has arrived in {city}.', storm: 'Storm! {ship} takes {dmg} % damage.', sunk: '{ship} has sunk with all hands!', hullWarning: '{ship} is badly damaged – head for a shipyard!',
-    piratesRepelled: '{ship} has repelled pirates.', piratesLoot: 'Pirates have plundered {ship} and stolen cargo.', piratesRansom: '{ship} pays {amount} marks ransom to pirates.',
-    routeTrade: '{ship} in {city}: sold {sold} lasts, bought {bought} lasts.', bankrupt: 'You are bankrupt. Your creditors seize your office.',
-    won: 'You are Alderman of the Hansa! Your name is carved in stone in Lübeck.', continuePlay: 'Keep playing', gameOver: 'Game over',
-    managerSold: 'Steward in {city}: sold {qty} lasts of {good}.', managerBought: 'Steward in {city}: bought {qty} lasts of {good}.',
-    route: 'Trade route', routeEdit: 'Edit route', routeStart: 'Start route', routeStop: 'Stop route', routeActive: 'Route active', routeNone: 'No route',
-    routeStops: 'Stops', addStop: 'Add stop', removeStop: 'Remove', routeHint: 'At each stop the ship first sells/unloads, then buys/loads. The route repeats forever.',
-    modeUnload: 'To warehouse', modeLoad: 'From warehouse', maxPrice: 'max. price', minPrice: 'min. price', apply: 'Apply', cancel: 'Cancel', close: 'Close', ok: 'OK',
-    routeNeedsStops: 'A route needs at least two stops.', ship: 'Ship', location: 'Location', status: 'Status', value: 'Value',
-    weaponsLevel: 'Level {lvl}', maxWeapons: 'Already fully armed.', shipSold: 'Sold {ship} for {price} marks.', shipBuilt: '{ship} launched in {city}.',
-    cargoValue: 'Cargo (base value)', selectCity: 'Select a city on the map.', yes: 'Yes', no: 'No',
-    unitLast: 'lasts', mark: 'marks', perLast: 'marks/last', helpTitle: 'How to become a Hanseatic merchant',
-    helpText: `<p><b>Goal:</b> Become Alderman of the Hansa. You need a net worth of 1,000,000 marks, high reputation in your home city and offices in six cities.</p>
-<p><b>Trading:</b> Click a city on the map. If one of your ships is in port you can buy and sell goods. Cities produce some goods cheaply (surplus) and urgently need others (shortage). Buy low, sail, sell high. Every purchase raises the price, every sale lowers it.</p>
-<p><b>Ships:</b> Pick a destination under "Ships" and depart. Fast ships carry less. Storms and pirates threaten at sea – armament helps. Repair damaged ships at a shipyard.</p>
-<p><b>Offices:</b> With enough reputation you can establish a trading office with a warehouse. A steward trades there daily at your limit prices. Workshops produce goods straight into the warehouse.</p>
-<p><b>Routes:</b> Give a ship a trade route with stops and orders and it will sail on its own.</p>
-<p><b>Reputation:</b> Rises when you deliver goods in short supply or donate. It lowers purchase prices and unlocks higher ranks.</p>
-<p><b>Bank:</b> Loans help you grow but cost interest daily. If you are insolvent for 60 days, the game is lost.</p>
-<p><b>Saving:</b> The game autosaves in your browser. Use "Export" to save your game as a file.</p>`,
-    season: { 0: 'Winter', 1: 'Spring', 2: 'Summer', 3: 'Autumn' }, welcome: 'Welcome to {city}, {name}! Your {ship} lies in port. Good luck.',
-    toastArrival: 'Arrival', eventsHere: 'Event', ships: 'Ships', cities: 'Cities', legend: 'Legend', legendCity: 'City', legendKontor: 'City with office', legendShip: 'Your ship',
-    confirmSellShip: 'Really sell the ship {ship}?', confirmDemolish: 'Really demolish this workshop?', noRouteStopsHint: 'No stops yet.', stop: 'Stop',
-    orders: 'Orders', capacityHint: '{used} / {cap} lasts', dailyCost: 'Daily costs', wages: 'Wages', upkeep: 'Upkeep', interestCost: 'Interest',
-    lastsDays: '{days} days left', shipTypeInfo: '{capacity} lasts, {speed} km/day, {crew} men',
+    title: 'Hanse-Kontor', subtitle: 'Sundhaven, anno 1372. A small Hanseatic town, a harbour, and your road to power.',
+    newGame: 'New game', continueGame: 'Continue', continuePlay: 'Keep playing', save: 'Save', load: 'Load', exportSave: 'Export', importSave: 'Import',
+    help: 'Help', saved: 'Game saved.', loaded: 'Game loaded.', noSave: 'No saved game found.', importError: 'The file could not be read.',
+    confirmNewGame: 'Discard the current game and start over?', playerName: 'Your name', difficulty: 'Difficulty', easy: 'Easy', normal: 'Normal', hard: 'Hard', defaultName: 'Hinrich Castorp',
+    diffHint_easy: '12,000 marks, calm times, many ships.', diffHint_normal: '6,000 marks.', diffHint_hard: '3,000 marks, rough times, few ships.',
+    day: 'Day', money: 'Cash', rank: 'Rank', pause: 'Pause', speed1: 'Slow', speed2: 'Normal', speed3: 'Fast', stepDay: 'Advance one day', mark: 'marks', unitLast: 'lasts',
+    rep: 'Reputation', influence: 'Influence', piety: 'Piety', suspicion: 'Suspicion', prosperity: 'Prosperity', population: 'Population', netWorth: 'Net worth',
+    tabOverview: 'Overview', tabLog: 'Chronicle', tabHelp: 'Help', back: 'Back', close: 'Close', cancel: 'Cancel', ok: 'OK', yes: 'Yes', no: 'No', none: 'none',
+    shortage: 'shortage', surplus: 'surplus', normalDemand: 'covered', good: 'Good', qty: 'Quantity', price: 'Price', stock: 'Stock', buy: 'Buy', sell: 'Sell', max: 'Max',
+    warehouse: 'Warehouse', warehouseCap: 'Storage', capacityHint: '{used} / {cap} lasts', expandWarehouse: 'Expand warehouse (+{qty} lasts, {cost} marks)', empty: 'empty',
+    notEnoughStock: 'Not enough stock.', warehouseFull: 'The warehouse is full.', notEnoughMoney: 'Not enough money.', notWanted: 'They do not want that much.', notEnoughCargo: 'Not enough in the warehouse.',
+    monopolyBlocked: 'A rival holds the monopoly on this good.', marketSaturated: 'The townspeople will not take more today.', marketCapHint: 'today', pietyTooLow: 'The church only deals with pious merchants (piety 40).', needLoyalty: 'He would need to like you more for that.',
+    needInfluence: 'You need 20 influence for a motion.', needRep: 'Your reputation is not high enough.', needGuild: 'Only guild members receive licences.', needLicense: 'You lack the guild licence.',
+    loanTooHigh: 'Your credit limit is insufficient.', maxShips: 'The harbour cannot hold more than three of your ships.', shipDamaged: 'The ship must be repaired first.', shipFull: 'The ship is full (120 lasts).',
+    harbour: 'Harbour', shipsInPort: 'Ships in port', noShips: 'No foreign ship is in port right now.', fromOrigin: 'from {origin}', captain: 'Captain', leavesIn: 'leaves in {days} days',
+    offers: 'Offers', wants: 'Wants', tariffInfo: 'Tariff: {rate} % (your discount through the customs officer: {disc} %)', smuggle: 'Smuggle at night (no tariff)', smuggleHint: 'No tariff, but the customs officer might catch you.',
+    bought: 'Bought {qty} lasts of {good} for {cost} marks.', sold: 'Sold {qty} lasts of {good} for {cost} marks.', smuggledOk: 'Smuggled, saved {saved} marks of duty.',
+    ownShips: 'Your ships', noOwnShips: 'You own no ship. The shipyard will build one.', inPort: 'in port', away: 'bound for {dest}, back in {days} days', cargo: 'Cargo',
+    loadShip: 'Load', unloadShip: 'Unload', sendShip: 'Send on voyage', destination: 'Destination', bringBack: 'Return cargo', expeditionHint: 'The ship sells its cargo at the destination (wanted goods fetch up to 1.5× base price) and buys the return cargo cheaply with the proceeds.',
+    daysTrip: '{days} days round trip', repairShip: 'Repair ({cost} marks)', sellShip: 'Sell ({price} marks)', hull: 'Condition',
+    market: 'Market square', marketHint: 'Sell to the townspeople here and buy what the town produces. They only take limited quantities per day; market stalls raise volume and price. Market fee: {fee} %.', stalls: 'Market stalls', buyStall: 'Lease a stall ({cost} marks, +4 % price, +50 % volume)',
+    monopolyYours: 'You hold the monopoly on {good} (+35 % price).', demand: 'Demand', buyPrice: 'Buy', sellPrice: 'Sell',
+    kontor: 'Office', ledger: 'Ledger (last 30 days)', income: 'Income', expenses: 'Expenses', balance: 'Balance', assets: 'Assets',
+    src_shipTrade: 'Ship & caravan trade', src_market: 'Market trade', src_tariffs: 'Tariffs', src_rent: 'Rent', src_tavern: 'Tavern', src_bathhouse: 'Bathhouse', src_lending: 'Money lending', src_expedition: 'Trading voyages',
+    src_taxFarm: 'Tax farm', src_office: 'Office', src_gambling: 'Gambling', src_church: 'Church & alms', src_wages: 'Wages', src_interest: 'Interest', src_bribes: 'Gifts & bribes', src_fines: 'Fines',
+    src_investments: 'Purchases & building', src_politics: 'Politics', src_loans: 'Loans',
+    townhall: 'Town hall', council: 'The council', yourSeat: 'Your seat', seat_none: 'no seat', seat_councillor: 'Councillor', seat_mayor: 'Mayor', loyalty: 'Goodwill', faction: 'Faction',
+    giveGift: 'Gift ({cost} marks)', giftDone: '{name} accepts your gift graciously.', laws: 'Laws', current: 'currently', propose: 'Propose motion (20 influence)',
+    motionPassed: 'Motion passed: {law} → {value} ({yes}:{no}).', motionFailed: 'Motion rejected: {law} → {value} ({yes}:{no}).', lawHint_tariff: 'A low tariff makes your ship trade cheaper; a high one fills the tax farm.',
+    lawHint_marketFee: 'Deducted from every market sale.', lawHint_usuryBan: 'Money lending becomes suspicious while the ban is in force.', lawHint_staple: 'More ships call at the harbour.',
+    lawHint_bathBan: 'Closes the bathhouse.', lawHint_monopoly: 'Only the monopoly holder may sell this good – at a premium.',
+    runCouncillor: 'Run for a council seat (3,000 marks, reputation 35, three friendly councillors)', runMayor: 'Run for mayor (6,000 marks, reputation 55, four friendly councillors)',
+    becameCouncillor: 'You now sit on the council of Sundhaven.', becameMayor: 'You are Mayor of Sundhaven!', electionLost: 'You lost the vote: only {support} of {need} councillors backed you.',
+    acceptBribes: 'Accept bribes as office holder (+money, +suspicion)', projects: 'Town projects', fund: 'Fund ({cost} marks)', funded: 'funded', projectDone: '{project} completed.',
+    taxFarm: 'Tax farm', taxFarmHint: 'Buy the right to collect all harbour tariffs for one year.', buyTaxFarm: 'Buy tax farm ({cost} marks)', taxFarmActive: 'You hold the tax farm for {days} more days.',
+    taxFarmBought: 'You bought the tax farm for {days} days.', taxFarmEnded: 'Your tax farm has expired.', bathClosed: 'The bathhouse ban closes your bathhouse.',
+    levy: 'The council demands a levy of {amount} marks ({days} days left).', payLevy: 'Pay levy', levyDemand: 'The council raises a special levy of {amount} marks.', levyIgnored: 'You did not pay the levy. Your reputation suffers.',
+    church: 'St Nicholas Church', churchHint: 'Piety opens doors: the church buys wax and wine, the bishop praises you, and indulgences wash away suspicion.',
+    donate: 'Donate', donateAmount: 'Donate {amount} marks', indulgence: 'Buy indulgence ({cost} marks, −20 suspicion)', churchSupply: 'The church needs this week', supply: 'Deliver ({qty} lasts, {price} marks/last)',
+    churchProjects: 'Endowments', sermonFavor: 'Sermon in your favour (500 marks, +8 reputation)', sermonAgainst: 'Sermon against a rival (800 marks)',
+    sermonAgainstLog: 'Father Anselm preaches against {rival}.', bishopPleased: 'The bishop visits Sundhaven and praises your piety.', bishopDispleased: 'The bishop visits Sundhaven and rebukes your way of life.',
+    customs: 'Customs house', customsHint: 'Customs officer {name} levies {rate} % on imports and half of that on exports. The more he likes you, the more he looks away (currently {disc} % discount).',
+    smuggleStats: 'Smuggled past customs so far: {amount} marks.', smuggleCaught: 'Caught smuggling! Fine: {fine} marks.',
+    guild: 'Guild hall', guildHint: 'The guild grants workshop licences. Membership: {fee} marks.', joinGuild: 'Join the guild ({fee} marks)', member: 'Member', licenses: 'Licences', buyLicense: 'Licence ({cost} marks)', licensed: 'licensed',
+    workshop: 'Workshop', workshopEmpty: 'Empty plot. With a guild licence you can build a workshop here.', build: 'Build ({cost} marks)', produces: 'produces {qty} lasts of {good}/day', consumes: 'consumes {inp}',
+    wage: 'Wages {wage} marks/day', idle: 'idle – inputs missing in warehouse', running: 'running', demolish: 'Demolish', workshopBuilt: '{workshop} built.',
+    house: 'House', houseOwnerNpc: 'Owned by a citizen. Price: {price} marks.', buyHouse: 'Buy ({price} marks)', rentPerDay: 'Rent {rent} marks/day', level: 'Level {level}',
+    upgradeHouse: 'Upgrade ({cost} marks, +12 marks/day)', sellHouse: 'Sell ({price} marks)', damaged: 'Fire damage – no rent', repairHouse: 'Repair (800 marks)', yours: 'Yours',
+    tavern: 'The Golden Herring Tavern', tavernHint: 'Rumours, dice, and people who will do anything for money.', rumor: 'Buy a rumour ({cost} marks)', rumors: 'Word on the street',
+    rumorShip: 'A ship from {origin} is said to arrive in {days} days, carrying {goods}.', rumorCaravan: 'A caravan from {origin} is expected in {days} days, with {goods}.', rumorNothing: 'Nothing new – only gossip about the mayor.',
+    gamble: 'Roll dice', bet: 'Stake', gambleWon: 'You won! {bet} marks gained.', gambleLost: 'You lost {bet} marks.', hire: 'Hire', hireSpy: 'Spy (600 marks, 60 days): reveals the true goodwill of the council',
+    spyActive: 'Your spy reports for {days} more days.', hireThugsCollect: 'Thugs: collect from a defaulting debtor (900 marks)', hireThugsSabotage: 'Thugs: harm {rival} (900 marks)',
+    thugsCollected: 'The thugs collected {amount} marks from {name}.', thugsFailed: '{name} has gone into hiding – the thugs came back empty-handed.', thugsNothing: 'There is no defaulting debtor.',
+    sabotageOk: 'A warehouse fire has hit {rival} hard.', sabotageFailed: 'The thugs were caught and gave you away – {rival} knows.',
+    buyTavern: 'Buy the tavern ({cost} marks)', tavernOwned: 'Your tavern earns {income} marks/day (more when ships are in port).',
+    bank: 'Money changer', yourLoan: 'Your loan', loanLimit: 'Credit limit', takeLoan: 'Borrow', repay: 'Repay', interestInfo: 'Interest {pct} % per year',
+    lending: 'Lend money', lendingHint: 'Citizens seek credit. High interest means high risk. Under a usury ban every loan makes you suspicious.', lend: 'Lend',
+    borrower: 'Borrower', interest: 'Interest', term: 'Term {days} days', risk: 'Risk', risk_low: 'low', risk_mid: 'medium', risk_high: 'high', outstanding: 'Outstanding loans', dueIn: 'due in {days} days',
+    defaulted: 'in default', loanDefault: '{name} cannot repay {amount} marks.', loanRepaid: '{name} repays {amount} marks.', usuryWarning: 'Usury ban in force!',
+    bailiff: "Bailiff's court", bailiffHint: 'Bailiff {name} keeps law and order. At high suspicion he investigates; at 85 you stand trial.', noInvestigation: 'There is nothing against you.',
+    investigation: 'The bailiff is investigating you – {days} days until the verdict.', bribeBailiff: 'Bribe the bailiff ({cost} marks)', investigationOpened: 'The bailiff has opened an investigation against you.',
+    investigationDropped: 'The investigation has been dropped.', bribeRefused: 'The bailiff refuses your money – and remembers it.', investigationFine: 'The bailiff fines you {fine} marks.',
+    trial: 'Trial before the council! {fine} marks fine, offices lost, reputation ruined.',
+    shipyard: 'Shipyard', shipyardHint: 'Shipwright {name} builds cogs for trading voyages and fishing boats.', buyShip: 'Build a cog ({cost} marks, 120 lasts)', buyBoat: 'Fishing boat ({cost} marks, {fish} fish/day)', boats: 'Fishing boats',
+    fishermen: "Fishermen's huts", fishermenHint: 'The fishermen sell their catch cheaply straight from the pier. Today: {qty} lasts at {price} marks.', buyFish: 'Buy fish',
+    gate: 'Town gate', gateHint: 'Caravans from the overland road camp outside the gate.', caravans: 'Caravans', noCaravans: 'Nobody is camped outside the gate right now.', caravanFrom: 'Caravan from {origin}',
+    shipArrived: '{ship} from {origin} has arrived.', caravanArrived: 'A caravan from {origin} has reached the gate.', shipLeftNoBerth: 'A ship from {origin} found no berth and sailed on.',
+    ev_famine: 'Famine in Sundhaven! Grain and fish are in demand.', ev_plague: 'The plague is in town. The streets empty.', ev_goodCatch: 'A rich catch! Fish is cheap.', ev_fair: 'Fair in Sundhaven – cloth, furs and spices in demand.',
+    evn_famine: 'Famine', evn_plague: 'Plague', evn_goodCatch: 'Rich catch', evn_fair: 'Fair', fireHouse: 'Fire! {house} has burnt out.', fireWarehouse: 'Fire in the harbour quarter – a tenth of your stock has burnt.',
+    piratesRepelled: 'Victual Brothers off the coast! The town wall keeps them away.', piratesRaid: 'Victual Brothers raid the harbour! Ships flee, warehouses burn.', stormEvent: 'Heavy storm at sea. Ships are delayed.',
+    expeditionPirates: '{ship} was robbed by pirates.', shipSent: '{ship} sails for {dest}.', shipReturned: '{ship} is back: {revenue} marks earned, return cargo {cargo}.',
+    season_lent: 'Lent', season_easter: 'Easter', season_midsummer: 'Midsummer', season_michaelmas: 'Michaelmas', season_christmas: 'Christmas',
+    promoted: 'People now call you {rank}.', won: 'You are Mayor, the richest citizen and Lord of Sundhaven!', bankrupt: 'You are bankrupt. Your creditors seize your office.', gameOver: 'Game over',
+    welcome: 'Welcome to Sundhaven, {name}! Two ships are in port and a caravan waits at the gate. Click on buildings and people.',
+    encBeggar: 'A beggar holds out his hand. "Alms, sir, for the love of God."', encMonk: 'A mendicant monk asks for a gift for the monastery.', alms: 'Give ({cost} marks)',
+    encMerchantTip: 'A merchant whispers: "{good}? There is a {label} at the market."', encMerchant: 'A merchant nods curtly and hurries to the harbour.', encFisher: 'A fisherman offers you 10 lasts of fish under the counter.', cheapFish: 'Take it ({cost} marks)',
+    encFisherTalk: 'A fisherman complains about the Victual Brothers and the price of salt.', encGuard: 'The town guard nods at you.', encGuardSuspicious: 'The guard studies you for a long moment. People are talking about you.', encChild: 'Children play tag and nearly run into you.',
+    encGossip: 'A townswoman whispers: councillor {name} is {loyalty} towards you.', gossipFriendly: 'well disposed', gossipCold: 'cold', encCitizenRep: 'A citizen greets you. Your reputation in town stands at {rep}.', encCitizen: 'A citizen wishes you a good day.', bathhouse: 'Bathhouse', buyBathhouse: 'Buy the bathhouse ({cost} marks)', leader: 'Caravan leader', movesOn: 'moves on in {days} days',
+    enc_citizen_label: 'Citizen', enc_merchant_label: 'Merchant', enc_fisher_label: 'Fisherman', enc_beggar_label: 'Beggar', enc_monk_label: 'Monk', enc_guard_label: 'Town guard', enc_child_label: 'Children',
+    overview: 'Overview', goals: 'Goal: become mayor, amass 500,000 marks net worth and outdo all rivals.', richest: 'Richest in town', you: 'you', incomeSources: 'Your income sources',
+    dailyIncome: 'Avg. daily income', chart: 'Net worth over time', noLog: 'Nothing has happened yet.', activeEvents: 'Currently in town', personsTitle: 'Important people',
+    legend: 'Click on buildings, ships, caravans and passers-by.', timeOfDay: 'Time of day', night: 'Night', morning: 'Morning', noon: 'Noon', evening: 'Evening',
+    helpTitle: 'How to become Lord of Sundhaven',
+    helpText: `<p><b>The game:</b> You are a merchant in Sundhaven. Click on buildings, ships, caravans and passers-by to trade, negotiate and scheme. Time passes in days; the buttons at the top set the pace.</p>
+<p><b>Trade:</b> Ships and caravans bring goods cheaply and pay dearly for others. Buy their cargo and sell it at the market to the townspeople – or deliver market goods to the ships. Customs takes a cut; a friendly customs officer or smuggling at night helps.</p>
+<p><b>Making money:</b> trade, your own cog on voyages, workshops (guild licence required), rental houses, market stalls, fishing boats, money lending, tavern, bathhouse, tax farm, offices, dice and deliveries to the church.</p>
+<p><b>Power:</b> Six councillors sit in the town hall. Gifts raise their goodwill; influence lets you table motions on tariffs, market fees, usury, staple rights, the bathhouse and monopolies. With reputation and friends on the council you become councillor and mayor.</p>
+<p><b>Church:</b> Donations, endowments and deliveries raise your piety. The priest preaches for you – or against your rivals. Indulgences erase suspicion.</p>
+<p><b>Suspicion:</b> Bribery, smuggling, usury and thugs get noticed. From 50 the bailiff investigates, at 85 you stand trial. The bailiff can be bribed – usually.</p>
+<p><b>Goal:</b> Become mayor, reach 500,000 marks net worth and be richer than every rival. Bankruptcy after 60 days with an empty purse.</p>`,
   },
 };
-
 HK.t = function (key, vars) {
   let s = HK.I18N[HK.LANG][key];
   if (s === undefined) s = HK.I18N.de[key];
   if (s === undefined) return key;
-  if (typeof s !== 'string') return s;
   if (vars) for (const k in vars) s = s.split('{' + k + '}').join(vars[k]);
   return s;
 };
-HK.name = function (obj) { return obj.name[HK.LANG] || obj.name.de; };
-HK.goodName = function (id) { return HK.name(HK.GOOD[id]); };
-HK.cityName = function (id) { return HK.name(HK.CITY[id]); };
-HK.fmt = function (n) { return Math.round(n).toLocaleString(HK.LANG === 'de' ? 'de-DE' : 'en-GB'); };
+HK.name = obj => obj.name[HK.LANG] || obj.name.de;
+HK.goodName = id => HK.name(HK.GOOD[id]);
+HK.fmt = n => Math.round(n).toLocaleString(HK.LANG === 'de' ? 'de-DE' : 'en-GB');
 HK.fmtDate = function (day) {
-  const c = HK.CONST;
-  const base = new Date(Date.UTC(2000, c.START_MONTH, c.START_DAY));
+  const c = HK.CONST, base = new Date(Date.UTC(2000, c.START_MONTH, c.START_DAY));
   base.setUTCDate(base.getUTCDate() + day);
   const year = c.START_YEAR + (base.getUTCFullYear() - 2000);
-  const fmt = new Intl.DateTimeFormat(HK.LANG === 'de' ? 'de-DE' : 'en-GB', { day: 'numeric', month: 'long', timeZone: 'UTC' });
-  return fmt.format(base) + ' ' + year;
+  return new Intl.DateTimeFormat(HK.LANG === 'de' ? 'de-DE' : 'en-GB', { day: 'numeric', month: 'long', timeZone: 'UTC' }).format(base) + ' ' + year;
 };
 HK.monthOf = function (day) {
-  const c = HK.CONST;
-  const base = new Date(Date.UTC(2000, c.START_MONTH, c.START_DAY));
+  const c = HK.CONST, base = new Date(Date.UTC(2000, c.START_MONTH, c.START_DAY));
   base.setUTCDate(base.getUTCDate() + day);
   return base.getUTCMonth();
 };

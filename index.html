@@ -9,69 +9,52 @@
 </head>
 <body>
   <div id="title-screen" class="overlay"></div>
-
   <div id="game" hidden>
     <header id="hud">
-      <div class="hud-left">
-        <span class="logo" data-i18n="title">Hanse-Kontor</span>
-        <span id="hud-date" class="hud-date"></span>
-      </div>
-      <div class="hud-center">
+      <div class="hud-left"><span class="logo" data-i18n="title">Hanse-Kontor</span><span id="hud-date" class="hud-date"></span><span id="hud-time" class="hud-time"></span></div>
+      <div class="hud-stats">
         <span id="hud-money" class="hud-money"></span>
+        <span class="stat" data-i18n-title="rep">☆ <b id="hud-rep"></b></span>
+        <span class="stat" data-i18n-title="influence">♜ <b id="hud-influence"></b></span>
+        <span class="stat" data-i18n-title="piety">✝ <b id="hud-piety"></b></span>
+        <span class="stat susp" data-i18n-title="suspicion">👁 <b id="hud-suspicion"></b></span>
         <span id="hud-rank" class="hud-rank"></span>
       </div>
       <div class="hud-right">
         <div class="speed">
-          <button id="btn-pause" data-i18n-title="pause" title="Pause">⏸</button>
-          <button id="btn-s1" data-i18n-title="speed1">▶</button>
-          <button id="btn-s2" data-i18n-title="speed2">▶▶</button>
-          <button id="btn-s3" data-i18n-title="speed3">▶▶▶</button>
-          <button id="btn-step" data-i18n-title="stepDay">+1</button>
+          <button id="btn-pause" data-i18n-title="pause">⏸</button><button id="btn-s1" data-i18n-title="speed1">▶</button><button id="btn-s2" data-i18n-title="speed2">▶▶</button><button id="btn-s3" data-i18n-title="speed3">▶▶▶</button><button id="btn-step" data-i18n-title="stepDay">+1</button>
         </div>
         <div class="menu">
-          <button id="btn-save" data-i18n="save">Speichern</button>
-          <button id="btn-export" data-i18n="exportSave">Exportieren</button>
-          <button id="btn-import" data-i18n="importSave">Importieren</button>
+          <button id="btn-save" data-i18n="save">Speichern</button><button id="btn-export" data-i18n="exportSave">Exportieren</button><button id="btn-import" data-i18n="importSave">Importieren</button>
           <input type="file" id="file-import" accept="application/json,.json" hidden>
-          <button id="btn-help" data-i18n="help">Hilfe</button>
-          <button id="btn-menu">☰</button>
+          <button id="btn-help" data-i18n="help">Hilfe</button><button id="btn-menu">☰</button>
           <span class="lang-switch"><button class="lang-btn" data-lang="de">DE</button><button class="lang-btn" data-lang="en">EN</button></span>
         </div>
       </div>
     </header>
-
     <main id="main">
-      <div id="map-wrap">
-        <svg id="map" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid meet"></svg>
-        <div class="legend">
-          <span><i class="lg-city"></i> <span data-i18n="legendCity">Stadt</span></span>
-          <span><i class="lg-kontor"></i> <span data-i18n="legendKontor">Stadt mit Kontor</span></span>
-          <span><i class="lg-ship"></i> <span data-i18n="legendShip">Eigenes Schiff</span></span>
-        </div>
+      <div id="scene-wrap">
+        <canvas id="scene" width="960" height="640"></canvas>
+        <div id="tooltip" hidden></div>
+        <div id="scene-hint" class="legend" data-i18n="legend">Klicke auf Gebäude, Schiffe, Karawanen und Passanten.</div>
       </div>
       <aside id="side">
         <nav id="tabs">
-          <button data-tab="city" class="active" data-i18n="tabCity">Stadt</button>
-          <button data-tab="ships" data-i18n="tabShips">Schiffe</button>
-          <button data-tab="kontors" data-i18n="tabKontors">Kontore</button>
-          <button data-tab="bank" data-i18n="tabBank">Bank &amp; Rat</button>
+          <button data-tab="place" class="active"><span id="tab-place-label">…</span></button>
+          <button data-tab="overview" data-i18n="tabOverview">Übersicht</button>
           <button data-tab="log"><span data-i18n="tabLog">Chronik</span> <span id="log-badge" class="badge" hidden></span></button>
-          <button data-tab="stats" data-i18n="tabStats">Statistik</button>
         </nav>
         <div id="sidebar"></div>
       </aside>
     </main>
   </div>
-
   <div id="toasts"></div>
   <div id="modal" class="overlay" hidden></div>
-
   <script src="js/data.js"></script>
-  <script src="js/geo.js"></script>
+  <script src="js/town.js"></script>
   <script src="js/i18n.js"></script>
-  <script src="js/economy.js"></script>
   <script src="js/game.js"></script>
-  <script src="js/map.js"></script>
+  <script src="js/scene.js"></script>
   <script src="js/ui.js"></script>
   <script src="js/main.js"></script>
 </body>
