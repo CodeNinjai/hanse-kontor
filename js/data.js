@@ -48,6 +48,28 @@ HK.WORKSHOPS = [
 ];
 HK.WORKSHOP = {}; HK.WORKSHOPS.forEach(w => HK.WORKSHOP[w.id] = w);
 
+/* Betriebe in der Stadt: käuflich, bringen Tageseinnahmen, manche verarbeiten Waren oder haben Nebenwirkungen.
+   craft: braucht Zunftmitgliedschaft; inp: Ware, deren Knappheit in der Stadt die Einnahmen drückt */
+HK.VENTURES = [
+  { id: 'dive',      name: { de: 'Spelunke „Zum Nassen Hund“', en: 'The Wet Dog dive' }, cost: 6000,  income: 24, craft: false, effect: 'dive' },
+  { id: 'bakery',    name: { de: 'Bäckerei',        en: 'Bakery' },        cost: 5000,  income: 28, craft: true, inp: 'grain', effect: 'feed' },
+  { id: 'butcher',   name: { de: 'Fleischerei',     en: 'Butcher' },       cost: 5500,  income: 30, craft: true, effect: 'feed' },
+  { id: 'cooper',    name: { de: 'Böttcherei',      en: 'Cooperage' },     cost: 6500,  income: 26, craft: true, inp: 'timber', effect: 'cooper' },
+  { id: 'ropewalk',  name: { de: 'Seilerei',        en: 'Ropewalk' },      cost: 7000,  income: 30, craft: true, effect: 'ships' },
+  { id: 'sailmaker', name: { de: 'Segelmacherei',   en: 'Sailmaker' },     cost: 8000,  income: 34, craft: true, inp: 'cloth', effect: 'ships' },
+  { id: 'smokery',   name: { de: 'Fischräucherei',  en: 'Fish smokery' },  cost: 7500,  income: 18, craft: true, inp: 'fish', effect: 'smoke' },
+  { id: 'tannery',   name: { de: 'Gerberei',        en: 'Tannery' },       cost: 6000,  income: 42, craft: true, effect: 'stink' },
+  { id: 'potter',    name: { de: 'Töpferei',        en: 'Pottery' },       cost: 3500,  income: 16, craft: true },
+  { id: 'dyer',      name: { de: 'Färberei',        en: 'Dye works' },     cost: 9000,  income: 38, craft: true, inp: 'cloth', effect: 'cloth' },
+];
+HK.VENTURE = {}; HK.VENTURES.forEach(v => HK.VENTURE[v.id] = v);
+/* Speicher: eigener Lagerplatz oder Vermietung an andere Kaufleute */
+HK.STORAGES = [
+  { id: 'saltstore', price: 7000, cap: 200, rent: 42 },
+  { id: 'storage2',  price: 8500, cap: 260, rent: 50 },
+  { id: 'storage3',  price: 8500, cap: 260, rent: 50 },
+];
+
 /* Personen mit Loyalität */
 HK.PERSONS = [
   { id: 'mayor',     name: 'Hinrich Wulflam',       title: { de: 'Bürgermeister', en: 'Mayor' },        faction: 'patrizier', council: true },
@@ -63,6 +85,11 @@ HK.PERSONS = [
   { id: 'changer',   name: 'Claus Schonefeld',      title: { de: 'Geldwechsler', en: 'Money changer' } },
   { id: 'guild',     name: 'Marquard Vrome',        title: { de: 'Gildemeister', en: 'Guild master' } },
   { id: 'shipwright', name: 'Bertold Ruge',         title: { de: 'Werftmeister', en: 'Shipwright' } },
+  { id: 'abbot',     name: 'Abt Bruno',             title: { de: 'Abt von St. Marien', en: "Abbot of St Mary's" } },
+  { id: 'craftmaster', name: 'Hinnerk Dreyer',      title: { de: 'Zunftmeister', en: 'Craft guild master' } },
+  { id: 'harbourmaster', name: 'Klaus Brede',       title: { de: 'Hafenmeister', en: 'Harbour master' } },
+  { id: 'divekeeper', name: 'Peer Lüdtke',          title: { de: 'Wirt der Spelunke', en: 'Dive keeper' } },
+  { id: 'schoolmaster', name: 'Magister Johannes Kock', title: { de: 'Schulmeister', en: 'Schoolmaster' } },
 ];
 HK.PERSON = {}; HK.PERSONS.forEach(p => HK.PERSON[p.id] = p);
 HK.FACTIONS = { patrizier: { de: 'Patrizier', en: 'Patricians' }, kaufleute: { de: 'Kaufleute', en: 'Merchants' }, zuenfte: { de: 'Zünfte', en: 'Guilds' }, kirche: { de: 'Kirche', en: 'Church' } };
@@ -128,4 +155,10 @@ HK.CONST = {
   INDULGENCE_COST: 800,
   BANKRUPT_DAYS: 60, WORKSHOP_PLOTS: 3,
   TAXFARM_DAYS: 365,
+  CRAFT_FEE: 1500, VENTURE_UPGRADE: 0.5, VENTURE_MAX_LEVEL: 3,
+  CONTRABAND_QTY: 12, FENCE_CAP: 30, WATCH_BRIBE: 700, WATCH_DAYS: 15, SAILORS_COST: 350,
+  RELIC_COST: 3000, SCRIPT_COST: 400, SCRIPT_DAYS: 30, MONK_BEER: 12, MONK_WAX: 5,
+  HOSPITAL_DONATION: 1000, HOSPITAL_ENDOW: 8000, SCHOOL_DONATION: 1500, SCHOOL_ENDOW: 6000,
+  HARBOUR_BOOK: 200, HARBOUR_BOOK_DAYS: 20, BERTH_PRIORITY: 800, EXTRA_BERTH: 15000, MAX_BERTHS: 5,
+  APPRENTICES: 1000, APPRENTICE_DAYS: 60, MASTER_TITLE: 5000, FISHMARKET_CAP: 25,
 };

@@ -35,6 +35,8 @@ HK.newGame = function (opts) {
     rivals: HK.RIVALS.map(r => ({ id: r.id, wealth: r.wealth })),
     investigation: null, log: [], history: [], ledger: [{}], stats: { profit: 0, volume: 0, smuggled: 0, bribes: 0 },
     rank: 0, won: false, gameOver: false, negDays: 0, nextId: 1, usedNames: [], rumors: [], spyUntil: 0,
+    ventures: {}, storages: HK.STORAGES.map(() => ({ owner: 'npc', mode: 'own' })), dive: { offer: null, fenced: 0 }, monastery: { stock: { beer: HK.CONST.MONK_BEER, wax: HK.CONST.MONK_WAX }, day: 0 },
+    craftGuild: false, masterTitle: false, hospitalEndowed: false, schoolEndowed: false, apprenticesUntil: 0, watchUntil: 0, scriptUntil: 0, harbourBookUntil: 0, fishSold: 0,
   };
   for (const g of HK.GOODS) st.town.stock[g.id] = g.cons * 18 + g.prod * 20;
   for (const k in HK.LAWS) st.town.laws[k] = HK.LAWS[k].init;
@@ -44,7 +46,7 @@ HK.newGame = function (opts) {
   st.warehouse.stock.salt = 20; st.warehouse.stock.beer = 30; st.hutFish = 25;
   for (let i = 0; i < 3; i++) HK.scheduleArrival(st, true);
   HK.scheduleArrival(st, false);
-  HK.refreshLoanOffers(st);
+  HK.refreshLoanOffers(st); HK.refreshContraband(st);
   // Zwei Schiffe liegen schon im Hafen
   HK.dockShip(st, 'luebeck'); HK.dockShip(st, 'danzig'); HK.dockCaravan(st, 'umland');
   st.history.push({ day: 0, worth: HK.netWorth(st) });
@@ -57,6 +59,8 @@ HK.netWorth = function (st) {
   let w = st.money - st.loan + HK.stockValue(st.warehouse.stock);
   for (const h of st.houses) if (h.owner === 'player') w += h.price * (0.8 + h.level * 0.2);
   for (const ws of st.workshops) if (ws.type) w += HK.WORKSHOP[ws.type].cost * 0.6;
+  for (const id in st.ventures || {}) w += HK.VENTURE[id].cost * (0.5 + st.ventures[id].level * 0.1);
+  (st.storages || []).forEach((sg, i) => { if (sg.owner === 'player') w += HK.STORAGES[i].price * 0.7; });
   for (const s of st.ownShips) w += HK.CONST.SHIP_PRICE * 0.6 * (s.hull / 100) + HK.stockValue(s.cargo);
   w += st.boats * HK.CONST.BOAT_PRICE * 0.6 + st.stalls * HK.CONST.STALL_COST * 0.6;
   if (st.tavernOwned) w += HK.CONST.TAVERN_PRICE * 0.7;
@@ -179,7 +183,7 @@ HK.sellToVisitor = function (st, v, g, qty, smuggle) {
   if (!w || qty <= 0) return { ok: false };
   if (w.qty < qty) return { ok: false, msg: 'notWanted' };
   if ((st.warehouse.stock[g] || 0) < qty) return { ok: false, msg: 'notEnoughCargo' };
-  const goods = w.price * qty;
+  const goods = Math.round(w.price * qty * (g === 'cloth' && HK.hasVenture(st, 'dyer') ? 1.1 : 1));
   const tariff = smuggle ? 0 : Math.round(goods * HK.tariffRate(st) * 0.5 * (1 - HK.customsDiscount(st)));
   HK.book(st, 'shipTrade', goods);
   if (tariff) HK.book(st, 'tariffs', -tariff);
@@ -193,7 +197,7 @@ HK.sellToVisitor = function (st, v, g, qty, smuggle) {
 HK.smuggleCheck = function (st, goods, r) {
   const dutySaved = goods * HK.tariffRate(st);
   st.stats.smuggled += dutySaved;
-  const risk = (0.12 + st.suspicion / 300) * (1 - st.persons.customs.loyalty / 160) * (st.town.projects.wall ? 1.15 : 1);
+  const risk = (0.12 + st.suspicion / 300) * (1 - st.persons.customs.loyalty / 160) * (st.town.projects.wall ? 1.15 : 1) * (st.watchUntil > st.day ? 0.4 : 1);
   if (Math.random() < risk) {
     const fine = Math.round(dutySaved * 3 + 200);
     HK.book(st, 'fines', -fine);
@@ -360,7 +364,7 @@ HK.fundProject = function (st, id) {
   if (st.money < p.cost) return { ok: false, msg: 'notEnoughMoney' };
   HK.book(st, 'politics', -p.cost); st.town.projects[id] = true;
   st.rep = HK.clamp(st.rep + p.rep, 0, 100); st.influence += 10;
-  if (p.effect === 'berth') st.town.berths = 4;
+  if (p.effect === 'berth') st.town.berths = Math.min(HK.CONST.MAX_BERTHS, st.town.berths + 1);
   if (p.effect === 'prosperity') st.town.prosperity = HK.clamp(st.town.prosperity + 8, 0, 100);
   HK.log(st, 'projectDone', { project: HK.name(p) }, 'good');
   return { ok: true };
@@ -451,10 +455,12 @@ HK.buyBathhouse = function (st) {
 HK.bathIncome = st => HK.law(st, 'bathBan') ? 0 : Math.round(45 + st.town.prosperity * 0.5);
 
 /* ---------- Taverne: Gerüchte, Glücksspiel, Anheuern ---------- */
+HK.rumorCost = st => HK.hasVenture(st, 'dive') ? 0 : HK.CONST.RUMOR_COST;
+HK.thugCost = st => Math.round(HK.CONST.THUG_COST * (HK.hasVenture(st, 'dive') ? 0.7 : 1));
 HK.buyRumor = function (st) {
-  if (st.money < HK.CONST.RUMOR_COST) return { ok: false, msg: 'notEnoughMoney' };
+  if (st.money < HK.rumorCost(st)) return { ok: false, msg: 'notEnoughMoney' };
   const unknown = st.incoming.filter(i => !i.known);
-  HK.book(st, 'tavern', -HK.CONST.RUMOR_COST);
+  HK.book(st, 'tavern', -HK.rumorCost(st));
   if (!unknown.length) { st.rumors.unshift({ day: st.day, key: 'rumorNothing', vars: {} }); return { ok: true }; }
   const inc = HK.pick(unknown); inc.known = true;
   const o = HK.ORIGIN[inc.origin];
@@ -476,8 +482,8 @@ HK.hireSpy = function (st) {
   return { ok: true };
 };
 HK.hireThugs = function (st, target) {
-  if (st.money < HK.CONST.THUG_COST) return { ok: false, msg: 'notEnoughMoney' };
-  HK.book(st, 'bribes', -HK.CONST.THUG_COST);
+  if (st.money < HK.thugCost(st)) return { ok: false, msg: 'notEnoughMoney' };
+  HK.book(st, 'bribes', -HK.thugCost(st));
   st.suspicion = HK.clamp(st.suspicion + 10, 0, 100);
   if (target === 'collect') {
     const bad = st.loansOut.filter(l => l.defaulted);
@@ -551,7 +557,7 @@ HK.buyShip = function (st) {
 HK.repairShip = function (st, id) {
   const s = st.ownShips.find(x => x.id === id);
   if (!s || s.status !== 'port' || s.hull >= 100) return { ok: false };
-  const cost = (100 - s.hull) * 30;
+  const cost = Math.round((100 - s.hull) * 30 * HK.shipRepairFactor(st));
   if (st.money < cost) return { ok: false, msg: 'notEnoughMoney' };
   HK.book(st, 'investments', -cost); s.hull = 100;
   return { ok: true };
@@ -583,7 +589,7 @@ HK.sendShip = function (st, id, dest, bringBack) {
   const s = st.ownShips.find(x => x.id === id), o = HK.ORIGIN[dest];
   if (!s || s.status !== 'port' || !o || !o.sea) return { ok: false };
   if (s.hull < 30) return { ok: false, msg: 'shipDamaged' };
-  s.status = 'away'; s.dest = dest; s.daysLeft = o.days * 2 + 1; s.bringBack = bringBack && o.sell[bringBack] ? bringBack : null; s.phase = 'out';
+  s.status = 'away'; s.dest = dest; s.daysLeft = o.days * 2 + 1 - (HK.hasVenture(st, 'ropewalk') && HK.hasVenture(st, 'sailmaker') ? 1 : 0); s.bringBack = bringBack && o.sell[bringBack] ? bringBack : null; s.phase = 'out';
   HK.log(st, 'shipSent', { ship: s.name, dest: HK.name(o) }, 'info');
   return { ok: true };
 };
@@ -601,6 +607,219 @@ HK.buyFishFromHuts = function (st, qty) {
   if (st.money < cost) return { ok: false, msg: 'notEnoughMoney' };
   HK.book(st, 'market', -cost); st.hutFish -= qty; HK.addStock(st.warehouse.stock, 'fish', qty);
   return { ok: true, cost };
+};
+
+/* ---------- Betriebe, Speicher, Zunft ---------- */
+HK.craftDiscount = st => st.persons.craftmaster.loyalty >= 50 ? 0.9 : 1;
+HK.joinCraftGuild = function (st) {
+  if (st.craftGuild) return { ok: false };
+  const fee = Math.round(HK.CONST.CRAFT_FEE * HK.craftDiscount(st));
+  if (st.money < fee) return { ok: false, msg: 'notEnoughMoney' };
+  HK.book(st, 'investments', -fee); st.craftGuild = true; st.rep = HK.clamp(st.rep + 2, 0, 100);
+  HK.log(st, 'craftJoined', {}, 'good');
+  return { ok: true };
+};
+HK.ventureCost = (st, v) => Math.round(v.cost * (v.craft ? HK.craftDiscount(st) : 1));
+HK.buyVenture = function (st, id) {
+  const v = HK.VENTURE[id]; if (!v || st.ventures[id]) return { ok: false };
+  if (v.craft && !st.craftGuild) return { ok: false, msg: 'needCraftGuild' };
+  const cost = HK.ventureCost(st, v);
+  if (st.money < cost) return { ok: false, msg: 'notEnoughMoney' };
+  HK.book(st, 'investments', -cost); st.ventures[id] = { level: 1, since: st.day };
+  HK.log(st, 'ventureBought', { venture: HK.name(v) }, 'good');
+  return { ok: true };
+};
+HK.upgradeVenture = function (st, id) {
+  const v = HK.VENTURE[id], o = st.ventures[id]; if (!v || !o || o.level >= HK.CONST.VENTURE_MAX_LEVEL) return { ok: false };
+  const cost = Math.round(v.cost * HK.CONST.VENTURE_UPGRADE);
+  if (st.money < cost) return { ok: false, msg: 'notEnoughMoney' };
+  HK.book(st, 'investments', -cost); o.level++;
+  return { ok: true };
+};
+HK.sellVenture = function (st, id) {
+  const v = HK.VENTURE[id], o = st.ventures[id]; if (!v || !o) return { ok: false };
+  HK.book(st, 'investments', Math.round(v.cost * (0.5 + o.level * 0.1))); delete st.ventures[id];
+  return { ok: true };
+};
+HK.ventureSupply = function (st, v) { if (!v.inp) return 1; return HK.clamp((st.town.stock[v.inp] || 0) / HK.desired(v.inp), 0.3, 1.2); };
+HK.ventureIncome = function (st, id) {
+  const v = HK.VENTURE[id], o = st.ventures[id]; if (!v || !o) return 0;
+  let inc = v.income * (0.6 + st.town.prosperity / 125) * (1 + 0.35 * (o.level - 1)) * HK.ventureSupply(st, v);
+  if (st.apprenticesUntil > st.day) inc *= 1.1;
+  if (v.effect === 'dive') inc += st.ships.length * 6;
+  if (v.effect === 'ships') inc += (st.ships.length + st.ownShips.length) * 3;
+  if (v.effect === 'feed' && st.town.events.some(e => e.type === 'famine')) inc *= 1.6;
+  return Math.round(inc);
+};
+HK.hasVenture = (st, id) => !!(st.ventures && st.ventures[id]);
+HK.shipRepairFactor = st => (HK.hasVenture(st, 'ropewalk') ? 0.8 : 1) * (HK.hasVenture(st, 'sailmaker') ? 0.8 : 1);
+HK.ventureCount = st => Object.keys(st.ventures).length;
+HK.hireApprentices = function (st) {
+  if (st.apprenticesUntil > st.day || !st.craftGuild) return { ok: false };
+  if (st.money < HK.CONST.APPRENTICES) return { ok: false, msg: 'notEnoughMoney' };
+  HK.book(st, 'wages', -HK.CONST.APPRENTICES); st.apprenticesUntil = st.day + HK.CONST.APPRENTICE_DAYS;
+  return { ok: true };
+};
+HK.masterTitle = function (st) {
+  if (st.masterTitle || !st.craftGuild || HK.ventureCount(st) < 3) return { ok: false, msg: 'needThreeVentures' };
+  if (st.money < HK.CONST.MASTER_TITLE) return { ok: false, msg: 'notEnoughMoney' };
+  HK.book(st, 'politics', -HK.CONST.MASTER_TITLE); st.masterTitle = true; st.rep = HK.clamp(st.rep + 8, 0, 100); st.influence += 6;
+  HK.log(st, 'masterTitleLog', {}, 'good');
+  return { ok: true };
+};
+// Speicher: kaufen, Nutzung umschalten (eigener Lagerplatz oder Vermietung)
+HK.buyStorage = function (st, i) {
+  const s = st.storages[i], def = HK.STORAGES[i]; if (!s || s.owner === 'player') return { ok: false };
+  if (st.money < def.price) return { ok: false, msg: 'notEnoughMoney' };
+  HK.book(st, 'investments', -def.price); s.owner = 'player'; s.mode = 'own'; st.warehouse.cap += def.cap;
+  return { ok: true };
+};
+HK.toggleStorage = function (st, i) {
+  const s = st.storages[i], def = HK.STORAGES[i]; if (!s || s.owner !== 'player') return { ok: false };
+  if (s.mode === 'own') { if (HK.stockUsed(st.warehouse.stock) > st.warehouse.cap - def.cap) return { ok: false, msg: 'storageInUse' }; st.warehouse.cap -= def.cap; s.mode = 'rent'; }
+  else { st.warehouse.cap += def.cap; s.mode = 'own'; }
+  return { ok: true };
+};
+HK.sellStorage = function (st, i) {
+  const s = st.storages[i], def = HK.STORAGES[i]; if (!s || s.owner !== 'player') return { ok: false };
+  if (s.mode === 'own') { if (HK.stockUsed(st.warehouse.stock) > st.warehouse.cap - def.cap) return { ok: false, msg: 'storageInUse' }; st.warehouse.cap -= def.cap; }
+  s.owner = 'npc'; s.mode = 'own'; HK.book(st, 'investments', Math.round(def.price * 0.7));
+  return { ok: true };
+};
+HK.storageRent = (st, i) => Math.round(HK.STORAGES[i].rent * (0.6 + st.town.prosperity / 125) * (1 + st.ships.length * 0.1));
+
+/* ---------- Spelunke: Schwarzmarkt, Hehler, Hafenwache, Matrosen ---------- */
+HK.refreshContraband = function (st) {
+  const g = HK.pick(['salt', 'wine', 'cloth', 'spices', 'furs', 'wax', 'iron', 'tools']);
+  st.dive.offer = { good: g, qty: HK.rndi(6, HK.CONST.CONTRABAND_QTY), price: Math.round(HK.GOOD[g].base * HK.rnd(0.5, 0.62)) };
+  st.dive.fenced = 0;
+};
+HK.buyContraband = function (st, qty) {
+  const o = st.dive.offer; if (!o || o.qty <= 0) return { ok: false };
+  qty = Math.min(Math.floor(qty), o.qty, HK.whFree(st));
+  if (qty <= 0) return { ok: false, msg: 'warehouseFull' };
+  const cost = qty * o.price; if (st.money < cost) return { ok: false, msg: 'notEnoughMoney' };
+  HK.book(st, 'shipTrade', -cost); o.qty -= qty; HK.addStock(st.warehouse.stock, o.good, qty);
+  st.suspicion = HK.clamp(st.suspicion + 1.5 + qty * 0.2, 0, 100); st.stats.smuggled += cost * 0.3;
+  return { ok: true, cost, qty };
+};
+HK.fencePrice = (st, g) => Math.round(HK.GOOD[g].base * 0.9 * HK.prosperityMod(st));
+HK.fenceSell = function (st, g, qty) {
+  const cap = HK.CONST.FENCE_CAP - (st.dive.fenced || 0);
+  qty = Math.min(Math.floor(qty), Math.floor(st.warehouse.stock[g] || 0), cap);
+  if (qty <= 0) return { ok: false, msg: 'fenceFull' };
+  const rev = qty * HK.fencePrice(st, g);
+  HK.book(st, 'market', rev); HK.addStock(st.warehouse.stock, g, -qty); st.dive.fenced = (st.dive.fenced || 0) + qty;
+  st.suspicion = HK.clamp(st.suspicion + 1 + qty * 0.15, 0, 100);
+  return { ok: true, cost: rev, qty };
+};
+HK.bribeWatch = function (st) {
+  if (st.watchUntil > st.day) return { ok: false };
+  if (st.money < HK.CONST.WATCH_BRIBE) return { ok: false, msg: 'notEnoughMoney' };
+  HK.book(st, 'bribes', -HK.CONST.WATCH_BRIBE); st.watchUntil = st.day + HK.CONST.WATCH_DAYS; st.stats.bribes += HK.CONST.WATCH_BRIBE;
+  return { ok: true };
+};
+HK.hireSailors = function (st, id) {
+  const s = st.ownShips.find(x => x.id === id); if (!s || s.status !== 'port' || s.hull >= 100) return { ok: false };
+  if (st.money < HK.CONST.SAILORS_COST) return { ok: false, msg: 'notEnoughMoney' };
+  HK.book(st, 'wages', -HK.CONST.SAILORS_COST); s.hull = Math.min(100, s.hull + 25); st.suspicion = HK.clamp(st.suspicion + 1, 0, 100);
+  return { ok: true };
+};
+
+/* ---------- Kloster, Spital, Schule ---------- */
+HK.monkPrice = (st, g) => Math.round(HK.GOOD[g].base * (st.persons.abbot.loyalty >= 50 ? 0.7 : 0.8));
+HK.buyFromMonks = function (st, g, qty) {
+  const avail = st.monastery.stock[g] || 0;
+  qty = Math.min(Math.floor(qty), avail, HK.whFree(st));
+  if (qty <= 0) return { ok: false, msg: avail ? 'warehouseFull' : 'notEnoughStock' };
+  const cost = qty * HK.monkPrice(st, g); if (st.money < cost) return { ok: false, msg: 'notEnoughMoney' };
+  HK.book(st, 'market', -cost); st.monastery.stock[g] -= qty; HK.addStock(st.warehouse.stock, g, qty);
+  return { ok: true, cost, qty };
+};
+HK.donateRelic = function (st) {
+  if (st.relicDay !== undefined && st.day - st.relicDay < 365) return { ok: false };
+  if (st.money < HK.CONST.RELIC_COST) return { ok: false, msg: 'notEnoughMoney' };
+  HK.book(st, 'church', -HK.CONST.RELIC_COST); st.relicDay = st.day; st.piety = HK.clamp(st.piety + 15, 0, 100); st.rep = HK.clamp(st.rep + 6, 0, 100);
+  st.persons.abbot.loyalty = HK.clamp(st.persons.abbot.loyalty + 20, 0, 100);
+  HK.log(st, 'relicDonated', {}, 'good');
+  return { ok: true };
+};
+HK.buyScriptorium = function (st) {
+  if (st.scriptUntil > st.day) return { ok: false };
+  if (st.money < HK.CONST.SCRIPT_COST) return { ok: false, msg: 'notEnoughMoney' };
+  HK.book(st, 'church', -HK.CONST.SCRIPT_COST); st.scriptUntil = st.day + HK.CONST.SCRIPT_DAYS; st.incoming.forEach(i => i.known = true);
+  return { ok: true };
+};
+HK.knowsIncoming = st => st.scriptUntil > st.day || st.harbourBookUntil > st.day;
+HK.hospitalDonate = function (st) {
+  if (st.money < HK.CONST.HOSPITAL_DONATION) return { ok: false, msg: 'notEnoughMoney' };
+  HK.book(st, 'church', -HK.CONST.HOSPITAL_DONATION); st.rep = HK.clamp(st.rep + 3, 0, 100); st.piety = HK.clamp(st.piety + 4, 0, 100); st.hospitalGiven = (st.hospitalGiven || 0) + HK.CONST.HOSPITAL_DONATION;
+  return { ok: true };
+};
+HK.hospitalEndow = function (st) {
+  if (st.hospitalEndowed) return { ok: false };
+  if (st.money < HK.CONST.HOSPITAL_ENDOW) return { ok: false, msg: 'notEnoughMoney' };
+  HK.book(st, 'church', -HK.CONST.HOSPITAL_ENDOW); st.hospitalEndowed = true; st.rep = HK.clamp(st.rep + 12, 0, 100); st.piety = HK.clamp(st.piety + 8, 0, 100); st.influence += 5;
+  HK.log(st, 'hospitalEndowedLog', {}, 'good');
+  return { ok: true };
+};
+HK.schoolDonate = function (st) {
+  if (st.schoolDay !== undefined && st.day - st.schoolDay < 30) return { ok: false };
+  if (st.money < HK.CONST.SCHOOL_DONATION) return { ok: false, msg: 'notEnoughMoney' };
+  HK.book(st, 'politics', -HK.CONST.SCHOOL_DONATION); st.schoolDay = st.day; st.influence += 5; st.rep = HK.clamp(st.rep + 2, 0, 100);
+  return { ok: true };
+};
+HK.schoolEndow = function (st) {
+  if (st.schoolEndowed) return { ok: false };
+  if (st.money < HK.CONST.SCHOOL_ENDOW) return { ok: false, msg: 'notEnoughMoney' };
+  HK.book(st, 'politics', -HK.CONST.SCHOOL_ENDOW); st.schoolEndowed = true; st.influence += 10; st.rep = HK.clamp(st.rep + 5, 0, 100);
+  HK.log(st, 'schoolEndowedLog', {}, 'good');
+  return { ok: true };
+};
+
+/* ---------- Hafenmeister, Fischmarkt ---------- */
+HK.buyHarbourBook = function (st) {
+  if (st.harbourBookUntil > st.day) return { ok: false };
+  if (st.money < HK.CONST.HARBOUR_BOOK) return { ok: false, msg: 'notEnoughMoney' };
+  HK.book(st, 'bribes', -HK.CONST.HARBOUR_BOOK); st.harbourBookUntil = st.day + HK.CONST.HARBOUR_BOOK_DAYS; st.incoming.forEach(i => i.known = true);
+  return { ok: true };
+};
+HK.berthPriorityCost = st => Math.round(HK.CONST.BERTH_PRIORITY * (st.persons.harbourmaster.loyalty >= 50 ? 0.7 : 1));
+HK.berthPriority = function (st) {
+  if (!st.ships.length) return { ok: false, msg: 'noShipsHere' };
+  const cost = HK.berthPriorityCost(st);
+  if (st.money < cost) return { ok: false, msg: 'notEnoughMoney' };
+  HK.book(st, 'bribes', -cost); st.ships.forEach(s => s.daysLeft += 2); st.suspicion = HK.clamp(st.suspicion + 2, 0, 100); st.stats.bribes += cost;
+  return { ok: true };
+};
+HK.buyExtraBerth = function (st) {
+  if (st.town.berths >= HK.CONST.MAX_BERTHS) return { ok: false };
+  if (st.money < HK.CONST.EXTRA_BERTH) return { ok: false, msg: 'notEnoughMoney' };
+  HK.book(st, 'politics', -HK.CONST.EXTRA_BERTH); st.town.berths++; st.rep = HK.clamp(st.rep + 6, 0, 100); st.influence += 4;
+  HK.log(st, 'berthBuilt', { n: st.town.berths }, 'good');
+  return { ok: true };
+};
+HK.fishmarketPrice = (st, g) => Math.round(HK.GOOD[g].base * HK.prosperityMod(st) * (st.town.events.some(e => e.type === 'goodCatch') ? 0.7 : st.town.events.some(e => e.type === 'famine') ? 1.5 : 1.05));
+HK.fishmarketSell = function (st, g, qty) {
+  if (g !== 'fish' && g !== 'smokedfish') return { ok: false };
+  const cap = HK.CONST.FISHMARKET_CAP - (st.fishSold || 0);
+  qty = Math.min(Math.floor(qty), Math.floor(st.warehouse.stock[g] || 0), cap);
+  if (qty <= 0) return { ok: false, msg: cap <= 0 ? 'marketSaturated' : 'notEnoughCargo' };
+  const rev = qty * HK.fishmarketPrice(st, g);
+  HK.book(st, 'market', rev); HK.addStock(st.warehouse.stock, g, -qty); st.fishSold = (st.fishSold || 0) + qty; st.stats.volume += rev;
+  return { ok: true, cost: rev, qty };
+};
+
+/* Fehlende Felder in alten Spielständen ergänzen */
+HK.migrate = function (st) {
+  if (!st.ventures) st.ventures = {};
+  if (!st.storages) st.storages = HK.STORAGES.map(() => ({ owner: 'npc', mode: 'own' }));
+  if (!st.dive) { st.dive = { offer: null, fenced: 0 }; HK.refreshContraband(st); }
+  if (!st.monastery) st.monastery = { stock: { beer: HK.CONST.MONK_BEER, wax: HK.CONST.MONK_WAX }, day: st.day };
+  for (const p of HK.PERSONS) if (!st.persons[p.id]) st.persons[p.id] = { loyalty: HK.rndi(15, 35) };
+  for (const k of ['craftGuild', 'masterTitle', 'hospitalEndowed', 'schoolEndowed']) if (st[k] === undefined) st[k] = false;
+  for (const k of ['apprenticesUntil', 'watchUntil', 'scriptUntil', 'harbourBookUntil', 'fishSold']) if (st[k] === undefined) st[k] = 0;
+  return st;
 };
 
 /* ---------- Passanten-Begegnungen ---------- */
@@ -714,7 +933,7 @@ HK.tick = function (st) {
     st.town.stock[g.id] = Math.max(0, s);
     if (['grain', 'fish', 'beer', 'salt', 'timber', 'cloth'].includes(g.id)) { supply += HK.clamp(st.town.stock[g.id] / HK.desired(g.id), 0, 1.5); n++; }
   }
-  const target = HK.clamp(supply / n * 70 + (st.town.projects.well ? 5 : 0) + (st.town.projects.wall ? 5 : 0), 10, 100);
+  const target = HK.clamp(supply / n * 70 + (st.town.projects.well ? 5 : 0) + (st.town.projects.wall ? 5 : 0) + (HK.hasVenture(st, 'bakery') ? 2 : 0) + (HK.hasVenture(st, 'butcher') ? 2 : 0) + (st.hospitalEndowed ? 2 : 0), 10, 100);
   st.town.prosperity += (target - st.town.prosperity) * 0.03;
   st.town.pop = Math.round(st.town.pop * (1 + (st.town.prosperity - 50) * 0.00002));
 
@@ -752,7 +971,7 @@ HK.tick = function (st) {
     for (const g in w.inp) if ((st.warehouse.stock[g] || 0) < w.inp[g]) can = false;
     if (can && HK.whFree(st) > 0) {
       for (const g in w.inp) HK.addStock(st.warehouse.stock, g, -w.inp[g]);
-      HK.addStock(st.warehouse.stock, w.out, Math.min(w.qty, HK.whFree(st)));
+      HK.addStock(st.warehouse.stock, w.out, Math.min(w.qty + (HK.hasVenture(st, 'cooper') && (w.out === 'beer' || w.out === 'smokedfish') ? 1 : 0), HK.whFree(st)));
       ws.idle = false; wages += w.wage;
     } else { ws.idle = true; wages += Math.round(w.wage / 2); }
   }
@@ -760,6 +979,18 @@ HK.tick = function (st) {
   st.hutFish = HK.rndi(10, 40);
   if (wages) HK.book(st, 'wages', -wages);
 
+  // Betriebe, Speicher, Räucherei, Spelunke, Kloster, Fischmarkt
+  let vInc = 0; for (const id in st.ventures) vInc += HK.ventureIncome(st, id);
+  if (vInc) HK.book(st, 'ventures', vInc);
+  if (HK.hasVenture(st, 'smokery')) { const q = Math.min(6 * st.ventures.smokery.level, Math.floor(st.warehouse.stock.fish || 0)); if (q >= 3) { HK.addStock(st.warehouse.stock, 'fish', -q); HK.addStock(st.warehouse.stock, 'smokedfish', Math.min(Math.floor(q * 0.7), HK.whFree(st))); } }
+  if (HK.hasVenture(st, 'tannery')) st.rep = HK.clamp(st.rep - 0.03, 0, 100);
+  if (HK.hasVenture(st, 'dive')) { st.piety = HK.clamp(st.piety - 0.05, 0, 100); st.suspicion = HK.clamp(st.suspicion + 0.03, 0, 100); }
+  let sInc = 0; st.storages.forEach((sg, i) => { if (sg.owner === 'player' && sg.mode === 'rent') sInc += HK.storageRent(st, i); });
+  if (sInc) HK.book(st, 'storage', sInc);
+  if (st.day % 3 === 0) HK.refreshContraband(st); else st.dive.fenced = 0;
+  if (st.day - st.monastery.day >= 7) { st.monastery.stock = { beer: HK.CONST.MONK_BEER, wax: HK.CONST.MONK_WAX }; st.monastery.day = st.day; }
+  st.fishSold = 0;
+  if (st.watchUntil === st.day) HK.log(st, 'watchEnded', {}, 'info');
   // Mieten, Taverne, Badehaus, Amt
   let rent = 0; for (const h of st.houses) if (h.owner === 'player') rent += HK.houseRent(st, h);
   if (rent) HK.book(st, 'rent', rent);
@@ -854,4 +1085,4 @@ HK.ledgerTotals = function (st) {
 
 HK.SAVE_KEY = 'hanse-kontor-v2';
 HK.serialize = st => JSON.stringify(st);
-HK.deserialize = function (json) { const s = JSON.parse(json); if (!s || s.version !== 2 || !s.town) throw new Error('bad save'); return s; };
+HK.deserialize = function (json) { const s = JSON.parse(json); if (!s || s.version !== 2 || !s.town) throw new Error('bad save'); return HK.migrate(s); };

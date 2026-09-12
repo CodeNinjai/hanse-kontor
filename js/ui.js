@@ -198,6 +198,7 @@ HK.UI = {
     let h = this.head(HK.t('harbour'), `${HK.t('shipsInPort')}: ${st.ships.length}/${st.town.berths}`);
     h += `<section>${st.ships.length ? this.visitorList(st.ships) : `<p class="hint">${HK.t('noShips')}</p>`}</section>`;
     h += `<section><h3>${HK.t('ownShips')}</h3>${this.ownShips()}</section>`;
+    if (HK.knowsIncoming(st)) h += this.incomingList();
     return h;
   },
   panel_gate() {
@@ -315,11 +316,11 @@ HK.UI = {
     const st = HK.state;
     let h = this.head(HK.t('tavern'), HK.t('tavernHint')) + `<section>${this.personRow('innkeeper')}`;
     h += st.tavernOwned ? `<p class="tag gold">${HK.t('tavernOwned', { income: HK.tavernIncome(st) })}</p>` : `<button class="small" data-action="buytavern" ${st.money >= HK.CONST.TAVERN_PRICE ? '' : 'disabled'}>${HK.t('buyTavern', { cost: HK.fmt(HK.CONST.TAVERN_PRICE) })}</button>`;
-    h += `</section><section><h3>${HK.t('rumors')}</h3><button class="small" data-action="rumor" ${st.money >= HK.CONST.RUMOR_COST ? '' : 'disabled'}>${HK.t('rumor', { cost: HK.CONST.RUMOR_COST })}</button><ul class="log">${st.rumors.map(r => `<li><small>${HK.fmtDate(r.day)}</small> ${HK.t(r.key, r.vars)}</li>`).join('')}</ul></section>`;
+    h += `</section><section><h3>${HK.t('rumors')}</h3><button class="small" data-action="rumor" ${st.money >= HK.rumorCost(st) ? '' : 'disabled'}>${HK.t('rumor', { cost: HK.rumorCost(st) })}</button><ul class="log">${st.rumors.map(r => `<li><small>${HK.fmtDate(r.day)}</small> ${HK.t(r.key, r.vars)}</li>`).join('')}</ul></section>`;
     h += `<section><h3>${HK.t('gamble')}</h3><div class="btn-row"><label>${HK.t('bet')} <input id="bet-input" type="number" min="1" data-field="bet" value="${this.esc(this.inputs.bet)}"></label><button class="small" data-action="gamble" ${st.money >= (parseInt(this.inputs.bet, 10) || 0) && (parseInt(this.inputs.bet, 10) || 0) > 0 ? '' : 'disabled'}>🎲 ${HK.t('gamble')}</button></div></section>`;
     h += `<section><h3>${HK.t('hire')}</h3><div class="btn-row"><button class="small" data-action="spy" ${st.money >= HK.CONST.SPY_COST ? '' : 'disabled'}>${HK.t('hireSpy')}</button>${st.spyUntil > st.day ? `<small>${HK.t('spyActive', { days: st.spyUntil - st.day })}</small>` : ''}</div>
-      <div class="btn-row"><button class="small" data-action="thugs" data-target="collect" ${st.money >= HK.CONST.THUG_COST ? '' : 'disabled'}>${HK.t('hireThugsCollect')}</button></div>
-      <div class="btn-row">${HK.RIVALS.map(r => `<button class="small danger" data-action="thugs" data-target="${r.id}" ${st.money >= HK.CONST.THUG_COST ? '' : 'disabled'}>${HK.t('hireThugsSabotage', { rival: r.name })}</button>`).join('')}</div></section>`;
+      <div class="btn-row"><button class="small" data-action="thugs" data-target="collect" ${st.money >= HK.thugCost(st) ? '' : 'disabled'}>${HK.t('hireThugsCollect', { cost: HK.thugCost(st) })}</button></div>
+      <div class="btn-row">${HK.RIVALS.map(r => `<button class="small danger" data-action="thugs" data-target="${r.id}" ${st.money >= HK.thugCost(st) ? '' : 'disabled'}>${HK.t('hireThugsSabotage', { rival: r.name, cost: HK.thugCost(st) })}</button>`).join('')}</div></section>`;
     return h;
   },
   panel_bank() {
@@ -354,9 +355,94 @@ HK.UI = {
     h += st.bathhouseOwned ? `<p class="tag gold">${HK.t('yours')}: ${HK.bathIncome(st)} ${HK.t('mark')}/${HK.t('day')}</p>` : `<button data-action="buybath" ${st.money >= HK.CONST.BATHHOUSE_PRICE ? '' : 'disabled'}>${HK.t('buyBathhouse', { cost: HK.fmt(HK.CONST.BATHHOUSE_PRICE) })}</button>`;
     return h;
   },
+  /* ---------- Neue Viertel: Betriebe, Speicher, Spelunke, Kloster, Spital, Schule, Hafenmeister, Zunft, Fischmarkt ---------- */
+  selBuilding() { return HK.Scene.selected && HK.BUILDING[HK.Scene.selected]; },
+  panel_venture() {
+    const st = HK.state, b = this.selBuilding(), v = b && HK.VENTURE[b.id]; if (!v) return '';
+    const o = st.ventures[v.id], cost = HK.ventureCost(st, v);
+    let h = this.head(HK.name(v), HK.t('vEffect_' + (v.effect || 'plain')));
+    h += `<section><p>${HK.t('ventureBase', { income: v.income })}${v.inp ? ` · ${HK.t('ventureInput', { good: HK.goodName(v.inp) })}` : ''}${v.craft ? ` · <span class="tag">${HK.t('needsCraft')}</span>` : ''}</p>`;
+    if (!o) h += `<button data-action="buyventure" data-id="${v.id}" ${st.money >= cost && (!v.craft || st.craftGuild) ? '' : 'disabled'}>${HK.t('buyVenture', { cost: HK.fmt(cost) })}</button>${v.craft && !st.craftGuild ? `<p class="hint">${HK.t('needCraftGuild')}</p>` : ''}`;
+    else {
+      h += `<p><span class="tag gold">${HK.t('yours')}</span> ${HK.t('ventureLevel', { level: o.level })} · <b>${HK.t('ventureIncome', { income: HK.ventureIncome(st, v.id) })}</b>${v.inp && HK.ventureSupply(st, v) < 0.8 ? ` · <span class="demand shortage">${HK.t('supplyLow', { good: HK.goodName(v.inp) })}</span>` : ''}</p><div class="btn-row">`;
+      if (o.level < HK.CONST.VENTURE_MAX_LEVEL) h += `<button class="small" data-action="upgradeventure" data-id="${v.id}" ${st.money >= Math.round(v.cost * HK.CONST.VENTURE_UPGRADE) ? '' : 'disabled'}>${HK.t('upgradeVenture', { cost: HK.fmt(Math.round(v.cost * HK.CONST.VENTURE_UPGRADE)) })}</button>`;
+      h += `<button class="small danger" data-action="sellventure" data-id="${v.id}">${HK.t('sellVenture', { price: HK.fmt(Math.round(v.cost * (0.5 + o.level * 0.1))) })}</button></div>`;
+    }
+    return h + `</section>`;
+  },
+  panel_storage() {
+    const st = HK.state, i = this.plot, def = HK.STORAGES[i], sg = st.storages[i], b = HK.BUILDINGS.find(x => x.panel === 'storage' && x.plot === i);
+    let h = this.head(HK.name(b), HK.t('storageHint', { cap: def.cap })) + `<section>`;
+    if (sg.owner !== 'player') h += `<button data-action="buystorage" ${st.money >= def.price ? '' : 'disabled'}>${HK.t('buyStorage', { price: HK.fmt(def.price) })}</button>`;
+    else {
+      h += `<p><span class="tag gold">${HK.t('yours')}</span> ${sg.mode === 'own' ? HK.t('storageOwn', { cap: def.cap }) : `<b>${HK.t('storageRent', { rent: HK.storageRent(st, i) })}</b>`}</p><div class="btn-row"><button class="small" data-action="togglestorage">${HK.t(sg.mode === 'own' ? 'useRent' : 'useOwn')}</button><button class="small danger" data-action="sellstorage">${HK.t('sellStorage', { price: HK.fmt(Math.round(def.price * 0.7)) })}</button></div>`;
+    }
+    return h + `</section>`;
+  },
+  panel_dive() {
+    const st = HK.state, v = HK.VENTURE.dive, o = st.dive.offer, q = this.qty();
+    let h = this.head(HK.name(v), HK.t('diveHint')) + `<section>${this.personRow('divekeeper')}`;
+    h += st.ventures.dive ? `<p class="tag gold">${HK.t('diveOwned', { income: HK.ventureIncome(st, 'dive') })}</p>` : `<button class="small" data-action="buyventure" data-id="dive" ${st.money >= v.cost ? '' : 'disabled'}>${HK.t('buyVenture', { cost: HK.fmt(v.cost) })}</button>`;
+    h += `</section><section><h3>${HK.t('contraband')}</h3>`;
+    if (o && o.qty > 0) h += `<p>${HK.t('contrabandOffer', { qty: o.qty, good: HK.goodName(o.good), price: o.price, base: HK.GOOD[o.good].base })}</p>${this.qtyRow()}<button data-action="contraband" ${st.money >= o.price && HK.whFree(st) > 0 ? '' : 'disabled'}>${HK.t('buyContraband')}</button>`;
+    else h += `<p class="hint">${HK.t('contrabandNone')}</p>`;
+    h += `</section><section><h3>${HK.t('fence')}</h3><p class="hint">${HK.t('fenceHint', { cap: HK.CONST.FENCE_CAP - (st.dive.fenced || 0) })}</p><table class="plain">${HK.GOODS.filter(g => (st.warehouse.stock[g.id] || 0) >= 1).map(g => `<tr><td>${HK.goodName(g.id)} <small>(${Math.floor(st.warehouse.stock[g.id])})</small></td><td class="num">${HK.fencePrice(st, g.id)}</td><td class="num"><button class="small" data-action="fence" data-good="${g.id}" ${HK.CONST.FENCE_CAP - (st.dive.fenced || 0) > 0 ? '' : 'disabled'}>${HK.t('sell')}</button></td></tr>`).join('') || `<tr><td class="hint">${HK.t('empty')}</td></tr>`}</table></section>`;
+    h += `<section><h3>${HK.t('shadyDeals')}</h3><div class="btn-row"><button class="small" data-action="bribewatch" ${st.watchUntil > st.day || st.money < HK.CONST.WATCH_BRIBE ? 'disabled' : ''}>${HK.t('bribeWatch', { cost: HK.CONST.WATCH_BRIBE, days: HK.CONST.WATCH_DAYS })}</button>${st.watchUntil > st.day ? `<small>${HK.t('watchActive', { days: st.watchUntil - st.day })}</small>` : ''}</div>`;
+    const dmg = st.ownShips.filter(s => s.status === 'port' && s.hull < 100);
+    if (dmg.length) h += `<div class="btn-row">${dmg.map(s => `<button class="small" data-action="sailors" data-id="${s.id}" ${st.money >= HK.CONST.SAILORS_COST ? '' : 'disabled'}>${HK.t('hireSailors', { ship: this.esc(s.name), cost: HK.CONST.SAILORS_COST })}</button>`).join('')}</div>`;
+    return h + `</section>`;
+  },
+  panel_monastery() {
+    const st = HK.state;
+    let h = this.head(HK.t('monastery'), HK.t('monasteryHint')) + `<section>${this.personRow('abbot')}</section>`;
+    h += `<section><h3>${HK.t('monkGoods')}</h3>${this.qtyRow()}<table class="plain">${['beer', 'wax'].map(g => `<tr><td>${HK.goodName(g)} <small>(${st.monastery.stock[g] || 0})</small></td><td class="num">${HK.monkPrice(st, g)} ${HK.t('mark')}</td><td class="num"><button class="small" data-action="buymonk" data-good="${g}" ${(st.monastery.stock[g] || 0) > 0 && st.money >= HK.monkPrice(st, g) ? '' : 'disabled'}>${HK.t('buy')}</button></td></tr>`).join('')}</table></section>`;
+    h += `<section><h3>${HK.t('piety')}</h3><div class="btn-row"><button class="small" data-action="relic" ${st.money >= HK.CONST.RELIC_COST && !(st.relicDay !== undefined && st.day - st.relicDay < 365) ? '' : 'disabled'}>${HK.t('relic', { cost: HK.fmt(HK.CONST.RELIC_COST) })}</button>${st.relicDay !== undefined && st.day - st.relicDay < 365 ? `<small>${HK.t('relicDone', { days: 365 - (st.day - st.relicDay) })}</small>` : ''}</div>
+      <div class="btn-row"><button class="small" data-action="scriptorium" ${st.money >= HK.CONST.SCRIPT_COST && !(st.scriptUntil > st.day) ? '' : 'disabled'}>${HK.t('scriptorium', { cost: HK.CONST.SCRIPT_COST, days: HK.CONST.SCRIPT_DAYS })}</button>${st.scriptUntil > st.day ? `<small>${HK.t('scriptActive', { days: st.scriptUntil - st.day })}</small>` : ''}</div></section>`;
+    if (HK.knowsIncoming(st)) h += this.incomingList();
+    return h;
+  },
+  incomingList() {
+    const st = HK.state;
+    return `<section><h3>${HK.t('incomingList')}</h3><ul class="log">${st.incoming.length ? st.incoming.map(i => `<li>${HK.t(i.sea ? 'rumorShip' : 'rumorCaravan', { origin: HK.name(HK.ORIGIN[i.origin]), days: Math.max(0, i.days), goods: Object.keys(HK.ORIGIN[i.origin].sell).map(HK.goodName).join(', ') })}</li>`).join('') : `<li>${HK.t('none')}</li>`}</ul></section>`;
+  },
+  panel_hospital() {
+    const st = HK.state;
+    let h = this.head(HK.t('hospital'), HK.t('hospitalHint')) + `<section><p>${HK.t('hospitalGiven', { amount: HK.fmt(st.hospitalGiven || 0) })}</p><div class="btn-row"><button class="small" data-action="hospitaldonate" ${st.money >= HK.CONST.HOSPITAL_DONATION ? '' : 'disabled'}>${HK.t('hospitalDonate', { cost: HK.fmt(HK.CONST.HOSPITAL_DONATION) })}</button></div>`;
+    h += st.hospitalEndowed ? `<p class="tag gold">${HK.t('hospitalEndowed')}</p>` : `<div class="btn-row"><button class="small" data-action="hospitalendow" ${st.money >= HK.CONST.HOSPITAL_ENDOW ? '' : 'disabled'}>${HK.t('hospitalEndow', { cost: HK.fmt(HK.CONST.HOSPITAL_ENDOW) })}</button></div>`;
+    return h + `</section>`;
+  },
+  panel_school() {
+    const st = HK.state, cd = st.schoolDay !== undefined && st.day - st.schoolDay < 30;
+    let h = this.head(HK.t('school'), HK.t('schoolHint')) + `<section>${this.personRow('schoolmaster')}<div class="btn-row"><button class="small" data-action="schooldonate" ${st.money >= HK.CONST.SCHOOL_DONATION && !cd ? '' : 'disabled'}>${HK.t('schoolDonate', { cost: HK.fmt(HK.CONST.SCHOOL_DONATION) })}</button>${cd ? `<small>${HK.t('schoolCooldown', { days: 30 - (st.day - st.schoolDay) })}</small>` : ''}</div>`;
+    h += st.schoolEndowed ? `<p class="tag gold">${HK.t('schoolEndowed')}</p>` : `<div class="btn-row"><button class="small" data-action="schoolendow" ${st.money >= HK.CONST.SCHOOL_ENDOW ? '' : 'disabled'}>${HK.t('schoolEndow', { cost: HK.fmt(HK.CONST.SCHOOL_ENDOW) })}</button></div>`;
+    return h + `</section>`;
+  },
+  panel_harbourmaster() {
+    const st = HK.state;
+    let h = this.head(HK.t('harbourmaster'), HK.t('harbourmasterHint', { berths: st.town.berths, ships: st.ships.length })) + `<section>${this.personRow('harbourmaster')}
+      <div class="btn-row"><button class="small" data-action="harbourbook" ${st.money >= HK.CONST.HARBOUR_BOOK && !(st.harbourBookUntil > st.day) ? '' : 'disabled'}>${HK.t('harbourBook', { cost: HK.CONST.HARBOUR_BOOK, days: HK.CONST.HARBOUR_BOOK_DAYS })}</button>${st.harbourBookUntil > st.day ? `<small>${HK.t('harbourBookActive', { days: st.harbourBookUntil - st.day })}</small>` : ''}</div>
+      <div class="btn-row"><button class="small" data-action="berthpriority" ${st.money >= HK.berthPriorityCost(st) && st.ships.length ? '' : 'disabled'}>${HK.t('berthPriority', { cost: HK.fmt(HK.berthPriorityCost(st)) })}</button></div>
+      <div class="btn-row"><button class="small" data-action="extraberth" ${st.money >= HK.CONST.EXTRA_BERTH && st.town.berths < HK.CONST.MAX_BERTHS ? '' : 'disabled'}>${HK.t('extraBerth', { cost: HK.fmt(HK.CONST.EXTRA_BERTH) })}</button> <small>${HK.t('berths')}: ${st.town.berths}/${HK.CONST.MAX_BERTHS}</small></div></section>`;
+    if (HK.knowsIncoming(st)) h += this.incomingList();
+    return h;
+  },
+  panel_craftguild() {
+    const st = HK.state, fee = Math.round(HK.CONST.CRAFT_FEE * HK.craftDiscount(st));
+    let h = this.head(HK.t('craftguild'), HK.t('craftHint', { fee: HK.fmt(fee) })) + `<section>${this.personRow('craftmaster')}`;
+    h += st.craftGuild ? `<p class="tag gold">${HK.t('craftMember')}</p>` : `<button data-action="joincraft" ${st.money >= fee ? '' : 'disabled'}>${HK.t('joinCraft', { fee: HK.fmt(fee) })}</button>`;
+    h += `</section><section><h3>${HK.t('ventures')}</h3><table class="plain">${HK.VENTURES.filter(v => v.craft).map(v => `<tr><td>${HK.name(v)}</td><td class="num">${st.ventures[v.id] ? `<span class="tag gold">${HK.t('yours')}</span>` : HK.fmt(HK.ventureCost(st, v)) + ' ' + HK.t('mark')}</td></tr>`).join('')}</table></section>`;
+    if (st.craftGuild) h += `<section><div class="btn-row"><button class="small" data-action="apprentices" ${st.money >= HK.CONST.APPRENTICES && !(st.apprenticesUntil > st.day) ? '' : 'disabled'}>${HK.t('apprentices', { cost: HK.fmt(HK.CONST.APPRENTICES), days: HK.CONST.APPRENTICE_DAYS })}</button>${st.apprenticesUntil > st.day ? `<small>${HK.t('apprenticesActive', { days: st.apprenticesUntil - st.day })}</small>` : ''}</div>
+      <div class="btn-row">${st.masterTitle ? `<span class="tag gold">${HK.t('masterTitleDone')}</span>` : `<button class="small" data-action="mastertitle" ${st.money >= HK.CONST.MASTER_TITLE && HK.ventureCount(st) >= 3 ? '' : 'disabled'}>${HK.t('masterTitle', { cost: HK.fmt(HK.CONST.MASTER_TITLE) })}</button>`}</div></section>`;
+    return h;
+  },
+  panel_fishmarket() {
+    const st = HK.state, cap = HK.CONST.FISHMARKET_CAP - (st.fishSold || 0);
+    let h = this.head(HK.t('fishmarket'), HK.t('fishmarketHint', { cap })) + `<section>${this.qtyRow()}<table class="plain">${['fish', 'smokedfish'].map(g => `<tr><td>${HK.goodName(g)} <small>(${Math.floor(st.warehouse.stock[g] || 0)})</small></td><td class="num">${HK.fishmarketPrice(st, g)} ${HK.t('mark')}</td><td class="num"><button class="small" data-action="fishsell" data-good="${g}" ${cap > 0 && (st.warehouse.stock[g] || 0) >= 1 ? '' : 'disabled'}>${HK.t('sell')}</button></td></tr>`).join('')}</table></section>`;
+    return h;
+  },
   panel_person() {
     const p = HK.PERSON[this.person]; if (!p) return '';
-    const link = { customs: 'customs', priest: 'church', bailiff: 'bailiff', innkeeper: 'tavern', changer: 'bank', guild: 'guild', shipwright: 'shipyard', mayor: 'townhall' }[this.person];
+    const link = { customs: 'customs', priest: 'church', bailiff: 'bailiff', innkeeper: 'tavern', changer: 'bank', guild: 'guild', shipwright: 'shipyard', mayor: 'townhall', abbot: 'monastery', craftmaster: 'craftguild', harbourmaster: 'harbourmaster', divekeeper: 'dive', schoolmaster: 'school' }[this.person];
     return this.head(p.name, p.title[HK.LANG] || p.title.de) + `<section>${this.personRow(this.person)}${link ? `<button class="small" data-action="open" data-panel="${link}">${HK.name(HK.BUILDINGS.find(b => b.panel === link))} →</button>` : ''}</section>`;
   },
   panel_encounter() {
@@ -470,6 +556,30 @@ HK.UI = {
       case 'send': if (ship) this.result(HK.sendShip(st, ship.id, this.inputs.dest, this.inputs.bring)); break;
       case 'hutfish': r = HK.buyFishFromHuts(st, Math.min(q, st.hutFish || 0, HK.whFree(st))); if (this.result(r)) this.toast(HK.t('bought', { qty: '', good: HK.goodName('fish'), cost: HK.fmt(r.cost) }), 'good', 1800); break;
       case 'enc': if (this.result(HK.encounterAction(st, this.encounter))) { this.encounter.action = null; } break;
+      case 'buyventure': if (this.result(HK.buyVenture(st, d.id))) this.toast(HK.t('ventureBought', { venture: HK.name(HK.VENTURE[d.id]) }), 'good', 2500); break;
+      case 'upgradeventure': this.result(HK.upgradeVenture(st, d.id)); break;
+      case 'sellventure': if (confirm(HK.t('sellVenture', { price: '' }) + '?')) HK.sellVenture(st, d.id); break;
+      case 'buystorage': this.result(HK.buyStorage(st, this.plot)); break;
+      case 'togglestorage': this.result(HK.toggleStorage(st, this.plot)); break;
+      case 'sellstorage': if (confirm(HK.t('sellStorage', { price: '' }) + '?')) this.result(HK.sellStorage(st, this.plot)); break;
+      case 'joincraft': this.result(HK.joinCraftGuild(st)); break;
+      case 'apprentices': this.result(HK.hireApprentices(st)); break;
+      case 'mastertitle': this.result(HK.masterTitle(st)); break;
+      case 'contraband': r = HK.buyContraband(st, q); if (this.result(r)) this.toast(HK.t('bought', { qty: r.qty, good: HK.goodName(st.dive.offer.good), cost: HK.fmt(r.cost) }), 'good', 1800); break;
+      case 'fence': r = HK.fenceSell(st, d.good, q); if (this.result(r)) this.toast(HK.t('sold', { qty: r.qty, good: HK.goodName(d.good), cost: HK.fmt(r.cost) }), 'good', 1800); break;
+      case 'bribewatch': this.result(HK.bribeWatch(st)); break;
+      case 'sailors': this.result(HK.hireSailors(st, parseInt(d.id, 10))); break;
+      case 'buymonk': r = HK.buyFromMonks(st, d.good, q); if (this.result(r)) this.toast(HK.t('bought', { qty: r.qty, good: HK.goodName(d.good), cost: HK.fmt(r.cost) }), 'good', 1800); break;
+      case 'relic': this.result(HK.donateRelic(st)); break;
+      case 'scriptorium': this.result(HK.buyScriptorium(st)); break;
+      case 'hospitaldonate': this.result(HK.hospitalDonate(st)); break;
+      case 'hospitalendow': this.result(HK.hospitalEndow(st)); break;
+      case 'schooldonate': this.result(HK.schoolDonate(st)); break;
+      case 'schoolendow': this.result(HK.schoolEndow(st)); break;
+      case 'harbourbook': this.result(HK.buyHarbourBook(st)); break;
+      case 'berthpriority': this.result(HK.berthPriority(st)); break;
+      case 'extraberth': this.result(HK.buyExtraBerth(st)); break;
+      case 'fishsell': r = HK.fishmarketSell(st, d.good, q); if (this.result(r)) this.toast(HK.t('sold', { qty: r.qty, good: HK.goodName(d.good), cost: HK.fmt(r.cost) }), 'good', 1800); break;
     }
     this.renderAll();
   },

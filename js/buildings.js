@@ -18,6 +18,7 @@ Object.assign(HK.Scene, {
     o = o || {}; const seed = this.seed(b), shut = [null, '#4f6f3f', '#7a3a3a', '#3a5a7a', '#6a5a2a'][seed % 5], flowers = seed % 2 === 0;
     const nL = Math.max(1, Math.round(b.w / 0.5)), nR = Math.max(1, Math.round(b.d / 0.5));
     for (let f = 0; f < floors; f++) {
+      if (f > 0 && b.noWindowsUpper) continue;
       const z = 0.3 + f * (b.h / floors) * 0.95, hz = 0.32, wz = 0.24;
       for (let i = 0; i < nL; i++) { const u = b.w * (i + 0.5) / nL; if (f === 0 && o.doorL !== undefined && Math.abs(u - o.doorL) < 0.3) continue; I.windowL(ctx, b.x, b.y, b.d, z, u, wz, hz, { shutters: f === 0 ? shut : null, flowers: f === 1 && flowers, arch: o.arch }); }
       for (let i = 0; i < nR; i++) { const v = b.d * (i + 0.5) / nR; if (f === 0 && o.doorR !== undefined && Math.abs(v - o.doorR) < 0.3) continue; I.windowR(ctx, b.x, b.w, b.y, z, v, wz, hz, { shutters: f === 0 ? shut : null, flowers: f === 1 && flowers, arch: o.arch }); }
@@ -63,9 +64,29 @@ Object.assign(HK.Scene, {
     if ((ridge === 'y' ? b.d : b.w) > 1.4 && this.seed(b) % 2) { if (ridge === 'y') { const gx = b.x + b.w * 0.72, gy = b.y + b.d * 0.5; I.box(ctx, gx, gy - 0.15, b.h + rh * 0.25, 0.3, 0.3, 0.28, { wall: wall }, { noTop: true }); I.pyramid(ctx, gx, gy - 0.15, b.h + rh * 0.25 + 0.28, 0.3, 0.3, 0.16, roofCol); I.windowR(ctx, gx, 0.3, gy - 0.15, b.h + rh * 0.25 + 0.05, 0.15, 0.14, 0.16, {}); } else { const gx = b.x + b.w * 0.5, gy = b.y + b.d * 0.72; I.box(ctx, gx - 0.15, gy, b.h + rh * 0.25, 0.3, 0.3, 0.28, { wall: wall }, { noTop: true }); I.pyramid(ctx, gx - 0.15, gy, b.h + rh * 0.25 + 0.28, 0.3, 0.3, 0.16, roofCol); I.windowL(ctx, gx - 0.15, gy, 0.3, b.h + rh * 0.25 + 0.05, 0.15, 0.14, 0.16, {}); } }
     this.chimney(ctx, b.x + b.w * 0.75, b.y + b.d * 0.4, b.h + rh * 0.55);
     if (b.hoist) { const gx = b.x + b.w, gy = b.y + b.d / 2; I.line(ctx, [gx, gy, b.h + rh + 0.05], [gx + 0.5, gy, b.h + rh - 0.05], '#3a2a1a', 2.5); I.line(ctx, [gx + 0.5, gy, b.h + rh - 0.05], [gx + 0.5, gy, b.h * 0.5 + Math.sin(this.time) * 0.15], '#222', 0.8); I.box(ctx, gx + 0.4, gy - 0.1, b.h * 0.5 + Math.sin(this.time) * 0.15 - 0.25, 0.22, 0.22, 0.25, { wall: '#9a7a4a', top: '#b08a50' }); }
-    if (b.sign) { const p = I.p(b.x + b.w, b.y + b.d * 0.2, b.h * 0.7); ctx.strokeStyle = '#3a2a1a'; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.moveTo(p[0], p[1]); ctx.lineTo(p[0] + 12, p[1] - 4); ctx.stroke(); ctx.fillStyle = '#4a3320'; ctx.fillRect(p[0] + 8, p[1] - 4, 9, 8); ctx.fillStyle = '#f0e6cc'; ctx.fillRect(p[0] + 9, p[1] - 3, 7, 6); if (b.sign === 'tavern') { ctx.fillStyle = '#c9a24a'; ctx.beginPath(); ctx.ellipse(p[0] + 12.5, p[1], 3, 1.6, -0.4, 0, 6.28); ctx.fill(); } else { ctx.fillStyle = '#e0b040'; ctx.beginPath(); ctx.arc(p[0] + 12.5, p[1], 2.2, 0, 6.28); ctx.fill(); } }
+    if (b.sign) { const p = I.p(b.x + b.w, b.y + b.d * 0.2, b.h * 0.7); ctx.strokeStyle = '#3a2a1a'; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.moveTo(p[0], p[1]); ctx.lineTo(p[0] + 12, p[1] - 4); ctx.stroke(); ctx.fillStyle = '#4a3320'; ctx.fillRect(p[0] + 8, p[1] - 4, 9, 8); ctx.fillStyle = '#f0e6cc'; ctx.fillRect(p[0] + 9, p[1] - 3, 7, 6); this.signIcon(ctx, b.sign, p[0] + 12.5, p[1]); }
+    if (b.shabby) { I.poly(ctx, [[b.x, b.y + b.d, 0.12], [b.x + b.w, b.y + b.d, 0.12], [b.x + b.w, b.y + b.d, 0.45], [b.x, b.y + b.d, 0.45]], 'rgba(60,50,30,0.3)'); I.poly(ctx, [[b.x + b.w, b.y + 0.1, b.h * 0.5], [b.x + b.w, b.y + 0.5, b.h * 0.5], [b.x + b.w, b.y + 0.4, b.h * 0.95], [b.x + b.w, b.y + 0.15, b.h * 0.9]], 'rgba(40,60,30,0.28)'); this.barrel3(ctx, b.x + b.w + 0.12, b.y + b.d - 0.3, 0); }
+    if (b.bigChimney) { I.box(ctx, b.x + b.w * 0.55, b.y + b.d * 0.35, b.h + rh * 0.3, 0.3, 0.3, 0.9, { wall: '#5a4a44', top: '#2a2420' }); }
     if (b.flagpole) { I.line(ctx, [b.x + b.w + 0.05, b.y + 0.15, 0], [b.x + b.w + 0.05, b.y + 0.15, 1.8], '#3a2a1a', 1.3); this.pennant(ctx, b.x + b.w + 0.05, b.y + 0.15, 1.8, 0.5, 0.3, ['#c8102e', '#f0ece0'], false); }
     if (b.id === 'bathhouse') for (let i = 0; i < 3; i++) { const p = I.p(b.x + b.w * 0.75, b.y + b.d * 0.4, b.h + rh * 0.55 + 0.3); ctx.fillStyle = `rgba(240,240,240,${0.25 - i * 0.06})`; ctx.beginPath(); ctx.arc(p[0] + 2 + Math.sin(this.time * 2 + i) * 3, p[1] - 6 - i * 7, 3 + i * 2, 0, 6.28); ctx.fill(); }
+  },
+  /* Zunftzeichen auf dem Aushängeschild */
+  signIcon(ctx, kind, x, y) {
+    ctx.save(); ctx.translate(x, y);
+    switch (kind) {
+      case 'tavern': ctx.fillStyle = '#c9a24a'; ctx.beginPath(); ctx.ellipse(0, 0, 3, 1.6, -0.4, 0, 6.28); ctx.fill(); break;
+      case 'mug': ctx.fillStyle = '#7a5a3a'; ctx.fillRect(-2, -2.2, 3.4, 4.4); ctx.strokeStyle = '#7a5a3a'; ctx.lineWidth = 0.9; ctx.beginPath(); ctx.arc(1.8, 0, 1.3, -1.3, 1.3); ctx.stroke(); ctx.fillStyle = '#f4ead6'; ctx.fillRect(-2, -2.8, 3.4, 1); break;
+      case 'pretzel': ctx.strokeStyle = '#a0682a'; ctx.lineWidth = 1.2; ctx.beginPath(); ctx.arc(0, 0.3, 2.3, 0.3, 2.85); ctx.moveTo(-2, 1.8); ctx.lineTo(1.4, -1.6); ctx.moveTo(2, 1.8); ctx.lineTo(-1.4, -1.6); ctx.stroke(); break;
+      case 'cleaver': ctx.fillStyle = '#9a9a9a'; ctx.fillRect(-2.4, -2, 4, 3); ctx.fillStyle = '#5a3a1a'; ctx.fillRect(1.4, -0.4, 1.4, 3); break;
+      case 'barrel': ctx.fillStyle = '#7a5a34'; ctx.beginPath(); ctx.ellipse(0, 0, 2.2, 2.7, 0, 0, 6.28); ctx.fill(); ctx.strokeStyle = '#2a1a0a'; ctx.lineWidth = 0.7; ctx.beginPath(); ctx.moveTo(-2.1, -0.8); ctx.lineTo(2.1, -0.8); ctx.moveTo(-2.1, 0.8); ctx.lineTo(2.1, 0.8); ctx.stroke(); break;
+      case 'fish': ctx.fillStyle = '#3f6a8a'; ctx.beginPath(); ctx.ellipse(-0.5, 0, 2.4, 1.3, 0, 0, 6.28); ctx.fill(); ctx.beginPath(); ctx.moveTo(1.6, 0); ctx.lineTo(3, -1.4); ctx.lineTo(3, 1.4); ctx.fill(); break;
+      case 'sail': ctx.fillStyle = '#e8e0c8'; ctx.beginPath(); ctx.moveTo(-1.5, 2.5); ctx.lineTo(-1.5, -2.6); ctx.lineTo(2.4, 1.2); ctx.fill(); ctx.fillStyle = '#3a2a1a'; ctx.fillRect(-2.1, -2.8, 0.8, 5.6); break;
+      case 'pot': ctx.fillStyle = '#b06a3a'; ctx.beginPath(); ctx.moveTo(-2, -1.5); ctx.lineTo(2, -1.5); ctx.lineTo(1.4, 2.4); ctx.lineTo(-1.4, 2.4); ctx.fill(); ctx.fillRect(-2.4, -2.4, 4.8, 1); break;
+      case 'book': ctx.fillStyle = '#7a2a2a'; ctx.fillRect(-2.6, -2, 5.2, 4); ctx.fillStyle = '#f4ead6'; ctx.fillRect(-2.1, -1.5, 2, 3); ctx.fillRect(0.2, -1.5, 2, 3); break;
+      case 'cross': ctx.fillStyle = '#c8102e'; ctx.fillRect(-0.7, -2.6, 1.4, 5.2); ctx.fillRect(-2.4, -0.7, 4.8, 1.4); break;
+      default: ctx.fillStyle = '#e0b040'; ctx.beginPath(); ctx.arc(0, 0, 2.2, 0, 6.28); ctx.fill();
+    }
+    ctx.restore();
   },
   gableDeco(ctx, b, pts, side) {
     // Blendnischen, Luken, Oculus, Giebelzier auf dem Treppengiebel
@@ -78,7 +99,7 @@ Object.assign(HK.Scene, {
     // Ecktürmchen
     const tx = b.x + b.w - 0.02, ty = b.y + 0.02;
     I.cylinder(ctx, tx, ty, b.h * 0.45, 0.2, b.h * 0.7, '#a24a3a', { brick: true, noTop: true }); I.cone(ctx, tx, ty, b.h * 1.15, 0.24, 0.5, season === 'winter' ? '#e6eaee' : '#3a3038');
-    if (b.banner) { const p = I.p(b.x + b.w, b.y + b.d * 0.5, b.h * 0.85); ctx.fillStyle = '#6a2a8a'; ctx.fillRect(p[0] - 3, p[1], 7, 18); ctx.fillStyle = '#e0b040'; ctx.fillRect(p[0] - 1, p[1] + 4, 3, 3); ctx.fillStyle = '#3a2a1a'; ctx.fillRect(p[0] - 5, p[1] - 1, 11, 1.5); }
+    if (b.banner) { const p = I.p(b.x + b.w, b.y + b.d * 0.5, b.h * 0.85); ctx.fillStyle = b.banner === 'green' ? '#2a6a3a' : '#6a2a8a'; ctx.fillRect(p[0] - 3, p[1], 7, 18); ctx.fillStyle = '#e0b040'; ctx.fillRect(p[0] - 1, p[1] + 4, 3, 3); ctx.fillStyle = '#3a2a1a'; ctx.fillRect(p[0] - 5, p[1] - 1, 11, 1.5); }
     if (b.id === 'bailiff') { const p = I.p(b.x + b.w, b.y + b.d * 0.5, 0.9); this.lamps.push([p[0] + 3, p[1]]); ctx.fillStyle = '#3a2a1a'; ctx.fillRect(p[0] + 2, p[1] - 6, 1.5, 7); }
   },
   drawTownhall(ctx, b, st, season, sv) {
@@ -123,12 +144,18 @@ Object.assign(HK.Scene, {
   },
   drawHuts(ctx, b, st, season, sv) {
     const snow = season === 'winter';
-    for (const [hx, hy] of [[b.x, b.y], [b.x + 0.7, b.y + 1.1]]) { I.shadow(ctx, hx, hy, 0.65, 0.6, 0.5, sv.v, sv.a); I.box(ctx, hx, hy, 0, 0.65, 0.6, 0.45, { wall: '#8a6a44' }, { noTop: true }); for (let z = 0.08; z < 0.45; z += 0.09) I.line(ctx, [hx, hy + 0.6, z], [hx + 0.65, hy + 0.6, z], 'rgba(0,0,0,0.25)', 0.5); I.gableRoof(ctx, hx, hy, 0.45, 0.65, 0.6, 0.35, snow ? '#e6eaee' : '#9a8352', 'x', { overhang: 0.1, rows: 4, gableFill: '#8a6a44' }); I.doorR(ctx, hx, 0.65, hy, 0, 0.3, 0.2, 0.32, false); I.windowL(ctx, hx, hy, 0.6, 0.15, 0.3, 0.14, 0.14, {}); }
-    // Fischgestell, Netz, umgedrehtes Boot
-    for (const u of [0.1, 0.5]) I.line(ctx, [b.x + 1.0, b.y + u, 0], [b.x + 1.0, b.y + u, 0.5], '#4a3a2a', 1.2); I.line(ctx, [b.x + 1.0, b.y + 0.1, 0.45], [b.x + 1.0, b.y + 0.5, 0.45], '#4a3a2a', 1);
-    for (let k = 0.14; k < 0.5; k += 0.07) I.line(ctx, [b.x + 1.0, b.y + k, 0.45], [b.x + 1.0, b.y + k, 0.3], '#b8a888', 1.2);
-    ctx.strokeStyle = 'rgba(60,50,40,0.6)'; for (let k = 0; k < 5; k++) I.line(ctx, [b.x + 0.2 + k * 0.1, b.y + 0.85, 0.25], [b.x + 0.25 + k * 0.1, b.y + 1.0, 0], 'rgba(60,50,40,0.6)', 0.6);
-    I.poly(ctx, [[b.x + 0.1, b.y + 1.9, 0], [b.x + 0.9, b.y + 1.85, 0], [b.x + 0.85, b.y + 2.05, 0.12], [b.x + 0.15, b.y + 2.1, 0.12]], '#4a3018', 'rgba(0,0,0,0.4)');
+    for (const [hx, hy, hw, hd, rot] of [[b.x, b.y, 0.7, 0.6, 'x'], [b.x + 0.8, b.y + 0.9, 0.65, 0.7, 'y'], [b.x + 0.05, b.y + 1.7, 0.75, 0.6, 'x'], [b.x + 1.0, b.y + 2.0, 0.55, 0.5, 'y']]) {
+      I.shadow(ctx, hx, hy, hw, hd, 0.5, sv.v, sv.a); I.box(ctx, hx, hy, 0, hw, hd, 0.42, { wall: '#8a6a44' }, { noTop: true });
+      for (let z = 0.08; z < 0.42; z += 0.09) { I.line(ctx, [hx, hy + hd, z], [hx + hw, hy + hd, z], 'rgba(0,0,0,0.25)', 0.5); I.line(ctx, [hx + hw, hy, z], [hx + hw, hy + hd, z], 'rgba(0,0,0,0.3)', 0.5); }
+      // Reetdach: dick, weich überstehend, mit Firstkappe
+      I.gableRoof(ctx, hx, hy, 0.42, hw, hd, Math.min(hw, hd) * 0.6, snow ? '#e6eaee' : '#a8905a', rot, { overhang: 0.14, rows: 5, gableFill: '#8a6a44', tileDark: 'rgba(90,60,20,0.35)' });
+      if (rot === 'x') I.line(ctx, [hx - 0.1, hy + hd / 2, 0.42 + Math.min(hw, hd) * 0.6], [hx + hw + 0.1, hy + hd / 2, 0.42 + Math.min(hw, hd) * 0.6], '#6a5a3a', 2.2); else I.line(ctx, [hx + hw / 2, hy - 0.1, 0.42 + Math.min(hw, hd) * 0.6], [hx + hw / 2, hy + hd + 0.1, 0.42 + Math.min(hw, hd) * 0.6], '#6a5a3a', 2.2);
+      I.doorR(ctx, hx, hw, hy, 0, hd / 2, 0.2, 0.32, false); I.windowL(ctx, hx, hy, hd, 0.14, hw / 2, 0.14, 0.14, {});
+    }
+    // Fischgestell, Netze, Rauchfeuer
+    for (const u of [0.1, 0.5]) I.line(ctx, [b.x + 1.5, b.y + u, 0], [b.x + 1.5, b.y + u, 0.5], '#4a3a2a', 1.2); I.line(ctx, [b.x + 1.5, b.y + 0.1, 0.45], [b.x + 1.5, b.y + 0.5, 0.45], '#4a3a2a', 1);
+    for (let k = 0.14; k < 0.5; k += 0.07) I.line(ctx, [b.x + 1.5, b.y + k, 0.45], [b.x + 1.5, b.y + k, 0.3], '#b8a888', 1.2);
+    const fp = I.p(b.x + 0.9, b.y + 0.4, 0); ctx.fillStyle = '#4a3a2a'; ctx.beginPath(); ctx.ellipse(fp[0], fp[1], 5, 2.5, 0, 0, 6.28); ctx.fill(); if (!this.picking) { ctx.fillStyle = `rgba(255,140,40,${0.6 + Math.sin(this.time * 8) * 0.25})`; ctx.beginPath(); ctx.arc(fp[0], fp[1] - 2, 2, 0, 6.28); ctx.fill(); if (this.light() < 0.6) this.lamps.push([fp[0], fp[1] - 2]); }
   },
   drawYard(ctx, b) {
     I.poly(ctx, [[b.x, b.y, 0], [b.x + b.w, b.y, 0], [b.x + b.w, b.y + b.d, 0], [b.x, b.y + b.d, 0]], this.pat.planks, 'rgba(0,0,0,0.4)');
@@ -172,6 +199,59 @@ Object.assign(HK.Scene, {
     if (mine) this.gableFlag(ctx, x + 0.55, y, 0.75);
   },
   drawMarket() {},
+  /* Lagerhalle: Traufenhaus mit Ladeluken statt Fenstern im Obergeschoss, Kran, Rampe */
+  drawLonghouse(ctx, b, st, season, sv) {
+    this.drawHouse(ctx, Object.assign({}, b, { noWindowsUpper: true }), st, season, sv, false);
+    const yy = b.y + b.d, n = Math.max(2, Math.round(b.w / 0.8));
+    for (let i = 0; i < n; i++) { const u = b.x + b.w * (i + 0.5) / n; if (b.low) continue; I.poly(ctx, [[u - 0.16, yy + 0.005, b.h * 0.55], [u + 0.16, yy + 0.005, b.h * 0.55], [u + 0.16, yy + 0.005, b.h * 0.92], [u - 0.16, yy + 0.005, b.h * 0.92]], '#3a2a1a', 'rgba(20,10,5,0.6)', 0.6); I.line(ctx, [u, yy + 0.01, b.h * 0.55], [u, yy + 0.01, b.h * 0.92], 'rgba(0,0,0,0.5)', 0.6); }
+    if (b.low) { for (let u = 0.3; u < b.w; u += 0.6) I.poly(ctx, [[b.x + u - 0.1, yy + 0.005, 0.12], [b.x + u + 0.1, yy + 0.005, 0.12], [b.x + u + 0.1, yy + 0.005, 0.42], [b.x + u - 0.1, yy + 0.005, 0.42]], '#3a2a1a'); }
+    if (!b.low) { I.poly(ctx, [[b.x + 0.2, yy, 0], [b.x + 0.8, yy, 0], [b.x + 0.8, yy + 0.35, 0], [b.x + 0.2, yy + 0.35, 0]], 'rgba(60,45,25,0.35)'); this.crate3(ctx, b.x + 0.25, yy + 0.05, 0, 0.22); }
+  },
+  /* Offene Markthalle: Pfosten, Satteldach, Tische mit Fisch */
+  drawOpenHall(ctx, b, st, season, sv) {
+    const rh = 0.45, snow = season === 'winter';
+    I.shadow(ctx, b.x, b.y, b.w, b.d, b.h + rh * 0.5, sv.v, sv.a);
+    I.poly(ctx, [[b.x, b.y, 0], [b.x + b.w, b.y, 0], [b.x + b.w, b.y + b.d, 0], [b.x, b.y + b.d, 0]], this.pat.stone, 'rgba(0,0,0,0.3)');
+    // Tische hinten (werden von Pfosten und Dach überlagert)
+    for (const [tx, ty] of [[b.x + 0.15, b.y + 0.2], [b.x + 0.85, b.y + 0.2], [b.x + 0.15, b.y + 0.65], [b.x + 0.85, b.y + 0.65]]) { I.box(ctx, tx, ty, 0.25, 0.5, 0.3, 0.08, { wall: '#7a5a3a', top: '#a08a5a' }); for (let k = 0; k < 4; k++) { const p = I.p(tx + 0.08 + k * 0.11, ty + 0.15, 0.36); ctx.fillStyle = k % 2 ? '#9fb3c8' : '#7d93a8'; ctx.beginPath(); ctx.ellipse(p[0], p[1], 3.2, 1.4, -0.4, 0, 6.28); ctx.fill(); ctx.fillStyle = '#2a2a2a'; ctx.fillRect(p[0] + 1.5, p[1] - 1, 0.9, 0.9); } }
+    for (const [px, py] of [[b.x, b.y], [b.x + b.w / 2, b.y], [b.x + b.w, b.y], [b.x, b.y + b.d], [b.x + b.w / 2, b.y + b.d], [b.x + b.w, b.y + b.d]]) I.line(ctx, [px, py, 0], [px, py, b.h], '#4a3320', 2.6);
+    I.line(ctx, [b.x, b.y + b.d, b.h - 0.05], [b.x + b.w, b.y + b.d, b.h - 0.05], '#3a2a1a', 1.8); I.line(ctx, [b.x + b.w, b.y, b.h - 0.05], [b.x + b.w, b.y + b.d, b.h - 0.05], '#3a2a1a', 1.8);
+    I.gableRoof(ctx, b.x, b.y, b.h, b.w, b.d, rh, snow ? '#e6eaee' : '#7a6a4a', 'x', { overhang: 0.16, rows: 5, gableFill: '#8a6a44' });
+    const p = I.p(b.x + b.w, b.y + b.d * 0.5, b.h + 0.1); ctx.fillStyle = '#f0e6cc'; ctx.fillRect(p[0] - 6, p[1] - 4, 12, 7); ctx.fillStyle = '#3f6a8a'; ctx.beginPath(); ctx.ellipse(p[0], p[1] - 0.5, 4, 1.8, -0.3, 0, 6.28); ctx.fill();
+    const gullP = I.p(b.x + 0.3, b.y - 0.1, b.h + rh + 0.05); ctx.fillStyle = '#f0ece0'; ctx.beginPath(); ctx.ellipse(gullP[0], gullP[1], 2.5, 1.8, 0, 0, 6.28); ctx.fill();
+  },
+  /* Kloster: Kapelle mit Dachreiter, Konventsflügel, Kreuzgang mit Garten und Brunnen */
+  drawMonastery(ctx, b, st, season, sv) {
+    const snow = season === 'winter';
+    I.shadow(ctx, b.x, b.y, b.w, b.d, b.h + 0.6, sv.v, sv.a);
+    // Kapelle hinten über die ganze Breite (First entlang x), Dachreiter mit Glocke
+    const cd = 0.95;
+    this.drawHouse(ctx, { id: 'monastery_c', x: b.x, y: b.y, w: b.w, d: cd, h: b.h + 0.2, brick: true, roof: '#4e4650' }, st, season, sv, true);
+    for (let i = 0; i < 4; i++) I.windowL(ctx, b.x, b.y, cd, 0.35, b.w * (i + 0.5) / 4, 0.2, 0.9, { arch: true, frame: '#3a2a20' });
+    const rh = Math.min(b.w, cd) * 0.62, tx = b.x + b.w * 0.5 - 0.14, ty = b.y + cd * 0.5 - 0.14, tz = b.h + 0.2 + rh * 0.85;
+    I.box(ctx, tx, ty, tz, 0.28, 0.28, 0.5, { wall: '#5a4a44' }, { noTop: true }); const bp = I.p(tx + 0.14, ty + 0.28, tz + 0.25); ctx.fillStyle = '#c9a24a'; ctx.beginPath(); ctx.arc(bp[0], bp[1], 2.2, 0, 6.28); ctx.fill();
+    I.pyramid(ctx, tx - 0.04, ty - 0.04, tz + 0.5, 0.36, 0.36, 0.55, snow ? '#e6eaee' : '#3a3038');
+    const cp = I.p(tx + 0.14, ty + 0.14, tz + 1.05); ctx.strokeStyle = '#e0b040'; ctx.lineWidth = 1.6; ctx.beginPath(); ctx.moveTo(cp[0], cp[1]); ctx.lineTo(cp[0], cp[1] - 9); ctx.moveTo(cp[0] - 3, cp[1] - 6.5); ctx.lineTo(cp[0] + 3, cp[1] - 6.5); ctx.stroke();
+    // Konventsflügel vorne links, Kreuzgarten vorne rechts mit Mauer, Brunnen und Baum
+    const ww = 1.2, gy = b.y + cd + 0.05, gd = b.d - cd - 0.05, gx = b.x + ww + 0.1, gw = b.w - ww - 0.1;
+    this.drawHouse(ctx, { id: 'monastery_w', x: b.x, y: gy, w: ww, d: gd, h: b.h - 0.3, brick: true, roof: '#4e4650' }, st, season, sv, false);
+    I.poly(ctx, [[gx, gy, 0], [gx + gw, gy, 0], [gx + gw, gy + gd, 0], [gx, gy + gd, 0]], snow ? this.pat.snow : this.pat.grass);
+    I.poly(ctx, [[gx + 0.15, gy + 0.15, 0.005], [gx + gw - 0.15, gy + 0.15, 0.005], [gx + gw - 0.15, gy + gd - 0.15, 0.005], [gx + 0.15, gy + gd - 0.15, 0.005]], 'rgba(0,0,0,0)', 'rgba(120,100,60,0.5)', 0.8);
+    I.cylinder(ctx, gx + gw * 0.5, gy + gd * 0.5, 0, 0.14, 0.2, '#8f887a', { brick: true }); this.drawTree(ctx, gx + 0.3, gy + 0.25, 0.26, season, sv);
+    for (let v = 0.12; v < gd; v += 0.24) I.line(ctx, [gx + gw, gy + v, 0], [gx + gw, gy + v, 0.42], '#7d766a', 2.2);
+    for (let u = 0.12; u < gw; u += 0.24) I.line(ctx, [gx + u, gy + gd, 0], [gx + u, gy + gd, 0.42], '#8f887a', 2.2);
+    I.box(ctx, gx, gy + gd - 0.06, 0.42, gw + 0.06, 0.06, 0.07, { wall: '#8f887a', top: '#a9a292' }); I.box(ctx, gx + gw - 0.06, gy, 0.42, 0.06, gd, 0.07, { wall: '#7d766a', top: '#a9a292' });
+    if (!this.picking) { const mp = I.p(gx + gw - 0.35, gy + gd - 0.25, 0); this.drawPerson(ctx, mp[0], mp[1], '#4a3a2a', 'monk', 1, false, '#e8c39e', 0, -1, null, null, 0.8); }
+  },
+  /* Spital: Backsteinhalle mit Kreuz am Giebel und Glockengiebel, Kranke auf Bänken */
+  drawHospital(ctx, b, st, season, sv) {
+    this.drawHouse(ctx, Object.assign({}, b, { brick: true, roof: '#4e4650' }), st, season, sv, false);
+    const rh = Math.min(b.w, b.d) * 0.62, cx = b.x + b.w / 2, yy = b.y + b.d;
+    I.line(ctx, [cx, yy + 0.02, b.h + rh - 0.1], [cx, yy + 0.02, b.h + rh + 0.4], '#e0b040', 2); I.line(ctx, [cx - 0.1, yy + 0.02, b.h + rh + 0.25], [cx + 0.1, yy + 0.02, b.h + rh + 0.25], '#e0b040', 2);
+    I.poly(ctx, [[b.x + b.w + 0.005, b.y + b.d * 0.5 - 0.18, 0.95], [b.x + b.w + 0.005, b.y + b.d * 0.5 + 0.18, 0.95], [b.x + b.w + 0.005, b.y + b.d * 0.5 + 0.18, 1.2], [b.x + b.w + 0.005, b.y + b.d * 0.5 - 0.18, 1.2]], '#f0e6cc'); I.poly(ctx, [[b.x + b.w + 0.01, b.y + b.d * 0.5 - 0.04, 0.97], [b.x + b.w + 0.01, b.y + b.d * 0.5 + 0.04, 0.97], [b.x + b.w + 0.01, b.y + b.d * 0.5 + 0.04, 1.18], [b.x + b.w + 0.01, b.y + b.d * 0.5 - 0.04, 1.18]], '#c8102e'); I.poly(ctx, [[b.x + b.w + 0.01, b.y + b.d * 0.5 - 0.14, 1.04], [b.x + b.w + 0.01, b.y + b.d * 0.5 + 0.14, 1.04], [b.x + b.w + 0.01, b.y + b.d * 0.5 + 0.14, 1.11], [b.x + b.w + 0.01, b.y + b.d * 0.5 - 0.14, 1.11]], '#c8102e');
+    I.box(ctx, b.x + 0.2, yy + 0.12, 0, 0.7, 0.18, 0.18, { wall: '#7a5a3a', top: '#a08a5a' });
+    if (!this.picking) { const p1 = I.p(b.x + 0.45, yy + 0.32, 0); this.drawPerson(ctx, p1[0], p1[1], '#8a8a7a', 'beggar', 1, false, '#d9a98a', 0, 1, null, null, 0.8); }
+  },
   drawGate(ctx, b, st, season, sv) {
     I.shadow(ctx, b.x, b.y, b.w, b.d, b.h, sv.v, sv.a);
     I.box(ctx, b.x, b.y, 0, b.w, b.d, b.h, { wall: '#736d63' }, { stroke: 'rgba(0,0,0,0)', noTop: true }); this.masonry(ctx, true, true, b.x, b.y, b.w, b.d, 0, b.h);
@@ -207,8 +287,7 @@ Object.assign(HK.Scene, {
     const seg = (x, y, w, d, k) => segs.push({ k, f: (ctx, sv) => { I.box(ctx, x, y, 0, w, d, h, stone, ns); this.masonry(ctx, true, true, x, y, w, d, 0, h); I.poly(ctx, [[x, y, h], [x + w, y, h], [x + w, y + d, h], [x, y + d, h]], '#7d776c'); parapet(ctx, x, y, w, d, w > d); } });
     for (let x = W.COAST_X + 0.5; x < W.WALL_E; x += 2) { const x1 = Math.min(x + 2, W.WALL_E); if (x < 15.3 && x1 > 15.7) { seg(x, W.WALL_N - t, 15.3 - x, t, x + 2 + W.WALL_N); seg(15.7, W.WALL_N - t, x1 - 15.7, t, x + 2 + W.WALL_N); } else seg(x, W.WALL_N - t, x1 - x, t, x + 2 + W.WALL_N); }
     segs.push({ k: 15.5 + W.WALL_N + 2, f: (ctx) => { I.box(ctx, 15.25, W.WALL_N - t - 0.1, 0, 0.5, t + 0.2, h + 0.7, stone, ns); this.masonry(ctx, true, true, 15.25, W.WALL_N - t - 0.1, 0.5, t + 0.2, 0, h + 0.7); I.poly(ctx, [[15.32, W.WALL_N + 0.1, 0], [15.68, W.WALL_N + 0.1, 0], [15.68, W.WALL_N + 0.1, 0.7], [15.5, W.WALL_N + 0.1, 0.95], [15.32, W.WALL_N + 0.1, 0.7]], '#1e1a18'); I.pyramid(ctx, 15.2, W.WALL_N - t - 0.15, h + 0.7, 0.6, t + 0.3, 0.55, '#3a3038'); } });
-    for (let y = W.WALL_N; y < W.COAST_Y; y += 2) { if (y >= 9.3 && y < 10.7) continue; seg(W.WALL_E, y, t, Math.min(2, W.COAST_Y - y), W.WALL_E + t + y + 2); }
-    seg(W.WALL_E, 8.3, t, 1.0, W.WALL_E + 9.8); seg(W.WALL_E, 10.7, t, 1.3, W.WALL_E + 12.5);
+    for (const [ya, yb] of [[W.WALL_N, 9.3], [10.7, W.COAST_Y]]) for (let y = ya; y < yb; y += 2) { const y1 = Math.min(y + 2, yb); seg(W.WALL_E, y, t, y1 - y, W.WALL_E + t + y1); }
     // Türme: Mauerwerk, Schießscharten, Kragsteinkranz, Zinnen, Kegeldach
     const tower = (cx, cy, r, hh, k) => segs.push({ k, f: (ctx, sv) => {
       I.cylinder(ctx, cx, cy, 0, r, hh, '#736d63', { noTop: true });
@@ -294,6 +373,16 @@ Object.assign(HK.Scene, {
       case 'well': { I.cylinder(ctx, p.x, p.y, 0, 0.24, 0.28, '#8f887a', { brick: true }); const c = I.p(p.x, p.y, 0.28); ctx.fillStyle = '#3f6a8a'; ctx.beginPath(); ctx.ellipse(c[0], c[1], 0.17 * I.TW, 0.17 * I.TH, 0, 0, 6.28); ctx.fill(); I.line(ctx, [p.x - 0.22, p.y, 0], [p.x - 0.22, p.y, 0.8], '#4a3320', 2); I.line(ctx, [p.x + 0.22, p.y, 0], [p.x + 0.22, p.y, 0.8], '#4a3320', 2); I.gableRoof(ctx, p.x - 0.26, p.y - 0.18, 0.8, 0.52, 0.36, 0.18, '#5a3a2a', 'x', { overhang: 0.03, rows: 3 }); I.line(ctx, [p.x - 0.22, p.y, 0.68], [p.x + 0.22, p.y, 0.68], '#3a2a1a', 1.5); break; }
       case 'statue': { I.box(ctx, p.x - 0.22, p.y - 0.22, 0, 0.44, 0.44, 0.25, { wall: '#8f887a', top: '#a9a292' }); I.box(ctx, p.x - 0.14, p.y - 0.14, 0.25, 0.28, 0.28, 0.5, { wall: '#7d766a', top: '#9a9284' }); const s = I.p(p.x, p.y, 0.75); ctx.fillStyle = '#8f8878'; ctx.beginPath(); ctx.moveTo(s[0] - 3, s[1]); ctx.lineTo(s[0] + 3, s[1]); ctx.lineTo(s[0] + 4, s[1] - 15); ctx.lineTo(s[0] - 4, s[1] - 15); ctx.fill(); ctx.beginPath(); ctx.arc(s[0], s[1] - 17.5, 3, 0, 6.28); ctx.fill(); ctx.strokeStyle = '#8f8878'; ctx.lineWidth = 1.6; ctx.beginPath(); ctx.moveTo(s[0] + 4, s[1] - 12); ctx.lineTo(s[0] + 8, s[1] - 22); ctx.stroke(); ctx.fillStyle = '#c9a24a'; ctx.fillRect(s[0] - 6, s[1] - 11, 4, 6); break; }
       case 'nets': { for (let k = 0; k < 5; k++) I.line(ctx, [p.x, p.y + k * 0.08, 0.35], [p.x + 0.05, p.y + k * 0.08 + 0.3, 0], 'rgba(60,50,40,0.6)', 0.6); I.line(ctx, [p.x, p.y, 0], [p.x, p.y, 0.4], '#4a3a2a', 1.2); I.line(ctx, [p.x, p.y + 0.35, 0], [p.x, p.y + 0.35, 0.4], '#4a3a2a', 1.2); I.line(ctx, [p.x, p.y, 0.38], [p.x, p.y + 0.35, 0.38], '#4a3a2a', 1); break; }
+      case 'pillory': { I.line(ctx, [p.x, p.y, 0], [p.x, p.y, 0.75], '#5a4a3a', 2.4); I.box(ctx, p.x - 0.2, p.y - 0.06, 0.55, 0.4, 0.12, 0.14, { wall: '#7a5a3a', top: '#9a7a4a' }); const q = I.p(p.x - 0.05, p.y, 0.62); ctx.fillStyle = '#1e1a18'; ctx.beginPath(); ctx.arc(q[0], q[1], 1.6, 0, 6.28); ctx.arc(q[0] + 5, q[1] + 1, 1.2, 0, 6.28); ctx.arc(q[0] - 5, q[1] + 1, 1.2, 0, 6.28); ctx.fill(); break; }
+      case 'ropes': { for (const u of [0, 0.9, 1.8]) I.line(ctx, [p.x + u, p.y, 0], [p.x + u, p.y, 0.45], '#4a3a2a', 1.4); for (let k = 0; k < 3; k++) I.line(ctx, [p.x, p.y, 0.42 - k * 0.1], [p.x + 1.8, p.y, 0.42 - k * 0.1], k % 2 ? '#c9b48a' : '#a89060', 0.9); const q = I.p(p.x + 2.1, p.y + 0.1, 0); ctx.fillStyle = '#b89a62'; ctx.beginPath(); ctx.ellipse(q[0], q[1], 5, 2.6, 0, 0, 6.28); ctx.fill(); ctx.strokeStyle = 'rgba(60,40,15,0.6)'; ctx.lineWidth = 0.6; ctx.beginPath(); ctx.ellipse(q[0], q[1], 2, 1, 0, 0, 6.28); ctx.stroke(); break; }
+      case 'sails': { I.line(ctx, [p.x, p.y, 0], [p.x, p.y, 0.7], '#4a3a2a', 1.4); I.line(ctx, [p.x + 1.0, p.y, 0], [p.x + 1.0, p.y, 0.7], '#4a3a2a', 1.4); I.line(ctx, [p.x, p.y, 0.68], [p.x + 1.0, p.y, 0.68], '#3a2a1a', 1); I.poly(ctx, [[p.x + 0.1, p.y + 0.01, 0.66], [p.x + 0.9, p.y + 0.01, 0.66], [p.x + 0.85, p.y + 0.06, 0.25], [p.x + 0.5, p.y + 0.1, 0.12], [p.x + 0.15, p.y + 0.06, 0.25]], '#efe6d2', 'rgba(80,60,30,0.5)', 0.6); for (let k = 0.25; k < 0.9; k += 0.2) I.line(ctx, [p.x + k, p.y + 0.02, 0.64], [p.x + k, p.y + 0.06, 0.2], 'rgba(120,100,70,0.35)', 0.6); break; }
+      case 'kiln': { I.cylinder(ctx, p.x, p.y, 0, 0.28, 0.35, '#8a6a4a', { brick: true, noTop: true }); I.cone(ctx, p.x, p.y, 0.35, 0.3, 0.4, '#7a5a3a'); const q = I.p(p.x, p.y + 0.27, 0.12); ctx.fillStyle = '#1e1a18'; ctx.fillRect(q[0] - 2.5, q[1] - 4, 5, 4.5); if (!this.picking) { ctx.fillStyle = `rgba(255,120,30,${0.5 + Math.sin(this.time * 6) * 0.2})`; ctx.fillRect(q[0] - 1.5, q[1] - 3, 3, 2.5); if (this.light() < 0.6) this.lamps.push([q[0], q[1] - 2]); } for (let k = 0; k < 4; k++) { const r = I.p(p.x + 0.4 + (k % 2) * 0.15, p.y - 0.1 + (k >> 1) * 0.15, 0.06); ctx.fillStyle = '#b06a3a'; ctx.beginPath(); ctx.ellipse(r[0], r[1], 2.4, 1.6, 0, 0, 6.28); ctx.fill(); } break; }
+      case 'frames': { for (const v of [0, 0.5, 1.0]) { I.line(ctx, [p.x, p.y + v, 0], [p.x, p.y + v, 0.7], '#4a3a2a', 1.3); } I.line(ctx, [p.x, p.y, 0.66], [p.x, p.y + 1.0, 0.66], '#3a2a1a', 1); for (const v of [0.08, 0.58]) I.poly(ctx, [[p.x, p.y + v, 0.64], [p.x, p.y + v + 0.34, 0.64], [p.x, p.y + v + 0.3, 0.2], [p.x, p.y + v + 0.04, 0.24]], '#a8825a', 'rgba(60,40,20,0.6)', 0.6); I.cylinder(ctx, p.x - 0.25, p.y + 0.3, 0, 0.16, 0.18, '#5a4a3a', {}); const q = I.p(p.x - 0.25, p.y + 0.3, 0.18); ctx.fillStyle = '#6a5a2a'; ctx.beginPath(); ctx.ellipse(q[0], q[1], 0.12 * I.TW, 0.12 * I.TH, 0, 0, 6.28); ctx.fill(); break; }
+      case 'dyecloths': { const cols = ['#3b6ac2', '#c23b3b', '#e0c020', '#3b9a4a']; I.line(ctx, [p.x, p.y, 0], [p.x, p.y, 0.75], '#4a3a2a', 1.3); I.line(ctx, [p.x, p.y + 1.1, 0], [p.x, p.y + 1.1, 0.75], '#4a3a2a', 1.3); I.line(ctx, [p.x, p.y, 0.72], [p.x, p.y + 1.1, 0.72], '#3a2a1a', 1); cols.forEach((c, i) => { const v = 0.08 + i * 0.26; I.poly(ctx, [[p.x, p.y + v, 0.71], [p.x, p.y + v + 0.2, 0.71], [p.x, p.y + v + 0.2, 0.25 + Math.sin(this.time * 2 + i) * 0.02], [p.x, p.y + v, 0.22]], c, 'rgba(20,10,5,0.4)', 0.5); }); I.cylinder(ctx, p.x - 0.28, p.y + 0.55, 0, 0.17, 0.22, '#5a4a3a', {}); const q = I.p(p.x - 0.28, p.y + 0.55, 0.22); ctx.fillStyle = '#3b3ac2'; ctx.beginPath(); ctx.ellipse(q[0], q[1], 0.13 * I.TW, 0.13 * I.TH, 0, 0, 6.28); ctx.fill(); break; }
+      case 'gallows': { I.box(ctx, p.x - 0.35, p.y - 0.35, 0, 0.7, 0.7, 0.25, { wall: '#8f887a', top: '#a9a292' }); I.line(ctx, [p.x, p.y, 0.25], [p.x, p.y, 1.5], '#4a3a2a', 3); I.line(ctx, [p.x, p.y, 1.48], [p.x + 0.55, p.y, 1.48], '#4a3a2a', 2.6); I.line(ctx, [p.x, p.y, 1.15], [p.x + 0.3, p.y, 1.46], '#4a3a2a', 1.2); I.line(ctx, [p.x + 0.45, p.y, 1.46], [p.x + 0.45, p.y, 1.15], '#2a1a0a', 0.8); const q = I.p(p.x + 0.45, p.y, 1.12); ctx.strokeStyle = '#2a1a0a'; ctx.lineWidth = 0.8; ctx.beginPath(); ctx.ellipse(q[0], q[1], 2, 2.6, 0, 0, 6.28); ctx.stroke(); const cr = I.p(p.x + 0.5, p.y - 0.05, 1.5); ctx.fillStyle = '#1e1a18'; ctx.beginPath(); ctx.ellipse(cr[0], cr[1], 2.6, 1.6, 0, 0, 6.28); ctx.fill(); break; }
+      case 'tollbar': { I.line(ctx, [p.x, p.y - 0.55, 0], [p.x, p.y - 0.55, 0.6], '#4a3a2a', 2); I.line(ctx, [p.x, p.y + 0.55, 0], [p.x, p.y + 0.55, 0.6], '#4a3a2a', 2); const up = HK.state && HK.state.caravans.length ? 0.9 : 0; I.line(ctx, [p.x, p.y - 0.55, 0.5], [p.x, p.y + 0.55, 0.5 + up], '#c8102e', 2.2); for (let k = 0.15; k < 1.0; k += 0.3) I.line(ctx, [p.x, p.y - 0.55 + k, 0.5 + up * k / 1.1], [p.x, p.y - 0.55 + k + 0.15, 0.5 + up * (k + 0.15) / 1.1], '#f0ece0', 2.2); I.box(ctx, p.x - 0.2, p.y - 0.85, 0, 0.35, 0.3, 0.35, { wall: '#7a5a3a' }, { noTop: true }); I.pyramid(ctx, p.x - 0.2, p.y - 0.85, 0.35, 0.35, 0.3, 0.2, '#5a4a3a'); break; }
+      case 'boatup': { I.poly(ctx, [[p.x, p.y, 0], [p.x + 0.85, p.y - 0.05, 0], [p.x + 0.8, p.y + 0.25, 0.14], [p.x + 0.05, p.y + 0.3, 0.14]], '#4a3018', 'rgba(0,0,0,0.4)'); for (let k = 0.1; k < 0.8; k += 0.15) I.line(ctx, [p.x + k, p.y + 0.02, 0.02], [p.x + k, p.y + 0.27, 0.13], 'rgba(0,0,0,0.3)', 0.5); I.line(ctx, [p.x + 0.9, p.y + 0.35, 0], [p.x + 1.05, p.y + 0.35, 0.8], '#4a3a2a', 1.6); for (let k = 0; k < 6; k++) I.line(ctx, [p.x + 0.92 + k * 0.02, p.y + 0.35 + k * 0.05, 0.1 + k * 0.1], [p.x + 0.7, p.y + 0.45 + k * 0.06, 0], 'rgba(90,80,60,0.6)', 0.5); break; }
+      case 'fishracks': { for (const u of [0, 0.5, 1.0]) I.line(ctx, [p.x + u, p.y, 0], [p.x + u, p.y, 0.6], '#4a3a2a', 1.3); I.line(ctx, [p.x, p.y, 0.58], [p.x + 1.0, p.y, 0.58], '#4a3a2a', 1); I.line(ctx, [p.x, p.y, 0.38], [p.x + 1.0, p.y, 0.38], '#4a3a2a', 1); for (let k = 0.06; k < 1.0; k += 0.11) { I.line(ctx, [p.x + k, p.y, 0.58], [p.x + k, p.y, 0.44], '#9fb3c8', 1.4); I.line(ctx, [p.x + k + 0.05, p.y, 0.38], [p.x + k + 0.05, p.y, 0.24], '#7d93a8', 1.4); } break; }
       case 'cross': { I.line(ctx, [p.x, p.y, 0], [p.x, p.y, 0.9], '#5a5048', 2.4); I.line(ctx, [p.x - 0.15, p.y, 0.7], [p.x + 0.15, p.y, 0.7], '#5a5048', 2.4); break; }
       case 'laundry': { const a = I.p(p.x, p.y, 0.6), b = I.p(p.x + 1.1, p.y, 0.6); I.line(ctx, [p.x, p.y, 0], [p.x, p.y, 0.65], '#4a3320', 1.2); I.line(ctx, [p.x + 1.1, p.y, 0], [p.x + 1.1, p.y, 0.65], '#4a3320', 1.2); ctx.strokeStyle = '#333'; ctx.lineWidth = 0.7; ctx.beginPath(); ctx.moveTo(a[0], a[1]); ctx.quadraticCurveTo((a[0] + b[0]) / 2, (a[1] + b[1]) / 2 + 3, b[0], b[1]); ctx.stroke(); ['#e8e0c8', '#7a3a3a', '#3a5a7a', '#e8e0c8'].forEach((c, i) => { const t = 0.18 + i * 0.2, lx = a[0] + (b[0] - a[0]) * t, ly = a[1] + (b[1] - a[1]) * t + 2, sw = Math.sin(this.time * 3 + i) * 1.5; ctx.fillStyle = c; ctx.beginPath(); ctx.moveTo(lx, ly); ctx.lineTo(lx + 5, ly + 2); ctx.lineTo(lx + 5 + sw, ly + 9); ctx.lineTo(lx + sw, ly + 7); ctx.fill(); }); break; }
       case 'crane': { I.line(ctx, [p.x, p.y, 0], [p.x, p.y, 1.6], '#4a3320', 4); I.cylinder(ctx, p.x, p.y, 0.2, 0.28, 0.35, '#5a4020', { noTop: false }); I.line(ctx, [p.x, p.y, 1.55], [p.x - 1.0, p.y - 0.3, 1.1], '#4a3320', 3.5); I.line(ctx, [p.x, p.y, 0.9], [p.x - 0.7, p.y - 0.2, 1.25], '#4a3320', 1.5); const hz = 0.35 + Math.sin(this.time * 0.8) * 0.25; I.line(ctx, [p.x - 1.0, p.y - 0.3, 1.1], [p.x - 1.0, p.y - 0.3, hz], '#222', 0.8); this.crate3(ctx, p.x - 1.1, p.y - 0.4, hz - 0.22, 0.22); break; }
@@ -310,9 +399,14 @@ Object.assign(HK.Scene, {
       case 'yard': this.drawYard(ctx, b); break;
       case 'plot': this.drawPlot(ctx, b, st, season, sv); break;
       case 'gate': this.drawGate(ctx, b, st, season, sv); break;
+      case 'longhouse': this.drawLonghouse(ctx, b, st, season, sv); break;
+      case 'openhall': this.drawOpenHall(ctx, b, st, season, sv); break;
+      case 'monastery': this.drawMonastery(ctx, b, st, season, sv); break;
+      case 'hospital': this.drawHospital(ctx, b, st, season, sv); break;
+      case 'school': this.drawHouse(ctx, b, st, season, sv, false); break;
       case 'market': return;
     }
-    const owned = (b.panel === 'house' && st.houses[b.plot].owner === 'player') || (b.panel === 'workshop' && st.workshops[b.plot].type) || (b.id === 'tavern' && st.tavernOwned) || (b.id === 'bathhouse' && st.bathhouseOwned) || b.id === 'kontor' || b.id === 'warehouse';
+    const owned = (b.panel === 'house' && st.houses[b.plot].owner === 'player') || (b.panel === 'workshop' && st.workshops[b.plot].type) || (b.id === 'tavern' && st.tavernOwned) || (b.id === 'bathhouse' && st.bathhouseOwned) || (b.panel === 'venture' && st.ventures && st.ventures[b.id]) || (b.panel === 'storage' && st.storages && st.storages[b.plot] && st.storages[b.plot].owner === 'player') || (b.id === 'dive' && st.ventures && st.ventures.dive);
     if (owned) this.gableFlag(ctx, b.x + b.w - 0.06, b.y + b.d - 0.06, b.h);
     if (b.panel === 'house' && st.houses[b.plot].damaged) { I.poly(ctx, [[b.x, b.y + b.d, 0], [b.x + b.w, b.y + b.d, 0], [b.x + b.w, b.y + b.d, b.h], [b.x, b.y + b.d, b.h]], 'rgba(20,15,10,0.6)'); I.poly(ctx, [[b.x + b.w, b.y, 0], [b.x + b.w, b.y + b.d, 0], [b.x + b.w, b.y + b.d, b.h], [b.x + b.w, b.y, b.h]], 'rgba(20,15,10,0.65)'); }
   },

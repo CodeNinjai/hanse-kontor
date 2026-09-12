@@ -10,10 +10,10 @@ HK.Scene = {
     this.canvas = canvas; this.ctx = canvas.getContext('2d');
     canvas.width = HK.SCENE.W * this.RS; canvas.height = HK.SCENE.H * this.RS;
     this.makePatterns(); this.makeGrain();
-    for (let i = 0; i < 40; i++) this.walkers.push(this.makeWalker(true));
-    for (let i = 0; i < 6; i++) this.gulls.push({ x: HK.rnd(60, 420), y: HK.rnd(80, 560), a: HK.rnd(0, 6.28), r: HK.rnd(25, 60), s: HK.rnd(0.25, 0.6) });
-    this.carts = [{ a: [9.5, 2.8], b: [9.5, 15.8], t: 0.2, dir: 1, v: 0.25, ox: true }, { a: [8.0, 10], b: [23.2, 10], t: 0.7, dir: -1, v: 0.2, ox: false }];
-    for (let i = 0; i < 5; i++) this.chickens.push({ cx: i < 3 ? 8.4 : 17.0, cy: i < 3 ? 3.3 : 9.7, x: 0, y: 0, t: Math.random() * 10, a: Math.random() * 6.28 });
+    for (let i = 0; i < 70; i++) this.walkers.push(this.makeWalker(true));
+    for (let i = 0; i < 9; i++) this.gulls.push({ x: HK.rnd(40, 560), y: HK.rnd(80, 760), a: HK.rnd(0, 6.28), r: HK.rnd(25, 60), s: HK.rnd(0.25, 0.6) });
+    this.carts = [{ a: [9.5, 2.8], b: [9.5, 17.8], t: 0.2, dir: 1, v: 0.25, ox: true }, { a: [8.0, 10], b: [27.0, 10], t: 0.7, dir: -1, v: 0.2, ox: false }, { a: [24, 2.8], b: [24, 17.8], t: 0.5, dir: 1, v: 0.22, ox: true }];
+    for (let i = 0; i < 8; i++) this.chickens.push({ cx: i < 3 ? 8.9 : i < 5 ? 17.0 : 26.6, cy: i < 3 ? -0.2 : i < 5 ? 9.7 : 9.2, x: 0, y: 0, t: Math.random() * 10, a: Math.random() * 6.28 });
     canvas.addEventListener('mousemove', e => { const p = this.toScene(e); const h = this.hit(p.x, p.y); this.hover = h; canvas.style.cursor = h ? 'pointer' : 'default'; this.tooltip(h, e); });
     canvas.addEventListener('mouseleave', () => { this.hover = null; this.tooltip(null); });
     canvas.addEventListener('click', e => { const p = this.toScene(e); const h = this.hit(p.x, p.y); if (h) HK.UI.sceneClick(h); });
@@ -116,7 +116,7 @@ HK.Scene = {
         if (!st.ships.some(s => String(s.id) === id)) { a.leaving = true; const dx = HK.LEAVE_POINT.x - a.x, dy = HK.LEAVE_POINT.y - a.y, dist = Math.hypot(dx, dy); const step = 0.9 * dt; a.x += dx / dist * step; a.y += dy / dist * step; const target = Math.atan2(dy, dx); a.heading += Math.atan2(Math.sin(target - a.heading), Math.cos(target - a.heading)) * Math.min(1, dt * 2); if (dist < 0.5) delete this.shipAnim[id]; }
       }
       const chimneys = [];
-      for (const b of HK.BUILDINGS) { if (['eave', 'gable', 'hall', 'townhall'].includes(b.kind)) chimneys.push(I.p(b.x + b.w * 0.75, b.y + b.d * 0.4, b.h + b.d * 0.5)); if (b.kind === 'plot' && st.workshops[b.plot].type && !st.workshops[b.plot].idle) { const p = I.p(b.x + b.w * 0.7, b.y + b.d * 0.4, b.h + 0.5); chimneys.push(p, p); } }
+      for (const b of HK.BUILDINGS) { if (['eave', 'gable', 'hall', 'townhall', 'longhouse', 'hospital', 'school'].includes(b.kind) && !b.low) chimneys.push(I.p(b.x + b.w * 0.75, b.y + b.d * 0.4, b.h + b.d * 0.5)); if (b.panel === 'venture' && st.ventures && st.ventures[b.id] && (b.id === 'bakery' || b.id === 'smokery' || b.id === 'potter')) { const p = I.p(b.x + b.w * 0.6, b.y + b.d * 0.4, b.h + 1.2); chimneys.push(p, p, p); } if (b.kind === 'plot' && st.workshops[b.plot].type && !st.workshops[b.plot].idle) { const p = I.p(b.x + b.w * 0.7, b.y + b.d * 0.4, b.h + 0.5); chimneys.push(p, p); } }
       if (Math.random() < dt * 5) { const c = HK.pick(chimneys); this.smoke.push({ x: c[0], y: c[1], age: 0, vx: HK.rnd(-3, 3) + (this.weather === 'rain' ? -6 : 0) }); }
       this.smoke = this.smoke.filter(s => (s.age += dt) < 4.5);
       for (const s of this.smoke) { s.y -= 9 * dt; s.x += s.vx * dt; }
@@ -132,7 +132,7 @@ HK.Scene = {
     const px = Math.round(HK.clamp(x, 0, HK.SCENE.W - 1)), py = Math.round(HK.clamp(y, 0, HK.SCENE.H - 1));
     const d = this.pickCtx.getImageData(px, py, 1, 1).data; const k = d[0] / 255;
     if (k > 0.3) { const code = Math.round(d[1] / k) + (Math.round(d[2] / k) << 8); const id = Math.round(code / 3); if (id > 0 && this.pickTable && this.pickTable[id]) return this.pickTable[id]; }
-    const wpt = this.toWorld(x, y); if (this.isWater(wpt.x, wpt.y) && wpt.x > -12 && wpt.y < 30) return { kind: 'building', building: HK.BUILDING.harbour, panel: 'harbour', label: HK.t('harbour') };
+    const wpt = this.toWorld(x, y); if (this.isWater(wpt.x, wpt.y) && wpt.x > -14 && wpt.y < 32) return { kind: 'building', building: HK.BUILDING.harbour, panel: 'harbour', label: HK.t('harbour') };
     return null;
   },
   shipHull(x, y, h, s) { const c = Math.cos(h), sn = Math.sin(h), pts = []; for (const [u, v] of [[-1.15, -0.4], [1.2, -0.4], [1.2, 0.4], [-1.15, 0.4]]) for (const z of [0, 2.7]) pts.push(I.p(x + (u * c - v * sn) * s, y + (u * sn + v * c) * s, z * s)); return I.hull(pts); },
@@ -239,67 +239,71 @@ HK.Scene = {
     // Farbflecken (Tiefe, Strömung)
     for (let i = 0; i < 26; i++) { const x = (i * 173) % W, y = (i * 97 + 40) % H, r = 60 + (i % 5) * 30; const gr = ctx.createRadialGradient(x, y, 0, x, y, r); gr.addColorStop(0, i % 2 ? 'rgba(255,255,255,0.05)' : 'rgba(0,10,30,0.10)'); gr.addColorStop(1, 'rgba(0,0,0,0)'); ctx.fillStyle = gr; ctx.fillRect(x - r, y - r, r * 2, r * 2); }
     // Flachwasser an der Küste
-    const cx = HK.WORLD.COAST_X, cy = HK.WORLD.COAST_Y; I.poly(ctx, [[cx, 1.2, 0], [cx, cy + 0.5, 0], [cx - 1.4, cy + 1.9, 0], [cx - 1.4, 1.2, 0]], 'rgba(120,190,190,0.16)'); I.poly(ctx, [[cx, cy + 0.5, 0], [24.8, cy + 0.5, 0], [24.8, cy + 1.9, 0], [cx, cy + 1.9, 0]], 'rgba(120,190,190,0.16)');
+    const cx = HK.WORLD.COAST_X, cy = HK.WORLD.COAST_Y, ex = HK.WORLD.WALL_E + 0.8; I.poly(ctx, [[cx, -3.2, 0], [cx, cy + 0.5, 0], [cx - 1.4, cy + 1.9, 0], [cx - 1.4, -3.2, 0]], 'rgba(120,190,190,0.16)'); I.poly(ctx, [[cx, cy + 0.5, 0], [ex, cy + 0.5, 0], [ex, cy + 1.9, 0], [cx, cy + 1.9, 0]], 'rgba(120,190,190,0.16)');
     ctx.strokeStyle = `rgba(255,255,255,${0.08 + 0.14 * P.amb})`; ctx.lineWidth = 1;
     for (let i = 0; i < 260; i++) { const x = ((i * 137 + t * 9) % (W + 60)) - 30, y = ((i * 89 + (i % 3) * 7) % (H + 20)) - 10 + Math.sin(t * 1.4 + i) * 1.5; const len = 6 + (i % 5) * 2.5; ctx.beginPath(); ctx.moveTo(x, y); ctx.quadraticCurveTo(x + len / 2, y - 1.5, x + len, y); ctx.stroke(); }
     const st = this.sunT();
-    if (st !== null && this.weather !== 'rain') { const lx = 60 + 260 * st, ly = 260 + 120 * Math.sin(st * Math.PI); for (let i = 0; i < 70; i++) { const x = lx + Math.cos(i * 2.4) * 90 * Math.sqrt((i % 10) / 10), y = ly + Math.sin(i * 2.4) * 50 * Math.sqrt((i % 10) / 10); const a = 0.35 * (0.5 + 0.5 * Math.sin(t * 5 + i)); ctx.fillStyle = `rgba(255,245,210,${a})`; ctx.fillRect(x, y, 4, 1.2); } }
+    if (st !== null && this.weather !== 'rain') { const lx = W * (0.06 + 0.28 * st), ly = H * 0.42 + 140 * Math.sin(st * Math.PI); for (let i = 0; i < 70; i++) { const x = lx + Math.cos(i * 2.4) * 90 * Math.sqrt((i % 10) / 10), y = ly + Math.sin(i * 2.4) * 50 * Math.sqrt((i % 10) / 10); const a = 0.35 * (0.5 + 0.5 * Math.sin(t * 5 + i)); ctx.fillStyle = `rgba(255,245,210,${a})`; ctx.fillRect(x, y, 4, 1.2); } }
     const c = this.clock, fog = c > 0.22 && c < 0.42 ? 1 - Math.abs(c - 0.3) / 0.12 : 0;
-    if (fog > 0) { for (let i = 0; i < 8; i++) { const x = 40 + i * 70 + Math.sin(t * 0.3 + i) * 20, y = 120 + (i % 3) * 140 + i * 20; const gr = ctx.createRadialGradient(x, y, 5, x, y, 110); gr.addColorStop(0, `rgba(235,235,240,${0.35 * fog})`); gr.addColorStop(1, 'rgba(235,235,240,0)'); ctx.fillStyle = gr; ctx.fillRect(x - 110, y - 110, 220, 220); } }
+    if (fog > 0) { for (let i = 0; i < 11; i++) { const x = 40 + i * 75 + Math.sin(t * 0.3 + i) * 20, y = 120 + (i % 3) * 160 + i * 28; const gr = ctx.createRadialGradient(x, y, 5, x, y, 110); gr.addColorStop(0, `rgba(235,235,240,${0.35 * fog})`); gr.addColorStop(1, 'rgba(235,235,240,0)'); ctx.fillStyle = gr; ctx.fillRect(x - 110, y - 110, 220, 220); } }
   },
   /* Kaikanten: sichtbare Südmauer, Schatten und Gischt an der Westkante */
   drawCoast(ctx, P, t) {
     const cx = HK.WORLD.COAST_X, cy = HK.WORLD.COAST_Y;
     // Schatten der Kaimauer im Wasser (West)
-    I.poly(ctx, [[cx, 1.4, 0], [cx, cy + 0.4, 0], [cx - 0.45, cy + 0.4, 0], [cx - 0.45, 1.4, 0]], 'rgba(10,20,40,0.28)');
+    const ex = HK.WORLD.WALL_E + 0.6;
+    I.poly(ctx, [[cx, -3.5, 0], [cx, cy + 0.4, 0], [cx - 0.45, cy + 0.4, 0], [cx - 0.45, -3.5, 0]], 'rgba(10,20,40,0.28)');
     // Südmauer (sichtbare +y-Fläche)
-    I.poly(ctx, [[cx, cy + 0.4, 0], [24.5, cy + 0.4, 0], [24.5, cy + 0.4, 0.4], [cx, cy + 0.4, 0.4]], '#6f685c', 'rgba(20,15,10,0.5)');
-    ctx.strokeStyle = 'rgba(0,0,0,0.25)'; for (let x = cx; x < 24.5; x += 0.5) I.line(ctx, [x, cy + 0.4, 0], [x, cy + 0.4, 0.4], 'rgba(0,0,0,0.2)', 0.6);
-    I.line(ctx, [cx, cy + 0.4, 0.2], [24.5, cy + 0.4, 0.2], 'rgba(0,0,0,0.2)', 0.6);
-    I.poly(ctx, [[cx, cy + 0.4, 0], [24.5, cy + 0.4, 0], [24.5, cy + 0.6, 0], [cx, cy + 0.6, 0]], 'rgba(40,70,60,0.4)');
+    I.poly(ctx, [[cx, cy + 0.4, 0], [ex, cy + 0.4, 0], [ex, cy + 0.4, 0.4], [cx, cy + 0.4, 0.4]], '#6f685c', 'rgba(20,15,10,0.5)');
+    ctx.strokeStyle = 'rgba(0,0,0,0.25)'; for (let x = cx; x < ex; x += 0.5) I.line(ctx, [x, cy + 0.4, 0], [x, cy + 0.4, 0.4], 'rgba(0,0,0,0.2)', 0.6);
+    I.line(ctx, [cx, cy + 0.4, 0.2], [ex, cy + 0.4, 0.2], 'rgba(0,0,0,0.2)', 0.6);
+    I.poly(ctx, [[cx, cy + 0.4, 0], [ex, cy + 0.4, 0], [ex, cy + 0.6, 0], [cx, cy + 0.6, 0]], 'rgba(40,70,60,0.4)');
     // Gischt
     ctx.fillStyle = 'rgba(255,255,255,0.35)';
-    for (let y = 1.6; y < cy; y += 0.25) { const p = I.p(cx - 0.05, y, 0); if ((y * 13 | 0) % 3 === 0) ctx.fillRect(p[0] - 2 + Math.sin(t * 3 + y * 5), p[1], 3, 1); }
-    for (let x = cx; x < 24.5; x += 0.25) { const p = I.p(x, cy + 0.65, 0); if ((x * 13 | 0) % 3 === 0) ctx.fillRect(p[0] - 2 + Math.sin(t * 3 + x * 5), p[1], 3, 1); }
+    for (let y = -3.5; y < cy; y += 0.25) { const p = I.p(cx - 0.05, y, 0); if ((y * 13 | 0) % 3 === 0) ctx.fillRect(p[0] - 2 + Math.sin(t * 3 + y * 5), p[1], 3, 1); }
+    for (let x = cx; x < ex; x += 0.25) { const p = I.p(x, cy + 0.65, 0); if ((x * 13 | 0) % 3 === 0) ctx.fillRect(p[0] - 2 + Math.sin(t * 3 + x * 5), p[1], 3, 1); }
   },
   makeGround(season) {
     const c = document.createElement('canvas'); c.width = HK.SCENE.W * this.RS; c.height = HK.SCENE.H * this.RS; const g = c.getContext('2d'); g.scale(this.RS, this.RS);
-    const cx = HK.WORLD.COAST_X, cy = HK.WORLD.COAST_Y;
+    const cx = HK.WORLD.COAST_X, cy = HK.WORLD.COAST_Y, ex = HK.WORLD.WALL_E + 0.6;
     const poly = (pts, fill, stroke) => { g.beginPath(); pts.forEach((q, i) => { const s = I.p(q[0], q[1], 0); i ? g.lineTo(s[0], s[1]) : g.moveTo(s[0], s[1]); }); g.closePath(); g.fillStyle = fill; g.fill(); if (stroke) { g.strokeStyle = stroke; g.lineWidth = 0.8; g.stroke(); } };
     // Land
     poly([[cx, -30, 0], [60, -30, 0], [60, cy + 0.4, 0], [cx, cy + 0.4, 0]], season === 'winter' ? this.pat.snow : this.pat.grass);
     if (season !== 'winter') { for (let i = 0; i < 90; i++) { const x = cx + Math.random() * 40, y = -25 + Math.random() * 42; if (y > cy) continue; const s = I.p(x, y, 0); g.fillStyle = i % 3 ? 'rgba(40,80,25,0.18)' : 'rgba(200,220,120,0.16)'; g.beginPath(); g.ellipse(s[0], s[1], 8 + Math.random() * 22, 4 + Math.random() * 9, 0, 0, 6.28); g.fill(); } }
     // Stadtboden
-    poly([[cx, 1.4, 0], [24.6, 1.4, 0], [24.6, cy + 0.4, 0], [cx, cy + 0.4, 0]], season === 'winter' ? this.pat.snow : this.pat.earth);
+    poly([[cx, 1.4, 0], [ex, 1.4, 0], [ex, cy + 0.4, 0], [cx, cy + 0.4, 0]], season === 'winter' ? this.pat.snow : this.pat.earth);
+    // Fischerdorf: festgetretener Sand
+    poly([[cx, -3.2, 0], [10.8, -3.2, 0], [10.8, 1.2, 0], [cx, 1.2, 0]], season === 'winter' ? this.pat.snow : '#c2b48c');
     // Kaistreifen
-    poly([[cx, 1.4, 0], [cx + 0.5, 1.4, 0], [cx + 0.5, cy + 0.4, 0], [cx, cy + 0.4, 0]], this.pat.stone, 'rgba(0,0,0,0.3)');
-    poly([[cx, cy - 0.1, 0], [24.6, cy - 0.1, 0], [24.6, cy + 0.4, 0], [cx, cy + 0.4, 0]], this.pat.stone, 'rgba(0,0,0,0.3)');
+    poly([[cx, -3.2, 0], [cx + 0.5, -3.2, 0], [cx + 0.5, cy + 0.4, 0], [cx, cy + 0.4, 0]], this.pat.stone, 'rgba(0,0,0,0.3)');
+    poly([[cx, cy - 0.3, 0], [ex, cy - 0.3, 0], [ex, cy + 0.4, 0], [cx, cy + 0.4, 0]], this.pat.stone, 'rgba(0,0,0,0.3)');
     // Felder
     for (const [fx, fy, fw, fd] of HK.FIELDS) { poly([[fx, fy, 0], [fx + fw, fy, 0], [fx + fw, fy + fd, 0], [fx, fy + fd, 0]], season === 'winter' ? '#d8dbe0' : this.pat.field, 'rgba(60,40,20,0.35)'); for (let k = 0.35; k < fd; k += 0.35) { const a = I.p(fx, fy + k, 0), b = I.p(fx + fw, fy + k, 0); g.strokeStyle = 'rgba(70,50,20,0.3)'; g.beginPath(); g.moveTo(a[0], a[1]); g.lineTo(b[0], b[1]); g.stroke(); } }
     // Straßen
-    for (const [x1, y1, x2, y2, w] of HK.STREETS) { const pts = y1 === y2 ? [[x1, y1 - w / 2, 0], [x2, y1 - w / 2, 0], [x2, y1 + w / 2, 0], [x1, y1 + w / 2, 0]] : [[x1 - w / 2, y1, 0], [x1 + w / 2, y1, 0], [x1 + w / 2, y2, 0], [x1 - w / 2, y2, 0]]; const outside = x1 > 24 || x2 > 24 || y1 < 1.4 || y2 < 1.4; poly(pts, season === 'winter' ? '#cfd3d8' : (outside ? '#a89474' : this.pat.cobble), 'rgba(60,45,25,0.35)'); }
+    for (const [x1, y1, x2, y2, w] of HK.STREETS) { const pts = y1 === y2 ? [[x1, y1 - w / 2, 0], [x2, y1 - w / 2, 0], [x2, y1 + w / 2, 0], [x1, y1 + w / 2, 0]] : [[x1 - w / 2, y1, 0], [x1 + w / 2, y1, 0], [x1 + w / 2, y2, 0], [x1 - w / 2, y2, 0]]; const outside = x1 > HK.WORLD.WALL_E || x2 > HK.WORLD.WALL_E || y1 < 1.4 || y2 < 1.4; poly(pts, season === 'winter' ? '#cfd3d8' : (outside ? '#a89474' : this.pat.cobble), 'rgba(60,45,25,0.35)'); }
     // Marktplatz
     const m = HK.BUILDING.market; poly([[m.x, m.y, 0], [m.x + m.w, m.y, 0], [m.x + m.w, m.y + m.d, 0], [m.x, m.y + m.d, 0]], season === 'winter' ? '#d3d6da' : this.pat.cobble, 'rgba(60,45,25,0.4)');
     // Pfützen, Schmutz
-    for (let i = 0; i < 60; i++) { const x = 8 + Math.random() * 15, y = 2 + Math.random() * 14; const s = I.p(x, y, 0); g.fillStyle = 'rgba(70,55,30,0.12)'; g.beginPath(); g.ellipse(s[0], s[1], 5 + Math.random() * 10, 2 + Math.random() * 3, 0, 0, 6.28); g.fill(); }
+    for (let i = 0; i < 90; i++) { const x = 8 + Math.random() * 19, y = 2 + Math.random() * 16; const s = I.p(x, y, 0); g.fillStyle = 'rgba(70,55,30,0.12)'; g.beginPath(); g.ellipse(s[0], s[1], 5 + Math.random() * 10, 2 + Math.random() * 3, 0, 0, 6.28); g.fill(); }
     this.ground = c;
   },
 
   /* ---------- Wetter, Licht ---------- */
   drawWeather(ctx, t) {
-    if (this.weather === 'rain') { ctx.strokeStyle = 'rgba(200,215,235,0.35)'; ctx.lineWidth = 1; for (let i = 0; i < 140; i++) { const x = ((i * 67 + t * 260) % 1000) - 20, y = ((i * 131 + t * 420) % 700) - 30; ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x - 3, y + 12); ctx.stroke(); } }
-    if (this.weather === 'snow') { ctx.fillStyle = 'rgba(255,255,255,0.85)'; for (let i = 0; i < 110; i++) { const x = ((i * 89 + t * 18 + Math.sin(t + i) * 20) % 1000) - 20, y = ((i * 151 + t * 40) % 680) - 20; ctx.beginPath(); ctx.arc(x, y, 1.2 + (i % 3) * 0.5, 0, 6.28); ctx.fill(); } }
-    if (this.weather === 'cloudy') { ctx.fillStyle = 'rgba(120,125,135,0.10)'; ctx.fillRect(0, 0, 960, 640); }
+    if (this.weather === 'rain') { ctx.strokeStyle = 'rgba(200,215,235,0.35)'; ctx.lineWidth = 1; for (let i = 0; i < 220; i++) { const x = ((i * 67 + t * 260) % (HK.SCENE.W + 40)) - 20, y = ((i * 131 + t * 420) % (HK.SCENE.H + 60)) - 30; ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x - 3, y + 12); ctx.stroke(); } }
+    if (this.weather === 'snow') { ctx.fillStyle = 'rgba(255,255,255,0.85)'; for (let i = 0; i < 180; i++) { const x = ((i * 89 + t * 18 + Math.sin(t + i) * 20) % (HK.SCENE.W + 40)) - 20, y = ((i * 151 + t * 40) % (HK.SCENE.H + 40)) - 20; ctx.beginPath(); ctx.arc(x, y, 1.2 + (i % 3) * 0.5, 0, 6.28); ctx.fill(); } }
+    if (this.weather === 'cloudy') { ctx.fillStyle = 'rgba(120,125,135,0.10)'; ctx.fillRect(0, 0, HK.SCENE.W, HK.SCENE.H); }
   },
   drawLighting(ctx, P, t) {
     const l = P.amb;
-    if (P.tint[3] > 0.005) { ctx.fillStyle = this.rgb(P.tint, P.tint[3]); ctx.fillRect(0, 0, 960, 640); }
+    const W = HK.SCENE.W, H = HK.SCENE.H;
+    if (P.tint[3] > 0.005) { ctx.fillStyle = this.rgb(P.tint, P.tint[3]); ctx.fillRect(0, 0, W, H); }
     const st = this.sunT();
-    if (st !== null && Math.sin(st * Math.PI) < 0.45) { const g = ctx.createLinearGradient(st < 0.5 ? 0 : 960, 0, st < 0.5 ? 960 : 0, 0); g.addColorStop(0, `rgba(255,190,110,${0.14 * (1 - Math.sin(st * Math.PI) / 0.45)})`); g.addColorStop(1, 'rgba(255,190,110,0)'); ctx.fillStyle = g; ctx.fillRect(0, 0, 960, 640); }
+    if (st !== null && Math.sin(st * Math.PI) < 0.45) { const g = ctx.createLinearGradient(st < 0.5 ? 0 : W, 0, st < 0.5 ? W : 0, 0); g.addColorStop(0, `rgba(255,190,110,${0.14 * (1 - Math.sin(st * Math.PI) / 0.45)})`); g.addColorStop(1, 'rgba(255,190,110,0)'); ctx.fillStyle = g; ctx.fillRect(0, 0, W, H); }
     if (l < 0.7) {
       const k = HK.clamp((0.7 - l) / 0.4, 0, 1);
       ctx.save(); ctx.globalCompositeOperation = 'lighter';
-      if (this.emCanvas && this.nightK) { ctx.save(); ctx.globalAlpha = 0.55 * k; ctx.filter = 'blur(6px)'; ctx.drawImage(this.emCanvas, 0, 0, 960, 640); ctx.filter = 'blur(1.5px)'; ctx.globalAlpha = 0.8 * k; ctx.drawImage(this.emCanvas, 0, 0, 960, 640); ctx.restore(); }
+      if (this.emCanvas && this.nightK) { ctx.save(); ctx.globalAlpha = 0.55 * k; ctx.filter = 'blur(6px)'; ctx.drawImage(this.emCanvas, 0, 0, W, H); ctx.filter = 'blur(1.5px)'; ctx.globalAlpha = 0.8 * k; ctx.drawImage(this.emCanvas, 0, 0, W, H); ctx.restore(); }
       for (const [x, y] of this.lamps) { const g = ctx.createRadialGradient(x, y, 1, x, y, 40); g.addColorStop(0, `rgba(255,190,90,${0.5 * k})`); g.addColorStop(0.3, `rgba(255,170,70,${0.18 * k})`); g.addColorStop(1, 'rgba(255,160,60,0)'); ctx.fillStyle = g; ctx.fillRect(x - 40, y - 40, 80, 80); ctx.fillStyle = `rgba(255,230,160,${0.9 * k})`; ctx.beginPath(); ctx.arc(x, y - 1, 1.8, 0, 6.28); ctx.fill(); }
       ctx.restore();
     }

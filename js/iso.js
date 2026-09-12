@@ -1,7 +1,7 @@
 /* Isometrische Projektion und Grundformen */
 'use strict';
 HK.Iso = {
-  TW: 26, TH: 13, OX: 338, OY: 30, ZS: 28,
+  TW: 26, TH: 13, OX: 490, OY: 60, ZS: 28,
   p(x, y, z) { return [this.OX + (x - y) * this.TW, this.OY + (x + y) * this.TH - (z || 0) * this.ZS]; },
   path(ctx, pts) { ctx.beginPath(); pts.forEach((q, i) => { const s = this.p(q[0], q[1], q[2]); i ? ctx.lineTo(s[0], s[1]) : ctx.moveTo(s[0], s[1]); }); ctx.closePath(); },
   poly(ctx, pts, fill, stroke, lw) { this.path(ctx, pts); if (fill) { ctx.fillStyle = fill; ctx.fill(); } if (stroke) { ctx.strokeStyle = stroke; ctx.lineWidth = lw || 0.8; ctx.stroke(); } },
