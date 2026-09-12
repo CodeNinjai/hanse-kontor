@@ -9,7 +9,7 @@ HK.Scene = {
   /* ---------- Initialisierung ---------- */
   init(canvas) {
     this.canvas = canvas; this.ctx = canvas.getContext('2d');
-    canvas.width = HK.SCENE.W; canvas.height = HK.SCENE.H;
+    this.RS = 2; canvas.width = HK.SCENE.W * this.RS; canvas.height = HK.SCENE.H * this.RS;
     this.makePatterns(); this.makeGrain();
     for (let i = 0; i < 130; i++) this.stars.push({ x: Math.random() * 960, y: Math.random() * 140, r: Math.random() < 0.15 ? 1.4 : 0.8, tw: Math.random() * 6.28 });
     for (let i = 0; i < 7; i++) this.clouds.push({ x: Math.random() * 1100 - 70, y: 18 + Math.random() * 80, w: 80 + Math.random() * 120, h: 14 + Math.random() * 16, v: 3 + Math.random() * 5 });
@@ -32,7 +32,7 @@ HK.Scene = {
 
   /* Texturen als Muster */
   makePatterns() {
-    const mk = (w, h, fn) => { const c = document.createElement('canvas'); c.width = w; c.height = h; const g = c.getContext('2d'); fn(g, w, h); return this.ctx.createPattern(c, 'repeat'); };
+    const mk = (w, h, fn) => { const c = document.createElement('canvas'); c.width = w * this.RS; c.height = h * this.RS; const g = c.getContext('2d'); g.scale(this.RS, this.RS); fn(g, w, h); const pat = this.ctx.createPattern(c, 'repeat'); if (pat.setTransform) pat.setTransform(new DOMMatrix().scale(1 / this.RS)); return pat; };
     this.pat.plaster = mk(48, 48, (g, w, h) => { g.fillStyle = 'rgba(0,0,0,0)'; for (let i = 0; i < 260; i++) { g.fillStyle = Math.random() < 0.5 ? 'rgba(80,60,30,0.10)' : 'rgba(255,255,240,0.12)'; g.fillRect(Math.random() * w, Math.random() * h, 1.5, 1.5); } });
     this.pat.brick = mk(16, 10, (g) => { g.fillStyle = '#a24a3a'; g.fillRect(0, 0, 16, 10); g.fillStyle = '#c9c0ad'; g.fillRect(0, 4, 16, 1); g.fillRect(0, 9, 16, 1); g.fillRect(7, 0, 1, 4); g.fillRect(15, 5, 1, 4); g.fillStyle = 'rgba(0,0,0,0.12)'; g.fillRect(2, 0, 4, 4); g.fillRect(9, 5, 5, 4); g.fillStyle = 'rgba(255,200,160,0.12)'; g.fillRect(0, 0, 3, 4); });
     this.pat.stone = mk(24, 14, (g) => { g.fillStyle = '#8f887a'; g.fillRect(0, 0, 24, 14); g.fillStyle = '#6f685c'; g.fillRect(0, 6, 24, 1); g.fillRect(0, 13, 24, 1); g.fillRect(11, 0, 1, 6); g.fillRect(4, 7, 1, 6); g.fillRect(18, 7, 1, 6); g.fillStyle = 'rgba(255,255,255,0.08)'; g.fillRect(0, 0, 11, 2); g.fillRect(12, 0, 12, 2); });
@@ -151,7 +151,7 @@ HK.Scene = {
     const st = HK.state; if (!st) return null;
     for (const w of this.walkers) { if (this.walkerAlpha(w) < 0.4) continue; const p = this.walkerPos(w); const d = this.depth(p.y); if (Math.hypot(p.x - x, p.y - 8 * d - y) < 10 * d) return { kind: 'walker', walker: w, label: HK.t('enc_' + w.type + '_label') }; }
     for (const n of HK.STATIC_NPCS) if (Math.hypot(n.x - x, n.y - 8 - y) < 11) { const p = HK.PERSON[n.person]; return { kind: 'person', person: n.person, label: p.name + ', ' + (p.title[HK.LANG] || p.title.de) }; }
-    for (const s of st.ships) { const a = this.shipAnim[s.id]; if (a && !a.leaving && Math.abs(x - a.x) < 52 * a.s && y > a.y - 62 * a.s && y < a.y + 10) return { kind: 'visitor', id: s.id, panel: 'harbour', label: s.name + ' (' + HK.name(HK.ORIGIN[s.origin]) + ')' }; }
+    for (const s of st.ships) { const a = this.shipAnim[s.id]; if (a && !a.leaving && Math.abs(x - a.x - 8 * a.s) < 66 * a.s && y > a.y - 115 * a.s && y < a.y + 8) return { kind: 'visitor', id: s.id, panel: 'harbour', label: s.name + ' (' + HK.name(HK.ORIGIN[s.origin]) + ')' }; }
     for (let i = 0; i < st.caravans.length; i++) { const c = HK.CARAVAN_SPOTS[i]; if (x > c.x - 26 && x < c.x + 26 && y > c.y - 30 && y < c.y + 12) return { kind: 'visitor', id: st.caravans[i].id, panel: 'gate', label: HK.t('caravanFrom', { origin: HK.name(HK.ORIGIN[st.caravans[i].origin]) }) }; }
     for (const b of HK.BUILDINGS) { if (!b.panel) continue; const top = b.kind === 'church' ? b.y - 170 : b.y - 6; const xw = b.kind === 'church' ? [b.x, b.x + (y < b.y - 6 ? 40 : b.w)] : [b.x, b.x + b.w]; if (x >= xw[0] && x <= xw[1] && y >= top && y <= b.y + b.h + 2) return { kind: 'building', building: b, panel: b.panel, label: HK.name(b) }; }
     return null;
@@ -160,6 +160,7 @@ HK.Scene = {
   /* ---------- Zeichnen ---------- */
   draw() {
     const ctx = this.ctx, st = HK.state; if (!st) return;
+    ctx.setTransform(this.RS, 0, 0, this.RS, 0, 0);
     const P = this.palette(), t = this.time, W = HK.SCENE.W, H = HK.SCENE.H;
     const season = this.season();
     if (season !== this.lastSeason) { this.lastSeason = season; this.makeGround(season); }
@@ -175,7 +176,7 @@ HK.Scene = {
     const nBoats = Math.min(4, 2 + st.boats);
     for (let i = 0; i < nBoats; i++) this.drawBoat(ctx, HK.BOAT_SPOTS[i].x, HK.BOAT_SPOTS[i].y + Math.sin(t * 2 + i) * 1.2, i >= 2);
     this.drawQuay(ctx, t);
-    ctx.drawImage(this.ground, 0, 0);
+    ctx.drawImage(this.ground, 0, 0, W, H);
     // Gebäude, Bäume, Requisiten, Personen nach Fußpunkt sortieren
     const items = [];
     for (const b of HK.BUILDINGS) if (b.kind !== 'water') items.push({ y: b.y + b.h, f: () => this.drawBuilding(ctx, b, st, season) });
@@ -259,7 +260,7 @@ HK.Scene = {
   },
   /* Boden (vorgerendert je Jahreszeit) */
   makeGround(season) {
-    const c = document.createElement('canvas'); c.width = 960; c.height = 640; const g = c.getContext('2d');
+    const c = document.createElement('canvas'); c.width = 960 * this.RS; c.height = 640 * this.RS; const g = c.getContext('2d'); g.scale(this.RS, this.RS);
     const Y0 = HK.SCENE.QUAY_Y + 14;
     g.fillStyle = this.pat.cobble; g.fillRect(0, Y0, 960, 22); // Kaifläche
     g.fillStyle = season === 'winter' ? this.pat.snow : this.pat.earth; g.fillRect(0, Y0 + 20, 960, 640 - Y0 - 20);
@@ -552,9 +553,9 @@ HK.Scene = {
     ctx.save(); ctx.translate(x, y); ctx.scale(s, s);
     const flag = { luebeck: '#c8102e', bruegge: '#3b6ac2', bergen: '#3b9a4a', danzig: '#c29a3b', riga: '#7a3bc2', stockholm: '#e0c020', london: '#a02020', own: '#e0b040' }[origin] || '#888';
     // Spiegelung
-    ctx.save(); ctx.globalAlpha = 0.22; ctx.scale(1, -0.55); ctx.translate(0, -4); this.shipBody(ctx, flag, docked, true); ctx.restore();
+    ctx.save(); ctx.globalAlpha = 0.2; ctx.scale(1, -0.45); ctx.translate(0, -6); this.shipBody(ctx, flag, docked, true); ctx.restore();
     this.shipBody(ctx, flag, docked, false);
-    if (selected) { ctx.strokeStyle = '#ffd766'; ctx.lineWidth = 2 / s; ctx.setLineDash([5, 4]); ctx.strokeRect(-52, -66, 104, 74); ctx.setLineDash([]); }
+    if (selected) { ctx.strokeStyle = '#ffd766'; ctx.lineWidth = 2 / s; ctx.setLineDash([5, 4]); ctx.strokeRect(-60, -118, 140, 126); ctx.setLineDash([]); }
     ctx.restore();
   },
   shipBody(ctx, flag, docked, mirror) {

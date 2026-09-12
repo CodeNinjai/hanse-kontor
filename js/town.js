@@ -68,9 +68,10 @@ HK.STREETS = [
 ];
 
 /* Liegeplätze (Schiffsmitte), eigene Schiffe auf Reede, Boote, Karawanen */
-HK.BERTHS = [{ x: 230, y: 284 }, { x: 410, y: 284 }, { x: 590, y: 284 }, { x: 770, y: 284 }];
+HK.PIERS = [{ x: 300, len: 52 }, { x: 660, len: 52 }];
+HK.BERTHS = [{ x: 222, y: 280 }, { x: 386, y: 280 }, { x: 580, y: 280 }, { x: 746, y: 280 }];
 HK.OWN_BERTHS = [{ x: 330, y: 238 }, { x: 500, y: 236 }, { x: 670, y: 238 }];
-HK.BOAT_SPOTS = [{ x: 150, y: 282 }, { x: 186, y: 290 }, { x: 216, y: 280 }, { x: 118, y: 288 }];
+HK.BOAT_SPOTS = [{ x: 130, y: 284 }, { x: 160, y: 292 }, { x: 96, y: 290 }, { x: 62, y: 284 }];
 HK.CARAVAN_SPOTS = [{ x: 928, y: 512 }, { x: 932, y: 590 }];
 HK.HORIZON_SHIP = { x: 720, y: 162 };
 HK.LEAVE_POINT = { x: 120, y: 166 };
