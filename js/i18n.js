@@ -100,7 +100,7 @@ HK.I18N = {
     /* Übersicht */
     overview: 'Übersicht', goals: 'Ziel: Werde Bürgermeister, häufe 500.000 Mark Reinvermögen an und überflügle alle Konkurrenten.', richest: 'Die Reichsten der Stadt', you: 'du', incomeSources: 'Deine Einnahmequellen',
     dailyIncome: 'Ø Tageseinnahmen', chart: 'Reinvermögen im Verlauf', noLog: 'Noch nichts geschehen.', activeEvents: 'Zurzeit in der Stadt', personsTitle: 'Wichtige Leute',
-    legend: 'Klicke auf Gebäude, Schiffe, Karawanen und Passanten.', timeOfDay: 'Tageszeit', night: 'Nacht', morning: 'Morgen', noon: 'Mittag', evening: 'Abend',
+    legend: 'Klicke auf Gebäude, Schiffe, Karawanen und Passanten. Mausrad zoomt, Ziehen verschiebt die Karte.', timeOfDay: 'Tageszeit', night: 'Nacht', morning: 'Morgen', noon: 'Mittag', evening: 'Abend',
     /* Neue Viertel */
     needCraftGuild: 'Dafür musst du der Zunft angehören.', needThreeVentures: 'Der Meistertitel setzt drei eigene Betriebe voraus.', storageInUse: 'Der Speicher ist noch belegt – erst das Lager leeren.', fenceFull: 'Der Hehler nimmt heute nichts mehr ab.', noShipsHere: 'Es liegt kein fremdes Schiff im Hafen.',
     craftJoined: 'Die Zunft hat dich aufgenommen.', ventureBought: '{venture} gehört jetzt dir.', masterTitleLog: 'Die Zunft ernennt dich zum Ältermann.', relicDonated: 'Das Kloster stellt deine Reliquie im Chor auf. Ganz Sundhaven pilgert.', hospitalEndowedLog: 'Du bist Stifter des Heilig-Geist-Spitals.', schoolEndowedLog: 'Die Lateinschule trägt nun deinen Namen.', berthBuilt: 'Der Hafen hat jetzt {n} Liegeplätze.', watchEnded: 'Die Hafenwache ist wieder nüchtern und wachsam.',
@@ -123,6 +123,7 @@ HK.I18N = {
 <p><b>Macht:</b> Im Rathaus sitzen sechs Ratsherren. Geschenke heben ihr Wohlwollen, Einfluss stellt Anträge zu Zoll, Marktgebühr, Wucherverbot, Stapelrecht, Badehausverbot und Monopolen. Mit Ruf und Freunden im Rat wirst du Ratsherr und Bürgermeister.</p>
 <p><b>Kirche:</b> Spenden, Stiftungen und Lieferungen heben deine Frömmigkeit. Der Pfarrer predigt für dich – oder gegen deine Konkurrenten. Ablässe tilgen Verdacht.</p>
 <p><b>Neue Viertel:</b> Am Südkai liegen Lagerhallen (kaufen, selbst nutzen oder vermieten), Fischmarkt, Spelunke (Schwarzmarkt, Hehler, bestochene Hafenwache) und Handwerker. Im Osten entscheidet die Zunft, wer Bäckerei, Böttcherei, Gerberei, Färberei, Seilerei oder Segelmacherei betreiben darf – jeder Betrieb bringt Tageseinnahmen und Nebenwirkungen. Kloster, Spital und Lateinschule belohnen Stiftungen mit Frömmigkeit, Ruf und Einfluss; der Hafenmeister führt das Hafenbuch.</p>
+<p><b>Karte:</b> Mausrad oder zwei Finger zoomen, Ziehen verschiebt den Ausschnitt, Doppelklick springt heran. Tasten: + − 0 und Pfeiltasten.</p>
 <p><b>Verdacht:</b> Bestechung, Schmuggel, Wucher und Schläger fallen auf. Ab 50 ermittelt der Vogt, ab 85 gibt es einen Prozess. Der Vogt lässt sich bestechen – meistens.</p>
 <p><b>Ziel:</b> Bürgermeister werden, 500.000 Mark Reinvermögen und reicher als alle Konkurrenten. Bankrott nach 60 Tagen mit leerer Kasse.</p>`,
   },
@@ -208,7 +209,7 @@ HK.I18N = {
     enc_citizen_label: 'Citizen', enc_merchant_label: 'Merchant', enc_fisher_label: 'Fisherman', enc_beggar_label: 'Beggar', enc_monk_label: 'Monk', enc_guard_label: 'Town guard', enc_child_label: 'Children',
     overview: 'Overview', goals: 'Goal: become mayor, amass 500,000 marks net worth and outdo all rivals.', richest: 'Richest in town', you: 'you', incomeSources: 'Your income sources',
     dailyIncome: 'Avg. daily income', chart: 'Net worth over time', noLog: 'Nothing has happened yet.', activeEvents: 'Currently in town', personsTitle: 'Important people',
-    legend: 'Click on buildings, ships, caravans and passers-by.', timeOfDay: 'Time of day', night: 'Night', morning: 'Morning', noon: 'Noon', evening: 'Evening',
+    legend: 'Click on buildings, ships, caravans and passers-by. Scroll to zoom, drag to move the map.', timeOfDay: 'Time of day', night: 'Night', morning: 'Morning', noon: 'Noon', evening: 'Evening',
     /* New quarters */
     needCraftGuild: 'You must be a member of the craft guild.', needThreeVentures: 'The title requires three businesses of your own.', storageInUse: 'The store is still in use – empty your warehouse first.', fenceFull: 'The fence takes no more today.', noShipsHere: 'No foreign ship is in port.',
     craftJoined: 'The craft guild has admitted you.', ventureBought: '{venture} is now yours.', masterTitleLog: 'The guild names you alderman.', relicDonated: 'The abbey enshrines your relic. All of Sundhaven comes to pray.', hospitalEndowedLog: 'You are patron of the Holy Ghost hospital.', schoolEndowedLog: 'The Latin school now bears your name.', berthBuilt: 'The harbour now has {n} berths.', watchEnded: 'The harbour watch is sober and alert again.',
@@ -231,6 +232,7 @@ HK.I18N = {
 <p><b>Power:</b> Six councillors sit in the town hall. Gifts raise their goodwill; influence lets you table motions on tariffs, market fees, usury, staple rights, the bathhouse and monopolies. With reputation and friends on the council you become councillor and mayor.</p>
 <p><b>Church:</b> Donations, endowments and deliveries raise your piety. The priest preaches for you – or against your rivals. Indulgences erase suspicion.</p>
 <p><b>New quarters:</b> On the south quay are warehouses (buy, use or rent out), the fish market, the dive (black market, fence, bribed harbour watch) and craftsmen. In the east the craft guild decides who may run a bakery, cooperage, tannery, dye works, ropewalk or sailmaker – each business yields daily income and side effects. Abbey, hospital and Latin school reward endowments with piety, reputation and influence; the harbour master keeps the harbour book.</p>
+<p><b>Map:</b> Scroll wheel or pinch to zoom, drag to move the view, double-click to jump in. Keys: + − 0 and the arrow keys.</p>
 <p><b>Suspicion:</b> Bribery, smuggling, usury and thugs get noticed. From 50 the bailiff investigates, at 85 you stand trial. The bailiff can be bribed – usually.</p>
 <p><b>Goal:</b> Become mayor, reach 500,000 marks net worth and be richer than every rival. Bankruptcy after 60 days with an empty purse.</p>`,
   },

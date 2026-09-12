@@ -14,9 +14,62 @@ HK.Scene = {
     for (let i = 0; i < 9; i++) this.gulls.push({ x: HK.rnd(40, 560), y: HK.rnd(80, 760), a: HK.rnd(0, 6.28), r: HK.rnd(25, 60), s: HK.rnd(0.25, 0.6) });
     this.carts = [{ a: [9.5, 2.8], b: [9.5, 17.8], t: 0.2, dir: 1, v: 0.25, ox: true }, { a: [8.0, 10], b: [27.0, 10], t: 0.7, dir: -1, v: 0.2, ox: false }, { a: [24, 2.8], b: [24, 17.8], t: 0.5, dir: 1, v: 0.22, ox: true }];
     for (let i = 0; i < 8; i++) this.chickens.push({ cx: i < 3 ? 8.9 : i < 5 ? 17.0 : 26.6, cy: i < 3 ? -0.2 : i < 5 ? 9.7 : 9.2, x: 0, y: 0, t: Math.random() * 10, a: Math.random() * 6.28 });
-    canvas.addEventListener('mousemove', e => { const p = this.toScene(e); const h = this.hit(p.x, p.y); this.hover = h; canvas.style.cursor = h ? 'pointer' : 'default'; this.tooltip(h, e); });
+    this.initInput(canvas);
+  },
+  /* ---------- Kamera: Zoom und Verschieben ---------- */
+  cam: { z: 1, x: 0, y: 0 },
+  ZOOM_MIN: 1, ZOOM_MAX: 2.8,
+  clampCam() { const W = HK.SCENE.W, H = HK.SCENE.H, z = this.cam.z; this.cam.x = HK.clamp(this.cam.x, 0, W - W / z); this.cam.y = HK.clamp(this.cam.y, 0, H - H / z); },
+  /* Zoom um einen Ankerpunkt (Bildschirm-Szenenkoordinaten), der dabei stehen bleibt */
+  setZoom(z, ax, ay) {
+    const old = this.cam.z; z = HK.clamp(z, this.ZOOM_MIN, this.ZOOM_MAX);
+    if (ax === undefined) { ax = HK.SCENE.W / 2; ay = HK.SCENE.H / 2; }
+    const wx = ax / old + this.cam.x, wy = ay / old + this.cam.y;
+    this.cam.z = z; this.cam.x = wx - ax / z; this.cam.y = wy - ay / z; this.clampCam();
+  },
+  panBy(dx, dy) { this.cam.x -= dx / this.cam.z; this.cam.y -= dy / this.cam.z; this.clampCam(); },
+  resetCam() { this.cam.z = 1; this.cam.x = 0; this.cam.y = 0; },
+  viewTransform(ctx, scale) { const z = this.cam.z * scale; ctx.setTransform(z, 0, 0, z, -this.cam.x * z, -this.cam.y * z); },
+  /* Bildschirmpunkt (Szenenpixel des Canvas) → Szenenkoordinaten der ungezoomten Karte */
+  toMap(p) { return { x: p.x / this.cam.z + this.cam.x, y: p.y / this.cam.z + this.cam.y }; },
+  initInput(canvas) {
+    canvas.style.touchAction = 'none';
+    const ptrs = new Map(); let drag = null, pinch = null;
+    const hoverAt = e => { const p = this.toMap(this.toScene(e)); const h = this.hit(p.x, p.y); this.hover = h; canvas.style.cursor = h ? 'pointer' : 'grab'; this.tooltip(h, e); };
+    canvas.addEventListener('pointerdown', e => {
+      ptrs.set(e.pointerId, { x: e.clientX, y: e.clientY }); canvas.setPointerCapture(e.pointerId);
+      if (ptrs.size === 1) drag = { x: e.clientX, y: e.clientY, moved: false };
+      else if (ptrs.size === 2) { const [a, b] = [...ptrs.values()]; pinch = { d: Math.hypot(a.x - b.x, a.y - b.y), z: this.cam.z }; drag = null; }
+    });
+    canvas.addEventListener('pointermove', e => {
+      if (ptrs.has(e.pointerId)) ptrs.set(e.pointerId, { x: e.clientX, y: e.clientY });
+      const r = canvas.getBoundingClientRect(), k = HK.SCENE.W / r.width;
+      if (pinch && ptrs.size === 2) { const [a, b] = [...ptrs.values()]; const d = Math.hypot(a.x - b.x, a.y - b.y); this.setZoom(pinch.z * d / (pinch.d || 1), ((a.x + b.x) / 2 - r.left) * k, ((a.y + b.y) / 2 - r.top) * k); return; }
+      if (drag) {
+        const dx = e.clientX - drag.x, dy = e.clientY - drag.y;
+        if (!drag.moved && Math.hypot(dx, dy) > 4) { drag.moved = true; canvas.style.cursor = 'grabbing'; this.tooltip(null); }
+        if (drag.moved) { this.panBy(dx * k, dy * k); drag.x = e.clientX; drag.y = e.clientY; return; }
+      }
+      if (e.pointerType === 'mouse') hoverAt(e);
+    });
+    const up = e => {
+      ptrs.delete(e.pointerId);
+      if (drag && !drag.moved && e.type === 'pointerup') { const p = this.toMap(this.toScene(e)); const h = this.hit(p.x, p.y); if (h) HK.UI.sceneClick(h); }
+      if (ptrs.size < 2) pinch = null;
+      if (ptrs.size === 0) { drag = null; canvas.style.cursor = this.hover ? 'pointer' : 'grab'; }
+    };
+    canvas.addEventListener('pointerup', up); canvas.addEventListener('pointercancel', up);
     canvas.addEventListener('mouseleave', () => { this.hover = null; this.tooltip(null); });
-    canvas.addEventListener('click', e => { const p = this.toScene(e); const h = this.hit(p.x, p.y); if (h) HK.UI.sceneClick(h); });
+    canvas.addEventListener('wheel', e => { e.preventDefault(); const p = this.toScene(e); this.setZoom(this.cam.z * (e.deltaY < 0 ? 1.15 : 1 / 1.15), p.x, p.y); if (e.pointerType !== 'touch') hoverAt(e); }, { passive: false });
+    canvas.addEventListener('dblclick', e => { e.preventDefault(); const p = this.toScene(e); this.setZoom(this.cam.z < 1.5 ? 2 : 1, p.x, p.y); });
+    window.addEventListener('keydown', e => {
+      if (!HK.state || HK.preview || HK.UI.modalOpen) return; const t = e.target; if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.tagName === 'SELECT')) return;
+      const step = 80;
+      if (e.key === '+' || e.key === '=') this.setZoom(this.cam.z * 1.2); else if (e.key === '-') this.setZoom(this.cam.z / 1.2); else if (e.key === '0') this.resetCam();
+      else if (e.key === 'ArrowLeft') this.panBy(step, 0); else if (e.key === 'ArrowRight') this.panBy(-step, 0); else if (e.key === 'ArrowUp') this.panBy(0, step); else if (e.key === 'ArrowDown') this.panBy(0, -step); else return;
+      e.preventDefault();
+    });
+    document.querySelectorAll('#zoom-ctl button').forEach(b => b.addEventListener('click', () => { const a = b.dataset.zoom; if (a === 'in') this.setZoom(this.cam.z * 1.25); else if (a === 'out') this.setZoom(this.cam.z / 1.25); else this.resetCam(); }));
   },
   toScene(e) { const r = this.canvas.getBoundingClientRect(); return { x: (e.clientX - r.left) * HK.SCENE.W / r.width, y: (e.clientY - r.top) * HK.SCENE.H / r.height }; },
   toWorld(sx, sy) { const a = (sx - I.OX) / I.TW, b = (sy - I.OY) / I.TH; return { x: (a + b) / 2, y: (b - a) / 2 }; },
@@ -189,7 +242,7 @@ HK.Scene = {
 
   /* Zeichenkontext, der jeden Füllbefehl zusätzlich als schwarze Silhouette in die Emissionsebene schreibt */
   teeCtx() {
-    if (this.tee) { this.em.setTransform(1, 0, 0, 1, 0, 0); this.em.clearRect(0, 0, HK.SCENE.W, HK.SCENE.H); return this.tee; }
+    if (this.tee) { this.em.setTransform(1, 0, 0, 1, 0, 0); this.em.clearRect(0, 0, HK.SCENE.W, HK.SCENE.H); this.viewTransform(this.em, 1); return this.tee; }
     const c = document.createElement('canvas'); c.width = HK.SCENE.W; c.height = HK.SCENE.H; this.emCanvas = c; const em = this.em = c.getContext('2d');
     const real = this.ctx, tee = {}, skip = new Set(['stroke', 'strokeRect', 'strokeText', 'fillText', 'measureText', 'getImageData', 'putImageData', 'createImageData', 'createLinearGradient', 'createRadialGradient', 'createConicGradient', 'createPattern', 'getTransform', 'isPointInPath', 'isPointInStroke', 'getLineDash', 'getContextAttributes', 'drawFocusIfNeeded']);
     const proto = Object.getPrototypeOf(real); let o = proto; const keys = new Set(); while (o && o !== Object.prototype) { Object.getOwnPropertyNames(o).forEach(k => keys.add(k)); o = Object.getPrototypeOf(o); }
@@ -199,7 +252,7 @@ HK.Scene = {
       if (typeof real[k] === 'function') { tee[k] = skip.has(k) ? (...a) => real[k](...a) : (...a) => { const r = real[k](...a); em[k](...a); return r; }; }
       else Object.defineProperty(tee, k, { get: () => real[k], set: v => { real[k] = v; em[k] = k === 'fillStyle' || k === 'strokeStyle' ? '#000' : k === 'globalAlpha' ? 1 : k === 'globalCompositeOperation' ? 'source-over' : v; } });
     }
-    this.tee = tee; em.setTransform(1, 0, 0, 1, 0, 0); em.clearRect(0, 0, HK.SCENE.W, HK.SCENE.H); return tee;
+    this.tee = tee; em.setTransform(1, 0, 0, 1, 0, 0); em.clearRect(0, 0, HK.SCENE.W, HK.SCENE.H); this.viewTransform(em, 1); return tee;
   },
   /* Leuchtendes Fenster in die Emissionsebene schreiben (Weltkoordinaten) */
   emit(pts, col) { if (!this.em || !this.nightK || this.picking) return; const em = this.em; em.save(); em.fillStyle = col; em.beginPath(); pts.forEach((q, i) => { const p = I.p(q[0], q[1], q[2]); i ? em.lineTo(p[0], p[1]) : em.moveTo(p[0], p[1]); }); em.closePath(); em.fill(); em.restore(); },
@@ -207,7 +260,7 @@ HK.Scene = {
   /* ---------- Zeichnen ---------- */
   draw() {
     const ctx = this.ctx, st = HK.state; if (!st) return;
-    ctx.setTransform(this.RS, 0, 0, this.RS, 0, 0);
+    this.viewTransform(ctx, this.RS);
     const P = this.palette(), t = this.time, W = HK.SCENE.W, H = HK.SCENE.H, season = this.season();
     if (season !== this.lastSeason) { this.lastSeason = season; this.makeGround(season); }
     this.windows = []; this.lamps = [];
@@ -222,13 +275,15 @@ HK.Scene = {
     for (const s of this.smoke) { ctx.fillStyle = `rgba(215,215,220,${0.32 * (1 - s.age / 4.5)})`; ctx.beginPath(); ctx.arc(s.x, s.y, 1.5 + s.age * 2, 0, 6.28); ctx.fill(); }
     ctx.strokeStyle = 'rgba(255,255,255,0.9)'; ctx.lineWidth = 1.1;
     for (const g of this.gulls) { const x = g.x + Math.cos(g.a) * g.r, y = g.y + Math.sin(g.a) * g.r * 0.5, f = Math.sin(t * 8 + g.a) * 2; ctx.beginPath(); ctx.moveTo(x - 4, y); ctx.quadraticCurveTo(x - 2, y - 1.5 - f, x, y); ctx.quadraticCurveTo(x + 2, y - 1.5 - f, x + 4, y); ctx.stroke(); }
+    const hb = this.hover && this.hover.building, sb = this.selected && HK.BUILDING[this.selected];
+    if (sb && sb.kind !== 'water') this.outline(ctx, sb, 'rgba(255,215,102,0.95)', 2 / this.cam.z);
+    if (hb && hb !== sb && hb.kind !== 'water') this.outline(ctx, hb, 'rgba(255,255,255,0.85)', 1.2 / this.cam.z);
+    // Wetter, Licht, Vignette und Korn liegen auf dem Bildausschnitt, nicht auf der Karte
+    ctx.setTransform(this.RS, 0, 0, this.RS, 0, 0);
     this.drawWeather(ctx, t);
     this.drawLighting(ctx, P, t);
     const vg = ctx.createRadialGradient(W / 2, H / 2, H * 0.45, W / 2, H / 2, H * 0.95); vg.addColorStop(0, 'rgba(0,0,0,0)'); vg.addColorStop(1, 'rgba(20,10,0,0.4)'); ctx.fillStyle = vg; ctx.fillRect(0, 0, W, H);
     ctx.save(); ctx.globalAlpha = 0.04; ctx.globalCompositeOperation = 'overlay'; for (let y = 0; y < H; y += 160) for (let x = 0; x < W; x += 240) ctx.drawImage(this.grain, x + ((t * 30) | 0) % 7, y); ctx.restore();
-    const hb = this.hover && this.hover.building, sb = this.selected && HK.BUILDING[this.selected];
-    if (sb && sb.kind !== 'water') this.outline(ctx, sb, 'rgba(255,215,102,0.95)', 2);
-    if (hb && hb !== sb && hb.kind !== 'water') this.outline(ctx, hb, 'rgba(255,255,255,0.85)', 1.2);
   },
   outline(ctx, b, color, w) { const hh = b.kind === 'church' ? 6.2 : b.h + Math.min(b.w, b.d) * 0.7 + 0.2; const hull = I.boxHull(b.x - 0.1, b.y - 0.1, b.w + 0.2, b.d + 0.2, hh); ctx.strokeStyle = color; ctx.lineWidth = w; ctx.setLineDash([5, 4]); ctx.beginPath(); hull.forEach((q, i) => i ? ctx.lineTo(q[0], q[1]) : ctx.moveTo(q[0], q[1])); ctx.closePath(); ctx.stroke(); ctx.setLineDash([]); },
 
@@ -304,7 +359,8 @@ HK.Scene = {
       const k = HK.clamp((0.7 - l) / 0.4, 0, 1);
       ctx.save(); ctx.globalCompositeOperation = 'lighter';
       if (this.emCanvas && this.nightK) { ctx.save(); ctx.globalAlpha = 0.55 * k; ctx.filter = 'blur(6px)'; ctx.drawImage(this.emCanvas, 0, 0, W, H); ctx.filter = 'blur(1.5px)'; ctx.globalAlpha = 0.8 * k; ctx.drawImage(this.emCanvas, 0, 0, W, H); ctx.restore(); }
-      for (const [x, y] of this.lamps) { const g = ctx.createRadialGradient(x, y, 1, x, y, 40); g.addColorStop(0, `rgba(255,190,90,${0.5 * k})`); g.addColorStop(0.3, `rgba(255,170,70,${0.18 * k})`); g.addColorStop(1, 'rgba(255,160,60,0)'); ctx.fillStyle = g; ctx.fillRect(x - 40, y - 40, 80, 80); ctx.fillStyle = `rgba(255,230,160,${0.9 * k})`; ctx.beginPath(); ctx.arc(x, y - 1, 1.8, 0, 6.28); ctx.fill(); }
+      const cz = this.cam.z;
+      for (const [lx, ly] of this.lamps) { const x = (lx - this.cam.x) * cz, y = (ly - this.cam.y) * cz; const g = ctx.createRadialGradient(x, y, 1, x, y, 40 * cz); g.addColorStop(0, `rgba(255,190,90,${0.5 * k})`); g.addColorStop(0.3, `rgba(255,170,70,${0.18 * k})`); g.addColorStop(1, 'rgba(255,160,60,0)'); ctx.fillStyle = g; ctx.fillRect(x - 40 * cz, y - 40 * cz, 80 * cz, 80 * cz); ctx.fillStyle = `rgba(255,230,160,${0.9 * k})`; ctx.beginPath(); ctx.arc(x, y - 1, 1.8 * cz, 0, 6.28); ctx.fill(); }
       ctx.restore();
     }
   },

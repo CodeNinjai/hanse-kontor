@@ -36,6 +36,8 @@ Dazu Stadtereignisse (Hungersnot, Pest, Brand, Vitalienbrüder, Sturm, Jahrmarkt
 
 ## Steuerung
 
+- **Karte:** Mausrad oder zwei Finger zoomen, Ziehen verschiebt den Ausschnitt, Doppelklick springt heran; Tasten `+`, `-`, `0` und Pfeiltasten; Schaltflächen unten rechts.
+
 | Taste | Wirkung |
 | --- | --- |
 | Leertaste | Pause / weiter |

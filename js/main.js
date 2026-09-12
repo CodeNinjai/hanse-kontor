@@ -44,7 +44,7 @@ HK.importGame = function (file) {
 };
 HK.startWithState = function (st) {
   HK.state = st; st.speed = 0; HK.preview = false;
-  HK.Scene.snapShips(); HK.Scene.selected = 'kontor'; HK.Scene.clock = 0.35; HK.Scene.weatherDay = -1;
+  HK.Scene.snapShips(); HK.Scene.resetCam(); HK.Scene.selected = 'kontor'; HK.Scene.clock = 0.35; HK.Scene.weatherDay = -1;
   HK.UI.panel = 'kontor'; HK.UI.selectedVisitor = null; HK.UI.closeModal(); HK.UI.showGame(); HK.UI.setTab('place'); HK.UI.renderAll();
 };
 HK.setLang = function (lang) {
