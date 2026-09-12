@@ -56,9 +56,12 @@ HK.UI = {
     if (p === 'encounter') return HK.t('enc_' + (this.encounter ? this.encounter.type : 'citizen') + '_label');
     if (p === 'house') return HK.name(HK.BUILDINGS.find(b => b.panel === 'house' && b.plot === this.plot));
     if (p === 'workshop') return HK.name(HK.BUILDINGS.find(b => b.panel === 'workshop' && b.plot === this.plot));
+    const sel = HK.Scene.selected && HK.BUILDING[HK.Scene.selected]; if (sel && sel.panel === p) return HK.name(sel);
     const b = HK.BUILDINGS.find(x => x.panel === p); return b ? HK.name(b) : HK.t(p);
   },
-  showGame() { this.$('title-screen').hidden = true; this.$('game').hidden = false; },
+  showGame() { this.$('title-screen').hidden = true; this.$('game').hidden = false; this.$('hud').hidden = false; this.$('side').hidden = false; },
+  /* Hintergrund um die Szene an den Himmel anpassen */
+  syncBackdrop() { const P = HK.Scene.palette(); const el = this.$('scene-wrap'); if (el) el.style.background = `linear-gradient(${HK.Scene.rgb(P.top)}, ${HK.Scene.rgb(P.near.map(v => v * 0.6))} 55%, #1a120c)`; if (!HK.preview && HK.state) this.renderHeader(); },
 
   /* Klick in der Szene */
   sceneClick(h) {
@@ -71,8 +74,8 @@ HK.UI = {
 
   /* ---------- Titel ---------- */
   showTitle(hasSave) {
-    const ts = this.$('title-screen'); ts.hidden = false;
-    const inGame = !!HK.state;
+    const ts = this.$('title-screen'); ts.hidden = false; this.$('game').hidden = false;
+    const inGame = !!HK.state && !HK.preview;
     const render = () => {
       ts.innerHTML = `<div class="title-box"><h1>${HK.t('title')}</h1><p class="subtitle">${HK.t('subtitle')}</p>
         <div class="lang-row"><button class="lang-btn ${HK.LANG === 'de' ? 'active' : ''}" data-lang="de">Deutsch</button><button class="lang-btn ${HK.LANG === 'en' ? 'active' : ''}" data-lang="en">English</button></div>
@@ -85,6 +88,7 @@ HK.UI = {
         ${hasSave && inGame ? `<button id="t-load" class="link">${HK.t('load')}</button>` : ''}<button id="t-help" class="link">${HK.t('help')}</button></div>`;
       ts.querySelectorAll('.lang-btn').forEach(b => b.addEventListener('click', () => HK.setLang(b.dataset.lang)));
       const r = ts.querySelector('#t-resume'); if (r) r.addEventListener('click', () => { ts.hidden = true; });
+      this.$('hud').hidden = !inGame; this.$('side').hidden = !inGame;
       const c = ts.querySelector('#t-continue'); if (c) c.addEventListener('click', () => HK.loadGame());
       const l = ts.querySelector('#t-load'); if (l) l.addEventListener('click', () => { if (confirm(HK.t('confirmNewGame'))) HK.loadGame(); });
       ts.querySelector('#t-help').addEventListener('click', () => this.showHelp());

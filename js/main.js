@@ -12,8 +12,10 @@ HK.loop = function (ts) {
       if (HK.Scene.clock >= 1) { HK.Scene.clock -= 1; HK.tick(st); HK.UI.renderAll(); if (st.day % 5 === 0) HK.autosave(); }
       else if (Math.floor(ts / 500) !== Math.floor((ts - dt * 1000) / 500)) HK.UI.renderHeader();
     }
+    if (HK.preview) HK.Scene.clock = (HK.Scene.clock + dt / 240) % 1;
     HK.Scene.update(dt);
     HK.Scene.draw();
+    if (Math.floor(ts / 400) !== Math.floor((ts - dt * 1000) / 400)) HK.UI.syncBackdrop();
   }
   requestAnimationFrame(HK.loop);
 };
@@ -41,8 +43,8 @@ HK.importGame = function (file) {
   r.readAsText(file);
 };
 HK.startWithState = function (st) {
-  HK.state = st; st.speed = 0;
-  HK.Scene.shipAnim = {}; HK.Scene.selected = 'kontor'; HK.Scene.clock = 0.35;
+  HK.state = st; st.speed = 0; HK.preview = false;
+  HK.Scene.snapShips(); HK.Scene.selected = 'kontor'; HK.Scene.clock = 0.35; HK.Scene.weatherDay = -1;
   HK.UI.panel = 'kontor'; HK.UI.selectedVisitor = null; HK.UI.closeModal(); HK.UI.showGame(); HK.UI.setTab('place'); HK.UI.renderAll();
 };
 HK.setLang = function (lang) {
@@ -63,6 +65,8 @@ document.addEventListener('DOMContentLoaded', () => {
   HK.onWin = () => HK.UI.showEnd(true);
   HK.onGameOver = () => HK.UI.showEnd(false);
   let hasSave = false; try { hasSave = !!localStorage.getItem(HK.SAVE_KEY); } catch (e) { /* */ }
+  // Vorschau der Stadt im Abendlicht hinter dem Titelbild
+  HK.state = HK.newGame({ name: '', difficulty: 'normal' }); HK.preview = true; HK.Scene.snapShips(); HK.Scene.clock = 0.7; HK.Scene.weatherDay = 0; HK.Scene.weather = 'clear';
   HK.UI.showTitle(hasSave);
   requestAnimationFrame(HK.loop);
 });
