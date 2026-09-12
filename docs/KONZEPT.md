@@ -179,7 +179,11 @@ Verdacht bleibt die Gegenwährung zu Geld: jede schnelle Mark erzeugt Verdacht, 
 | Familie, Alter, Nachfolge, Chronik | fehlt | mittel |
 | Mehrere Titel und Spielende | fehlt | klein |
 
-## 9. Vorgeschlagene Reihenfolge
+## 9. Umsetzungsstand
+
+Alle sieben Schritte der ursprünglichen Reihenfolge sind umgesetzt (Titel und Chronik, Fraktionsansehen, Rivalen als Akteure, Aufträge, Ereignisketten Vitalienbrüder und Pestjahr, Seefahrt mit Schiffstypen, Kapitänen, Konvois und Fernkontoren samt Feintuch-Kette und Meistern, Familie und Nachfolge). Offen bleiben aus Abschnitt 4: weitere Ketten (Bischofsstreit, Fehde, Hansetag), Ratsämter vergeben, Bruderschaft als Spieleraktion, Wallfahrt und Kirchenbau.
+
+## 10. Ursprünglich vorgeschlagene Reihenfolge
 
 1. **Titel und Chronik** (klein): sechs Wege als Ziele sichtbar machen, Spielende nach 20 Jahren, Bilanzschirm. Gibt sofort Richtung.
 2. **Fraktionsansehen** (mittel): vier Werte, jede bestehende Handlung wirkt darauf; Wahlen und Geschenkkosten hängen dran.

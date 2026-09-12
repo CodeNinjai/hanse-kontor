@@ -65,6 +65,8 @@ document.addEventListener('DOMContentLoaded', () => {
   HK.onWin = () => HK.UI.showEnd(true);
   HK.onTitle = t => HK.UI.showTitleWon(t);
   HK.onDecision = ch => HK.UI.showDecision(ch);
+  HK.onOffer = o => HK.UI.showOffer(o);
+  HK.onSuccession = h => HK.UI.showSuccession(h);
   HK.onChronicle = () => HK.UI.showChronicle();
   HK.onGameOver = () => HK.UI.showEnd(false);
   let hasSave = false; try { hasSave = !!localStorage.getItem(HK.SAVE_KEY); } catch (e) { /* */ }

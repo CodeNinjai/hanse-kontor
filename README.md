@@ -36,6 +36,16 @@ Dazu Stadtereignisse (Hungersnot, Pest, Brand, Vitalienbrüder, Sturm, Jahrmarkt
 
 **Ziel:** Bürgermeister werden, 500.000 Mark Reinvermögen anhäufen und reicher sein als alle Konkurrenten. Nach 60 Tagen mit leerer Kasse ist das Spiel verloren.
 
+## Spieltiefe
+
+- **Sechs Wege, sechs Titel:** Handelsfürst, Bürgermeister auf Lebenszeit, Reeder der Hanse, Stifter von St. Nikolai, Ältermann der Zünfte, Herr der Nacht – jeweils mit sichtbaren Bedingungen in der Übersicht. Die Partie läuft 10, 20 oder 30 Jahre und endet mit der Chronik samt Nachruf; danach kann man weiterspielen.
+- **Fraktionsansehen:** Patrizier, Kaufleute, Zünfte und Kirche urteilen getrennt. Gesetze, Geschenke, Stiftungen, Betriebe und krumme Geschäfte verschieben das Ansehen; Wahlen brauchen die Fraktionen, Geschenke werden billiger, wo man geschätzt wird.
+- **Rivalen als Akteure:** Everd Kruse (Kaufmann), Wessel Bracht (Reeder) und Katharina Detmers (Stifterin) kaufen Häuser, Betriebe, Speicher und Schiffe, ziehen in den Rat, stellen Anträge, schwärzen an, drücken Preise oder helfen mit Tipps und Fürsprache. Treffen und Bündnisse in der Taverne, Kauf von Rivalenbesitz nur bei guter Haltung.
+- **Aufträge:** Rat, Gilde, Kloster, Spelunke und Hafenmeister hängen befristete Liefer- und Fahrtaufträge aus, mit Lohn, Ansehen und Strafen.
+- **Ereignisketten:** Die Vitalienbrüder (Hehlerware oder Warnung, Kaperfahrt selbst anführen) und das Pestjahr (Spital, Hafensperre, Prozession oder Flucht) mit Entscheidungen und Folgen.
+- **Seefahrt:** Schnigge, Kogge und Holk, bis zu fünf Schiffe, Kapitäne mit Eigenschaften, Konvois, Fernkontore in Lübeck, Brügge und Bergen; Produktionskette Tuch → Feintuch in der Färberei, Meister in Betrieben.
+- **Familie:** Heiratsangebote mit Mitgift und Bündnis, Kinder mit Eigenschaften, Erbe übernimmt nach dem Tod des Kaufmanns – ohne Erben endet die Chronik.
+
 ## Steuerung
 
 - **Karte:** Mausrad oder zwei Finger zoomen, Ziehen verschiebt den Ausschnitt, Doppelklick springt heran; Tasten `+`, `-`, `0` und Pfeiltasten; Schaltflächen unten rechts.
@@ -58,6 +68,12 @@ js/game.js      Spielzustand, Wirtschaft, alle Aktionen, Tagestick, Ereignisse
 js/iso.js       Isometrische Projektion, Quader, Dächer, Türme, Fenster, Fachwerk
 js/scene.js     Szene: Wasser, Boden, Tiefensortierung, Licht, Wetter, Passanten
 js/buildings.js Gebäude, Stadtmauer, Bäume, Requisiten, Koggen, Personen
+js/paths.js     Titel, Chronik, Fraktionsansehen
+js/rivals.js    Rivalen als Akteure
+js/contracts.js Auftragsbrett
+js/chains.js    Ereignisketten
+js/sea.js       Kapitäne, Fernkontore
+js/family.js    Heirat, Kinder, Nachfolge
 js/ui.js        Seitenleiste, Gebäudemenüs, Dialoge
 js/main.js      Spielschleife, Speichern/Laden
 ```

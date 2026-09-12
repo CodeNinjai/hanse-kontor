@@ -127,6 +127,27 @@ HK.UI = {
     };
     r(); this.modalRender = r;
   },
+  showOffer(o) {
+    HK.setSpeed(0); const st = HK.state;
+    const r = () => { const box = this.modal(`<h2>${HK.t('offerHead')}</h2><p class="lede">${HK.t('offer_' + o.house, { name: o.name, family: o.family, dowry: HK.fmt(o.dowry), rival: o.rival ? HK.rivalName(o.rival) : '' })}</p><p class="hint">${HK.t('offerEffect_' + o.house)}</p><div class="choices"><button class="choice" data-answer="1"><b>${HK.t('offerAccept', { dowry: HK.fmt(o.dowry) })}</b></button><button class="choice" data-answer="0"><b>${HK.t('offerDecline')}</b></button></div>`);
+      box.querySelectorAll('[data-answer]').forEach(b => b.addEventListener('click', () => { HK.answerOffer(st, b.dataset.answer === '1'); this.closeModal(); this.renderAll(); })); };
+    r(); this.modalRender = r;
+  },
+  showSuccession(heir) {
+    HK.setSpeed(0); const st = HK.state;
+    const r = () => this.modal(`<h2>${HK.t('successionHead')}</h2><p class="lede">${HK.t('successionText', { heir: this.esc(st.name), trait: HK.t('heir_' + heir.trait), gen: st.family.generation })}</p><p class="hint">${HK.t('heirHint_' + heir.trait)}</p><div class="modal-actions"><button data-close class="primary">${HK.t('continuePlay')}</button></div>`);
+    r(); this.modalRender = r;
+  },
+  familySection() {
+    const st = HK.state, F = st.family; if (!F) return '';
+    const age = HK.playerAge(st);
+    let h = `<section><h3>${HK.t('family')}</h3><table class="plain"><tr><td>${HK.t('age')}</td><td class="num">${age} · ${HK.t('generation', { gen: F.generation })}</td></tr><tr><td>${HK.t('spouse')}</td><td class="num">${F.spouse ? this.esc(F.spouse.name + ' ' + F.spouse.family) : HK.t('unmarried')}</td></tr></table>`;
+    if (F.children.length) h += `<table class="plain">${F.children.map((c, i) => `<tr><td>${this.esc(c.name)} <small>${HK.childAge(st, c)} ${HK.t('yearsOld')} · ${HK.t('heir_' + c.trait)}</small></td><td class="num">${F.heir === i ? `<span class="tag gold">${HK.t('heirChosen')}</span>` : `<button class="small" data-action="chooseheir" data-idx="${i}">${HK.t('chooseHeir')}</button>`}</td></tr>`).join('')}</table>`;
+    else h += `<p class="hint">${HK.t(F.spouse ? 'noChildrenYet' : 'familyHint')}</p>`;
+    if (F.offer) h += `<button class="small" data-action="showoffer">${HK.t('offerPending', { name: F.offer.name })}</button>`;
+    if (age >= 50) h += `<p class="hint">${HK.t('ageWarning')}</p>`;
+    return h + `</section>`;
+  },
   showChronicle() {
     HK.setSpeed(0); const st = HK.state, c = HK.chronicle(st);
     const r = () => {
@@ -541,6 +562,7 @@ HK.UI = {
       <tr><td>${HK.t('influence')}</td><td class="num">${Math.floor(st.influence)}</td></tr><tr><td>${HK.t('prosperity')}</td><td>${this.bar(st.town.prosperity, 'green')}</td></tr><tr><td>${HK.t('population')}</td><td class="num">${HK.fmt(st.town.pop)}</td></tr></table></section>`;
     h += `<section><h3>${HK.t('factionsTitle')}</h3><table class="plain">${HK.FACTION_IDS.map(f => `<tr><td>${HK.FACTIONS[f][HK.LANG]}</td><td>${this.bar(st.factions[f], st.factions[f] >= 50 ? 'green' : st.factions[f] < 25 ? 'red' : '')}</td></tr>`).join('')}</table><p class="hint">${HK.t('factionsHint')}</p></section>`;
     h += `<section><h3>${HK.t('titles')}</h3><p class="hint">${HK.t('titlesHint', { years: st.years, date: HK.fmtDate(st.endDay) })}</p>${HK.TITLES.map(t => { const pr = HK.titleProgress(st, t), done = !!st.titles[t.id]; return `<details class="title ${done ? 'done' : ''}"><summary><b>${HK.name(t)}</b> ${done ? `<span class="tag gold">${HK.t('titleHeld')}</span>` : `<small>${pr.filter(c => c.done).length}/${pr.length}</small>`}</summary><p class="hint">${HK.t('title_' + t.id + '_desc')}</p><ul class="conds">${pr.map(c => `<li class="${c.done ? 'ok' : ''}">${c.done ? '✓' : '·'} ${HK.t(c.key, { v: HK.fmt(c.v), target: HK.fmt(c.target) })}</li>`).join('')}</ul></details>`; }).join('')}<div class="btn-row"><button class="small" data-action="chronicle">${HK.t('chronicleView')}</button></div></section>`;
+    h += this.familySection();
     h += this.contractsSection(null);
     h += `<section><h3>${HK.t('richest')}</h3><table class="plain">${rich.map((r, i) => `<tr class="${r.me ? 'me' : ''}"><td>${i + 1}. ${r.me ? '<b>' + r.name + '</b>' : r.name}</td><td class="num">${HK.fmt(r.w)}</td></tr>`).join('')}</table><div class="btn-row"><button class="small" data-action="open" data-panel="rivals">${HK.t('rivals')} →</button></div></section>`;
     const inc = Object.keys(tot).filter(k => tot[k] > 0).sort((a, b) => tot[b] - tot[a]);
@@ -670,6 +692,8 @@ HK.UI = {
       case 'extraberth': this.result(HK.buyExtraBerth(st)); break;
       case 'weighfarm': this.result(HK.buyWeighFarm(st)); break;
       case 'chronicle': this.showChronicle(); break;
+      case 'chooseheir': this.result(HK.chooseHeir(st, parseInt(d.idx, 10))); break;
+      case 'showoffer': if (st.family.offer) this.showOffer(st.family.offer); break;
       case 'decision': { const ch = st.chains.active.find(c => c.id === st.pendingDecision.chain); if (ch) this.showDecision(ch); break; }
       case 'bless': this.result(HK.blessShips(st)); break;
       case 'militia': this.result(HK.fundMilitia(st)); break;

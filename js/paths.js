@@ -43,6 +43,7 @@ HK.chronicle = function (st) {
   if (titles.length >= 3) lines.push('ep_manyTitles'); else if (titles.length) lines.push('ep_' + titles[0].id); else if (worth >= 100000) lines.push('ep_rich'); else lines.push('ep_modest');
   if (st.stats.smuggled > 30000 && st.piety < 50) lines.push('ep_shady'); else if (st.piety >= 70) lines.push('ep_pious'); else if (st.seat !== 'none') lines.push('ep_office'); else lines.push('ep_trader');
   if (rivals.every(r => r.beaten)) lines.push('ep_beatAll'); else if (rivals.some(r => r.beaten)) lines.push('ep_beatSome'); else lines.push('ep_beatNone');
+  if (st.family && st.family.generation > 1) lines.push('ep_generation'); else if (st.family && st.family.children.length) lines.push('ep_children');
   return { worth, years, rivals, holdings, titles, lines, rank: HK.RANKS[st.rank], seat: st.seat, pop: st.town.pop, prosperity: Math.round(st.town.prosperity), factions: Object.assign({}, st.factions), ended: st.day >= st.endDay };
 };
 
