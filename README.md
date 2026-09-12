@@ -1,6 +1,6 @@
 # Hanse-Kontor
 
-Eine Wirtschaftssimulation für einen Spieler in **Sundhaven**, einer kleinen Hansestadt an der Küste, anno 1372. Die Stadt ist eine belebte Szene mit Hafen: Schiffe laufen ein, Karawanen lagern vor dem Tor, Bürger gehen ihren Wegen nach, nachts leuchten die Fenster. Jedes Gebäude und jede Person lässt sich anklicken und öffnet ein eigenes Spielsystem: Handel, Betriebe, Besitz, Geldverleih, Politik, Kirche, Korruption.
+Eine Wirtschaftssimulation für einen Spieler in **Sundhaven**, einer kleinen Hansestadt auf einer Halbinsel, anno 1372. Die Stadt ist eine isometrisch gezeichnete, belebte Szene: Koggen laufen an den Stegen ein, Karawanen lagern vor dem Tor, Bürger gehen ihren Wegen nach, die Windmühle dreht sich, nachts leuchten Fenster und Laternen, im Winter liegt Schnee auf den Dächern. Jedes Gebäude und jede Person lässt sich anklicken und öffnet ein eigenes Spielsystem: Handel, Betriebe, Besitz, Geldverleih, Politik, Kirche, Korruption.
 
 Reines HTML, CSS und JavaScript ohne Build-Schritt: `index.html` öffnen und spielen. Oberfläche auf Deutsch und Englisch umschaltbar.
 
@@ -44,10 +44,12 @@ Dazu Stadtereignisse (Hungersnot, Pest, Brand, Vitalienbrüder, Sturm, Jahrmarkt
 index.html      Seitengerüst
 css/style.css   Gestaltung
 js/data.js      Waren, Herkunftsorte, Betriebe, Personen, Gesetze, Konstanten
-js/town.js      Stadtplan: Gebäude, Straßen, Wegenetz, Liegeplätze
+js/town.js      Stadtplan in Weltkoordinaten: Gebäude, Straßen, Wegenetz, Stege
 js/i18n.js      Sprachtabellen DE/EN
 js/game.js      Spielzustand, Wirtschaft, alle Aktionen, Tagestick, Ereignisse
-js/scene.js     Canvas-Szene: Gebäude, Schiffe, Passanten, Tag und Nacht
+js/iso.js       Isometrische Projektion, Quader, Dächer, Türme, Fenster, Fachwerk
+js/scene.js     Szene: Wasser, Boden, Tiefensortierung, Licht, Wetter, Passanten
+js/buildings.js Gebäude, Stadtmauer, Bäume, Requisiten, Koggen, Personen
 js/ui.js        Seitenleiste, Gebäudemenüs, Dialoge
 js/main.js      Spielschleife, Speichern/Laden
 ```
