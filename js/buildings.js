@@ -166,32 +166,58 @@ Object.assign(HK.Scene, {
   drawMarket() {},
   drawGate(ctx, b, st, season, sv) {
     I.shadow(ctx, b.x, b.y, b.w, b.d, b.h, sv.v, sv.a);
-    I.box(ctx, b.x, b.y, 0, b.w, b.d, b.h, { wall: '#8f887a' }, { noTop: true });
-    for (let z = 0.15; z < b.h; z += 0.15) { I.line(ctx, [b.x, b.y + b.d, z], [b.x + b.w, b.y + b.d, z], 'rgba(0,0,0,0.2)', 0.5); I.line(ctx, [b.x + b.w, b.y, z], [b.x + b.w, b.y + b.d, z], 'rgba(0,0,0,0.25)', 0.5); }
+    I.box(ctx, b.x, b.y, 0, b.w, b.d, b.h, { wall: '#736d63' }, { stroke: 'rgba(0,0,0,0)', noTop: true }); this.masonry(ctx, true, true, b.x, b.y, b.w, b.d, 0, b.h);
     // Torbogen auf der Außenseite (+x) und Innenseite
     const cy = b.y + b.d / 2; I.poly(ctx, [[b.x + b.w, cy - 0.3, 0], [b.x + b.w, cy + 0.3, 0], [b.x + b.w, cy + 0.3, 0.6], [b.x + b.w, cy, 0.85], [b.x + b.w, cy - 0.3, 0.6]], '#1e1a18');
     I.poly(ctx, [[b.x + b.w, cy - 0.22, 0], [b.x + b.w, cy + 0.22, 0], [b.x + b.w, cy + 0.22, 0.5], [b.x + b.w, cy - 0.22, 0.5]], 'rgba(255,240,200,0.14)');
     // Zinnen und Dach
-    for (let u = 0; u < b.w; u += 0.25) I.box(ctx, b.x + u, b.y + b.d - 0.12, b.h, 0.12, 0.12, 0.15, { wall: '#7d766a', top: '#9a9284' }); for (let v = 0; v < b.d; v += 0.25) I.box(ctx, b.x + b.w - 0.12, b.y + v, b.h, 0.12, 0.12, 0.15, { wall: '#7d766a', top: '#9a9284' });
-    I.pyramid(ctx, b.x + 0.1, b.y + 0.1, b.h + 0.15, b.w - 0.2, b.d - 0.2, 0.9, season === 'winter' ? '#e6eaee' : '#3a3038');
+    I.box(ctx, b.x, b.y, b.h, b.w, b.d, 0.1, { wall: '#736d63', top: '#7d776c' }, { stroke: 'rgba(0,0,0,0)' }); for (let u = 0.04; u < b.w - 0.2; u += 0.4) I.box(ctx, b.x + u, b.y + b.d - 0.16, b.h + 0.1, 0.24, 0.16, 0.3, { wall: '#736d63', top: '#8a847a' }, { stroke: 'rgba(0,0,0,0.35)' }); for (let v = 0.04; v < b.d - 0.2; v += 0.4) I.box(ctx, b.x + b.w - 0.16, b.y + v, b.h + 0.1, 0.16, 0.24, 0.3, { wall: '#736d63', top: '#8a847a' }, { stroke: 'rgba(0,0,0,0.35)' });
+    I.pyramid(ctx, b.x + 0.12, b.y + 0.12, b.h + 0.4, b.w - 0.24, b.d - 0.24, 1.0, season === 'winter' ? '#e6eaee' : '#3a3038');
     I.windowR(ctx, b.x, b.w, b.y, 1.1, cy, 0.18, 0.3, { arch: true });
     const p = I.p(b.x + b.w, cy, 1.25); ctx.fillStyle = '#c8102e'; ctx.fillRect(p[0] - 4, p[1] - 6, 8, 4); ctx.fillStyle = '#f0ece0'; ctx.fillRect(p[0] - 4, p[1] - 2, 8, 4);
     const lp = I.p(b.x + b.w + 0.05, cy - 0.45, 0.8), lp2 = I.p(b.x + b.w + 0.05, cy + 0.45, 0.8); this.lamps.push([lp[0], lp[1]], [lp2[0], lp2[1]]);
   },
+  masonry(ctx, faceL, faceR, x, y, w, d, z0, h) {
+    // Steinfugen: waagerechte Lagen und versetzte Stoßfugen auf beiden sichtbaren Flächen
+    const course = 0.13; let row = 0;
+    for (let z = z0 + course; z < z0 + h; z += course, row++) {
+      if (faceL) { I.line(ctx, [x, y + d, z], [x + w, y + d, z], 'rgba(0,0,0,0.28)', 0.6); I.line(ctx, [x, y + d, z + 0.02], [x + w, y + d, z + 0.02], 'rgba(255,255,255,0.07)', 0.6); for (let u = (row % 2) * 0.17; u < w; u += 0.34) I.line(ctx, [x + u, y + d, z - course], [x + u, y + d, z], 'rgba(0,0,0,0.22)', 0.6); }
+      if (faceR) { I.line(ctx, [x + w, y, z], [x + w, y + d, z], 'rgba(0,0,0,0.32)', 0.6); for (let v = (row % 2) * 0.17; v < d; v += 0.34) I.line(ctx, [x + w, y + v, z - course], [x + w, y + v, z], 'rgba(0,0,0,0.26)', 0.6); }
+    }
+    // Feuchte, dunkler Sockel
+    if (faceL) I.poly(ctx, [[x, y + d, z0], [x + w, y + d, z0], [x + w, y + d, z0 + 0.22], [x, y + d, z0 + 0.22]], 'rgba(20,20,15,0.22)');
+    if (faceR) I.poly(ctx, [[x + w, y, z0], [x + w, y + d, z0], [x + w, y + d, z0 + 0.22], [x + w, y, z0 + 0.22]], 'rgba(20,20,15,0.26)');
+  },
   wallSegments() {
-    const segs = [], W = HK.WORLD, t = 0.5, h = 1.15;
-    const seg = (x, y, w, d, k) => segs.push({ k, f: (ctx, sv) => { I.box(ctx, x, y, 0, w, d, h, { wall: '#8f887a', top: '#a9a292' }, { stroke: 'rgba(0,0,0,0)' }); for (let z = 0.15; z < h; z += 0.15) { I.line(ctx, [x, y + d, z], [x + w, y + d, z], 'rgba(0,0,0,0.18)', 0.5); I.line(ctx, [x + w, y, z], [x + w, y + d, z], 'rgba(0,0,0,0.22)', 0.5); } const along = w > d; for (let u = 0.05; u < (along ? w : d) - 0.05; u += 0.25) { if (along) I.box(ctx, x + u, y, h, 0.11, 0.12, 0.13, { wall: '#7d766a', top: '#9a9284' }, { stroke: 'rgba(0,0,0,0.25)' }); else I.box(ctx, x + d - 0.12, y + u, h, 0.12, 0.11, 0.13, { wall: '#7d766a', top: '#9a9284' }, { stroke: 'rgba(0,0,0,0.25)' }); } } });
-    // Nordmauer entlang y = WALL_N, Ostmauer entlang x = WALL_E, in Stücke geteilt
+    const segs = [], W = HK.WORLD, t = 0.6, h = 1.35, stone = { wall: '#736d63', top: '#8a847a' }, ns = { stroke: 'rgba(0,0,0,0)' };
+    const parapet = (ctx, x, y, w, d, along) => {
+      // Wehrgang: Brüstung mit Zinnen an der sichtbaren Außenkante
+      const L = along ? w : d, ph = 0.12, mh = 0.34, mw = 0.24, gap = 0.16;
+      if (along) { I.box(ctx, x, y + d - 0.16, h, w, 0.16, ph, stone, ns); for (let u = 0.04; u + mw <= L; u += mw + gap) I.box(ctx, x + u, y + d - 0.16, h + ph, mw, 0.16, mh, stone, { stroke: 'rgba(0,0,0,0.35)' }); I.box(ctx, x, y, h, w, 0.14, ph + 0.1, stone, ns); }
+      else { I.box(ctx, x + w - 0.16, y, h, 0.16, d, ph, stone, ns); for (let v = 0.04; v + mw <= L; v += mw + gap) I.box(ctx, x + w - 0.16, y + v, h + ph, 0.16, mw, mh, stone, { stroke: 'rgba(0,0,0,0.35)' }); I.box(ctx, x, y, h, 0.14, d, ph + 0.1, stone, ns); }
+    };
+    const seg = (x, y, w, d, k) => segs.push({ k, f: (ctx, sv) => { I.box(ctx, x, y, 0, w, d, h, stone, ns); this.masonry(ctx, true, true, x, y, w, d, 0, h); I.poly(ctx, [[x, y, h], [x + w, y, h], [x + w, y + d, h], [x, y + d, h]], '#7d776c'); parapet(ctx, x, y, w, d, w > d); } });
     for (let x = W.COAST_X + 0.5; x < W.WALL_E; x += 2) { const x1 = Math.min(x + 2, W.WALL_E); if (x < 15.3 && x1 > 15.7) { seg(x, W.WALL_N - t, 15.3 - x, t, x + 2 + W.WALL_N); seg(15.7, W.WALL_N - t, x1 - 15.7, t, x + 2 + W.WALL_N); } else seg(x, W.WALL_N - t, x1 - x, t, x + 2 + W.WALL_N); }
-    segs.push({ k: 15.5 + W.WALL_N + 2, f: (ctx) => { I.box(ctx, 15.3, W.WALL_N - t - 0.1, 0, 0.4, t + 0.2, h + 0.6, { wall: '#8f887a', top: '#a9a292' }, { stroke: 'rgba(0,0,0,0)' }); I.poly(ctx, [[15.32, W.WALL_N + 0.1, 0], [15.68, W.WALL_N + 0.1, 0], [15.68, W.WALL_N + 0.1, 0.7], [15.5, W.WALL_N + 0.1, 0.95], [15.32, W.WALL_N + 0.1, 0.7]], '#1e1a18'); I.pyramid(ctx, 15.25, W.WALL_N - t - 0.15, h + 0.6, 0.5, t + 0.3, 0.5, '#3a3038'); } });
+    segs.push({ k: 15.5 + W.WALL_N + 2, f: (ctx) => { I.box(ctx, 15.25, W.WALL_N - t - 0.1, 0, 0.5, t + 0.2, h + 0.7, stone, ns); this.masonry(ctx, true, true, 15.25, W.WALL_N - t - 0.1, 0.5, t + 0.2, 0, h + 0.7); I.poly(ctx, [[15.32, W.WALL_N + 0.1, 0], [15.68, W.WALL_N + 0.1, 0], [15.68, W.WALL_N + 0.1, 0.7], [15.5, W.WALL_N + 0.1, 0.95], [15.32, W.WALL_N + 0.1, 0.7]], '#1e1a18'); I.pyramid(ctx, 15.2, W.WALL_N - t - 0.15, h + 0.7, 0.6, t + 0.3, 0.55, '#3a3038'); } });
     for (let y = W.WALL_N; y < W.COAST_Y; y += 2) { if (y >= 9.3 && y < 10.7) continue; seg(W.WALL_E, y, t, Math.min(2, W.COAST_Y - y), W.WALL_E + t + y + 2); }
     seg(W.WALL_E, 8.3, t, 1.0, W.WALL_E + 9.8); seg(W.WALL_E, 10.7, t, 1.3, W.WALL_E + 12.5);
-    // Türme
-    const tower = (cx, cy, r, hh, k) => segs.push({ k, f: (ctx, sv) => { I.cylinder(ctx, cx, cy, 0, r, hh, '#8f887a', { brick: true, noTop: true }); for (let a = 0; a < 6.28; a += 0.6) { const px = cx + Math.cos(a) * r * 0.85, py = cy + Math.sin(a) * r * 0.85; if (px + py > cx + cy - 0.1) I.box(ctx, px - 0.06, py - 0.06, hh, 0.12, 0.12, 0.16, { wall: '#7d766a', top: '#9a9284' }); } I.cone(ctx, cx, cy, hh + 0.16, r + 0.05, 0.9, this.season() === 'winter' ? '#e6eaee' : '#3a3038'); const p = I.p(cx, cy, hh + 1.06); ctx.fillStyle = '#c8102e'; ctx.fillRect(p[0], p[1] - 8, 7 + Math.sin(this.time * 4 + cx), 4); I.line(ctx, [cx, cy, hh + 1.06], [cx, cy, hh + 1.5], '#3a2a1a', 1); } });
-    tower(W.WALL_E + 0.25, W.WALL_N - 0.25, 0.55, 1.8, W.WALL_E + W.WALL_N + 1.2);
-    tower(W.WALL_E + 0.25, W.COAST_Y + 0.1, 0.55, 1.8, W.WALL_E + W.COAST_Y + 1.2);
-    tower(W.COAST_X + 0.6, W.WALL_N - 0.25, 0.45, 1.6, W.COAST_X + W.WALL_N + 1.0);
-    tower(15.0, W.WALL_N - 0.25, 0.4, 1.5, 15 + W.WALL_N + 1); tower(16.0, W.WALL_N - 0.25, 0.4, 1.5, 16 + W.WALL_N + 1);
+    // Türme: Mauerwerk, Schießscharten, Kragsteinkranz, Zinnen, Kegeldach
+    const tower = (cx, cy, r, hh, k) => segs.push({ k, f: (ctx, sv) => {
+      I.cylinder(ctx, cx, cy, 0, r, hh, '#736d63', { noTop: true });
+      for (let z = 0.13; z < hh; z += 0.13) { const P = I.p(cx, cy, z); ctx.strokeStyle = 'rgba(0,0,0,0.26)'; ctx.lineWidth = 0.6; ctx.beginPath(); ctx.ellipse(P[0], P[1], r * I.TW, r * I.TH, 0, 0, Math.PI); ctx.stroke(); const off = ((z / 0.13) | 0) % 2 ? 0.35 : 0; for (let a = 0.15 + off; a < Math.PI; a += 0.7) { const Q = I.p(cx + Math.cos(a) * r, cy + Math.sin(a) * r, z); ctx.beginPath(); ctx.moveTo(Q[0], Q[1]); ctx.lineTo(Q[0], Q[1] + 0.13 * I.ZS); ctx.stroke(); } }
+      const base = I.p(cx, cy, 0); ctx.fillStyle = 'rgba(20,20,15,0.25)'; ctx.beginPath(); ctx.ellipse(base[0], base[1], r * I.TW, r * I.TH, 0, 0, Math.PI); ctx.lineTo(base[0] - r * I.TW, base[1] - 0.2 * I.ZS); ctx.ellipse(base[0], base[1] - 0.2 * I.ZS, r * I.TW, r * I.TH, 0, Math.PI, 0, true); ctx.fill();
+      for (const [a, z] of [[0.9, hh * 0.35], [1.6, hh * 0.6], [0.5, hh * 0.75]]) { const Q = I.p(cx + Math.cos(a) * r * 0.98, cy + Math.sin(a) * r * 0.98, z); ctx.fillStyle = '#1e1a18'; ctx.fillRect(Q[0] - 1, Q[1] - 8, 2.2, 9); }
+      I.cylinder(ctx, cx, cy, hh, r + 0.09, 0.16, '#6a645a', {}); I.cylinder(ctx, cx, cy, hh + 0.16, r + 0.09, 0.1, '#7d776c', {});
+      for (let a = 0; a < 6.28; a += 0.55) { const px = cx + Math.cos(a) * (r + 0.02), py = cy + Math.sin(a) * (r + 0.02); if (px + py > cx + cy - 0.15) I.box(ctx, px - 0.07, py - 0.07, hh + 0.26, 0.14, 0.14, 0.2, stone, { stroke: 'rgba(0,0,0,0.35)' }); }
+      I.cone(ctx, cx, cy, hh + 0.42, r + 0.02, 1.15, this.season() === 'winter' ? '#e6eaee' : '#3a3038');
+      const T = I.p(cx, cy, hh + 1.57), B = I.p(cx, cy, hh + 0.42); ctx.strokeStyle = 'rgba(0,0,0,0.3)'; ctx.lineWidth = 0.6; for (let a = 0.2; a < Math.PI; a += 0.5) { ctx.beginPath(); ctx.moveTo(T[0], T[1]); ctx.lineTo(B[0] + Math.cos(a) * (r + 0.02) * I.TW, B[1] + Math.sin(a) * (r + 0.02) * I.TH); ctx.stroke(); }
+      I.line(ctx, [cx, cy, hh + 1.57], [cx, cy, hh + 2.05], '#3a2a1a', 1.2); const p = I.p(cx, cy, hh + 2.05); ctx.fillStyle = '#c8102e'; ctx.beginPath(); ctx.moveTo(p[0], p[1]); ctx.lineTo(p[0] + 10 + Math.sin(this.time * 4 + cx) * 2, p[1] + 3); ctx.lineTo(p[0], p[1] + 6); ctx.fill();
+    } });
+    tower(W.WALL_E + 0.3, W.WALL_N - 0.3, 0.62, 2.3, W.WALL_E + W.WALL_N + 1.3);
+    tower(W.WALL_E + 0.3, W.COAST_Y + 0.1, 0.62, 2.3, W.WALL_E + W.COAST_Y + 1.3);
+    tower(W.COAST_X + 0.6, W.WALL_N - 0.3, 0.5, 2.0, W.COAST_X + W.WALL_N + 1.0);
+    tower(15.0, W.WALL_N - 0.3, 0.42, 1.9, 15 + W.WALL_N + 1); tower(16.0, W.WALL_N - 0.3, 0.42, 1.9, 16 + W.WALL_N + 1);
+    tower(W.WALL_E + 0.3, 6.0, 0.5, 2.0, W.WALL_E + 6.0 + 1.1); tower(W.WALL_E + 0.3, 13.5, 0.5, 2.0, W.WALL_E + 13.5 + 1.1);
     return segs;
   },
   drawMole(ctx, sv) {
@@ -236,15 +262,20 @@ Object.assign(HK.Scene, {
     if (p.y0 <= p.full.y0 + 1.3 && p.y1 > p.full.y0 + 1.3) { this.barrel3(ctx, x0 + 0.12, p.full.y0 + 1.25, 0.2); I.box(ctx, x0 + 0.28, p.full.y0 + 1.0, 0.2, 0.18, 0.18, 0.18, { wall: '#9a7a4a', top: '#b08a50' }); }
   },
   drawTree(ctx, x, y, r, season, sv) {
-    const s = I.p(x, y, 0); if (!this.picking) { ctx.fillStyle = `rgba(15,10,5,${sv.a * 0.8})`; ctx.beginPath(); ctx.ellipse(s[0] + sv.v[0] * 12, s[1] + sv.v[1] * 6 + 2, r * 26, r * 12, 0, 0, 6.28); ctx.fill(); }
-    ctx.fillStyle = '#4a3320'; ctx.fillRect(s[0] - 2, s[1] - r * 30, 4, r * 30);
-    if (season === 'winter') { ctx.strokeStyle = '#4a3320'; ctx.lineWidth = 1.3; for (let i = 0; i < 7; i++) { const a = -Math.PI / 2 + (i - 3) * 0.35; ctx.beginPath(); ctx.moveTo(s[0], s[1] - r * 26); ctx.lineTo(s[0] + Math.cos(a) * r * 34, s[1] - r * 26 + Math.sin(a) * r * 34); ctx.stroke(); } return; }
-    const cols = season === 'autumn' ? ['#b8702a', '#d08a30', '#e0a848'] : ['#3f6a2e', '#5a8a3a', '#7aa84a'];
-    const cy = s[1] - r * 40, sway = Math.sin(this.time * 1.2 + x) * 1.2, R = r * 30;
-    ctx.fillStyle = cols[0]; ctx.beginPath(); ctx.arc(s[0] + sway, cy, R, 0, 6.28); ctx.arc(s[0] - R * 0.55 + sway, cy + R * 0.25, R * 0.7, 0, 6.28); ctx.arc(s[0] + R * 0.55 + sway, cy + R * 0.25, R * 0.7, 0, 6.28); ctx.arc(s[0] + sway, cy - R * 0.4, R * 0.65, 0, 6.28); ctx.fill();
-    ctx.fillStyle = cols[1]; ctx.beginPath(); ctx.arc(s[0] - R * 0.2 + sway, cy - R * 0.15, R * 0.75, 0, 6.28); ctx.arc(s[0] + R * 0.35 + sway, cy - R * 0.05, R * 0.5, 0, 6.28); ctx.fill();
-    ctx.fillStyle = cols[2]; ctx.beginPath(); ctx.arc(s[0] - R * 0.4 + sway, cy - R * 0.45, R * 0.42, 0, 6.28); ctx.arc(s[0] + R * 0.1 + sway, cy - R * 0.55, R * 0.3, 0, 6.28); ctx.fill();
-    ctx.fillStyle = 'rgba(0,0,0,0.12)'; ctx.beginPath(); ctx.arc(s[0] + R * 0.35 + sway, cy + R * 0.35, R * 0.55, 0, 6.28); ctx.fill();
+    const s = I.p(x, y, 0), R = r * 46, th = r * 30;
+    if (!this.picking) { ctx.fillStyle = `rgba(15,10,5,${sv.a * 0.8})`; ctx.beginPath(); ctx.ellipse(s[0] + sv.v[0] * 14, s[1] + sv.v[1] * 8 + 2, R * 0.95, R * 0.42, 0, 0, 6.28); ctx.fill(); }
+    ctx.fillStyle = '#4a3320'; ctx.beginPath(); ctx.moveTo(s[0] - 3, s[1] + 1); ctx.lineTo(s[0] + 3, s[1] + 1); ctx.lineTo(s[0] + 2, s[1] - th); ctx.lineTo(s[0] - 2, s[1] - th); ctx.fill();
+    if (season === 'winter') { ctx.strokeStyle = '#4a3320'; ctx.lineWidth = 1.6; for (let i = 0; i < 9; i++) { const a = -Math.PI / 2 + (i - 4) * 0.3; ctx.beginPath(); ctx.moveTo(s[0], s[1] - th * 0.9); ctx.lineTo(s[0] + Math.cos(a) * R * 1.1, s[1] - th * 0.9 + Math.sin(a) * R * 1.1); ctx.stroke(); } return; }
+    const pal = season === 'autumn' ? ['#7a4a1a', '#b8702a', '#d08a30', '#e8b050'] : ['#2f5a24', '#3f7a2e', '#5a9a3a', '#86bf52'];
+    const cy = s[1] - th - R * 0.55, sway = Math.sin(this.time * 1.2 + x) * 1.2;
+    const lobes = [[0, 0.05, 1], [-0.55, 0.3, 0.68], [0.55, 0.32, 0.66], [-0.3, -0.45, 0.6], [0.32, -0.42, 0.62], [0, -0.7, 0.45]];
+    const blob = (k, col, off) => { ctx.fillStyle = col; ctx.beginPath(); for (const [lx, ly, lr] of lobes) ctx.arc(s[0] + sway + lx * R + (off ? off[0] * R : 0), cy + ly * R + (off ? off[1] * R : 0), lr * R * k, 0, 6.28); ctx.fill(); };
+    blob(1.06, 'rgba(25,45,15,0.55)'); // Umriss
+    blob(1, pal[1]);
+    blob(0.78, pal[0], [0.16, 0.18]); // Schattenseite unten rechts
+    blob(0.72, pal[2], [-0.12, -0.12]);
+    blob(0.42, pal[3], [-0.24, -0.3]);
+    ctx.fillStyle = 'rgba(25,45,15,0.35)'; for (let i = 0; i < 7; i++) { const a = i * 0.9 + x; ctx.beginPath(); ctx.arc(s[0] + sway + Math.cos(a) * R * 0.6, cy + Math.sin(a) * R * 0.5 + R * 0.1, R * 0.12, 0, 6.28); ctx.fill(); }
   },
   barrel3(ctx, x, y, z) { I.cylinder(ctx, x, y, z, 0.11, 0.28, '#7a5a34', {}); const p = I.p(x, y, z + 0.09), q = I.p(x, y, z + 0.2); ctx.strokeStyle = '#3a2a1a'; ctx.lineWidth = 0.8; for (const c of [p, q]) { ctx.beginPath(); ctx.ellipse(c[0], c[1], 0.11 * I.TW, 0.11 * I.TH, 0, 0, Math.PI); ctx.stroke(); } },
   crate3(ctx, x, y, z, s) { I.box(ctx, x, y, z, s, s, s, { wall: '#9a7a4a', top: '#b08a50' }, { stroke: 'rgba(60,35,10,0.7)' }); I.line(ctx, [x, y + s, z], [x + s, y + s, z + s], 'rgba(60,35,10,0.6)', 0.6); I.line(ctx, [x + s, y, z], [x + s, y + s, z + s], 'rgba(60,35,10,0.6)', 0.6); },
@@ -280,81 +311,126 @@ Object.assign(HK.Scene, {
 
   /* ---------- Schiffe (3D-Rumpf, gedreht) ---------- */
   drawShip(ctx, x, y, heading, s, origin, docked, selected) {
-    const c = Math.cos(heading), sn = Math.sin(heading), t = this.time;
+    const c = Math.cos(heading), sn = Math.sin(heading), t = this.time, pk = this.picking;
     const W = (u, v, z) => [x + (u * c - v * sn) * s, y + (u * sn + v * c) * s, z * s];
-    const flag = { luebeck: '#c8102e', bruegge: '#3b6ac2', bergen: '#3b9a4a', danzig: '#c29a3b', riga: '#7a3bc2', stockholm: '#e0c020', london: '#a02020', own: '#e0b040', guard: '#f0ece0' }[origin] || '#888';
-    const bob = Math.sin(t * 1.4 + x) * 0.02;
-    // Deckssprung: Dollbord steigt zu Bug und Heck an
-    const sheer = u => 0.62 + 0.16 * u * u + (u > 0.85 ? (u - 0.85) * 0.9 : 0) + (u < -0.9 ? (-0.9 - u) * 0.6 : 0) + bob;
-    const prof = [[1.22, 0], [1.1, 0.13], [0.92, 0.24], [0.68, 0.32], [0.4, 0.37], [0.1, 0.39], [-0.2, 0.39], [-0.5, 0.37], [-0.78, 0.33], [-1.0, 0.25], [-1.13, 0.13], [-1.18, 0]];
+    const S = (u, v, z) => I.p(...W(u, v, z));
+    const strokeW = (pts, col, lw, close) => { ctx.strokeStyle = col; ctx.lineWidth = lw; ctx.beginPath(); pts.forEach((q, i) => { const p = I.p(q[0], q[1], q[2]); i ? ctx.lineTo(p[0], p[1]) : ctx.moveTo(p[0], p[1]); }); if (close) ctx.closePath(); ctx.stroke(); };
+    const flag = { luebeck: '#c8102e', bruegge: '#3b6ac2', bergen: '#3b9a4a', danzig: '#c29a3b', riga: '#7a3bc2', stockholm: '#e0c020', london: '#a02020', own: '#e0b040', guard: '#2a4a8a' }[origin] || '#888';
+    const flag2 = { luebeck: '#f4f0e6', bruegge: '#e8c840', bergen: '#f0e8d8', danzig: '#2a2a2a', riga: '#f4f0e6', stockholm: '#2a58b8', london: '#f4f0e6', own: '#3a2a10', guard: '#f0ece0' }[origin] || '#eee';
+    const bob = docked ? Math.sin(t * 1.1 + x) * 0.012 : Math.sin(t * 1.5 + x) * 0.03;
+    // Deckssprung: Dollbord steigt zu Bug und Heck deutlich an
+    const sheer = u => 0.72 + 0.2 * u * u + (u > 0.8 ? (u - 0.8) * 1.1 : 0) + (u < -0.85 ? (-0.85 - u) * 0.9 : 0) + bob;
+    const prof = [[1.25, 0], [1.14, 0.14], [0.95, 0.27], [0.7, 0.35], [0.4, 0.4], [0.1, 0.42], [-0.2, 0.42], [-0.5, 0.4], [-0.78, 0.36], [-1.0, 0.28], [-1.14, 0.16], [-1.2, 0]];
     const gw = prof.concat(prof.slice(1, -1).reverse().map(q => [q[0], -q[1]]));
-    // Wasserschatten und Gischt direkt an der Wasserlinie
-    const bul = f => 1 - 0.45 * f * f + 0.12 * Math.sin(f * Math.PI);
-    const wl = gw.map(g => W(g[0] * 0.95, g[1] * bul(1) * 1.12, 0.01));
-    if (!this.picking) { const sp = I.p(x, y, 0); ctx.fillStyle = 'rgba(5,15,35,0.32)'; ctx.beginPath(); ctx.ellipse(sp[0], sp[1] + 2, 1.15 * s * I.TW * 1.05, 0.5 * s * I.TH * 1.6, -heading * 0.5, 0, 6.28); ctx.fill(); I.poly(ctx, wl, 'rgba(235,245,255,0.28)', 'rgba(255,255,255,0.5)', 1.2); }
-    // Bordwand: je Seite vier durchgehende Plankengänge, entlang der Länge weich schattiert
+    const bul = f => 1 - 0.5 * f * f + 0.1 * Math.sin(f * Math.PI);
+    const deckZ = u => sheer(u) - 0.2;
+    // Wasserschatten, Spiegelung, Gischt und Kielwasser
+    if (!pk) {
+      const sp = I.p(x, y, 0); ctx.fillStyle = 'rgba(5,15,35,0.3)'; ctx.beginPath(); ctx.ellipse(sp[0], sp[1] + 3, 1.25 * s * I.TW, 0.6 * s * I.TH * 1.5, -heading * 0.5, 0, 6.28); ctx.fill();
+      const wlS = gw.map(g => I.p(...W(g[0] * 0.97, g[1] * bul(1) * 1.15, 0)));
+      for (const [dy, a] of [[5, 0.32], [11, 0.18], [17, 0.09]]) { ctx.fillStyle = `rgba(35,22,12,${a})`; ctx.beginPath(); wlS.forEach((p, i) => i ? ctx.lineTo(p[0], p[1] + dy * s) : ctx.moveTo(p[0], p[1] + dy * s)); ctx.closePath(); ctx.fill(); }
+      ctx.fillStyle = 'rgba(225,238,250,0.30)'; ctx.strokeStyle = 'rgba(255,255,255,0.5)'; ctx.lineWidth = 1.1; ctx.beginPath(); wlS.forEach((p, i) => i ? ctx.lineTo(p[0], p[1]) : ctx.moveTo(p[0], p[1])); ctx.closePath(); ctx.fill(); ctx.stroke();
+      if (!docked) { ctx.strokeStyle = 'rgba(255,255,255,0.35)'; ctx.lineWidth = 1.2; for (const sd of [-1, 1]) { ctx.beginPath(); for (let k = 0; k <= 5; k++) { const p = I.p(...W(-1.2 - k * 0.3, sd * (0.15 + k * 0.1) + Math.sin(t * 3 + k) * 0.03, 0)); k ? ctx.lineTo(p[0], p[1]) : ctx.moveTo(p[0], p[1]); } ctx.stroke(); } }
+    }
+    // Bordwand: fünf Klinkerplankengänge je Seite, geteert unten, hell oben, weich entlang der Länge schattiert
     const lightDir = [-0.55, -0.83];
-    const half = prof.length;
-    const sides = [{ sign: 1, pts: prof }, { sign: -1, pts: prof }];
     const lam = (a, b, sign) => { const nx0 = (b[1] - a[1]) * sign, ny0 = -(b[0] - a[0]) * sign; const len = Math.hypot(nx0, ny0) || 1; const nwx = (nx0 * c - ny0 * sn) / len, nwy = (nx0 * sn + ny0 * c) / len; return Math.max(0, nwx * lightDir[0] + nwy * lightDir[1]); };
-    const strakes = ['#5a3a1e', '#66431f', '#704a22', '#7a5227'];
-    const sideOrder = sides.map(sd => { const mid = W(0, sd.sign * 0.37, 0.3); return { sd, sy: I.p(mid[0], mid[1], mid[2])[1] }; }).sort((a, b) => a.sy - b.sy);
-    for (const { sd } of sideOrder) {
-      const P = sd.pts, sign = sd.sign;
-      const kBow = 0.5 + 0.55 * lam(P[2], P[3], sign), kStern = 0.5 + 0.55 * lam(P[8], P[9], sign), kMid = 0.5 + 0.55 * lam(P[5], P[6], sign);
-      const bowS = I.p(...W(1.1, sign * 0.15, 0.3)), sternS = I.p(...W(-1.1, sign * 0.15, 0.3));
-      for (let k = 0; k < 4; k++) {
-        const f0 = k / 4, f1 = (k + 1) / 4;
-        const top = P.map(g => W(g[0] * (1 - 0.06 * f0), sign * g[1] * bul(f0), sheer(g[0]) * (1 - f0) + 0.02));
-        const bot = P.map(g => W(g[0] * (1 - 0.06 * f1), sign * g[1] * bul(f1), sheer(g[0]) * (1 - f1) + 0.02)).reverse();
+    const strakes = ['#a8763f', '#986a36', '#84582c', '#5a3c20', '#3e2a16'];
+    const N = strakes.length;
+    const sides = [{ sign: 1 }, { sign: -1 }].map(sd => { const mid = W(0, sd.sign * 0.4, 0.3); return { sign: sd.sign, sy: I.p(mid[0], mid[1], mid[2])[1] }; }).sort((a, b) => a.sy - b.sy);
+    const near = sides[1].sign;
+    for (const { sign } of sides) {
+      const P = prof;
+      const kBow = 0.62 + 0.5 * lam(P[2], P[3], sign), kStern = 0.62 + 0.5 * lam(P[8], P[9], sign), kMid = 0.62 + 0.5 * lam(P[5], P[6], sign);
+      const bowS = S(1.1, sign * 0.15, 0.3), sternS = S(-1.1, sign * 0.15, 0.3);
+      const ring = f => P.map(g => W(g[0] * (1 - 0.07 * f), sign * g[1] * bul(f), sheer(g[0]) * (1 - f) + 0.03));
+      for (let k = 0; k < N; k++) {
+        const f0 = k / N, f1 = (k + 1) / N, top = ring(f0), bot = ring(f1).reverse();
         const grad = ctx.createLinearGradient(bowS[0], bowS[1], sternS[0], sternS[1]); grad.addColorStop(0, I.shade(strakes[k], kBow)); grad.addColorStop(0.5, I.shade(strakes[k], kMid)); grad.addColorStop(1, I.shade(strakes[k], kStern));
         I.path(ctx, top.concat(bot)); ctx.fillStyle = grad; ctx.fill();
-        ctx.strokeStyle = 'rgba(20,10,5,0.5)'; ctx.lineWidth = 0.6; ctx.beginPath(); top.forEach((q, i) => { const p = I.p(q[0], q[1], q[2]); i ? ctx.lineTo(p[0], p[1]) : ctx.moveTo(p[0], p[1]); }); ctx.stroke();
+        if (k) { strokeW(top, 'rgba(20,10,5,0.55)', 0.9); strokeW(top.map(q => [q[0], q[1], q[2] + 0.018 * s]), 'rgba(255,225,170,0.22)', 0.7); }
       }
-      // Bergholz und Farbstreifen
-      const rail = P.map(g => W(g[0], sign * g[1], sheer(g[0]) - 0.06)), wale = P.map(g => W(g[0] * 0.995, sign * g[1] * bul(0.28), sheer(g[0]) * 0.72 + 0.02));
-      ctx.strokeStyle = flag; ctx.lineWidth = 1.5 * s; ctx.beginPath(); rail.forEach((q, i) => { const p = I.p(q[0], q[1], q[2]); i ? ctx.lineTo(p[0], p[1]) : ctx.moveTo(p[0], p[1]); }); ctx.stroke();
-      ctx.strokeStyle = 'rgba(20,10,5,0.75)'; ctx.lineWidth = 1.8 * s; ctx.beginPath(); wale.forEach((q, i) => { const p = I.p(q[0], q[1], q[2]); i ? ctx.lineTo(p[0], p[1]) : ctx.moveTo(p[0], p[1]); }); ctx.stroke();
-      // Nagelreihen
-      ctx.fillStyle = 'rgba(0,0,0,0.35)'; for (let i = 1; i < P.length - 1; i++) for (let k = 1; k < 4; k++) { const g = P[i]; const q = I.p(...W(g[0] * (1 - 0.06 * k / 4), sign * g[1] * bul(k / 4), sheer(g[0]) * (1 - k / 4) + 0.02)); ctx.fillRect(q[0], q[1], 0.9, 0.9); }
+      // Bergholz, Farbstreifen, Nagelreihen
+      const rail = P.map(g => W(g[0], sign * g[1], sheer(g[0]) - 0.07)), wale = P.map(g => W(g[0] * 0.99, sign * g[1] * bul(0.4), sheer(g[0]) * 0.6 + 0.03));
+      strokeW(rail, flag, 2.2 * s); strokeW(rail.map(q => [q[0], q[1], q[2] - 0.05 * s]), 'rgba(0,0,0,0.25)', 0.8);
+      strokeW(wale, '#2a1a0c', 2.4 * s); strokeW(wale.map(q => [q[0], q[1], q[2] + 0.02 * s]), 'rgba(255,220,160,0.18)', 0.7);
+      ctx.fillStyle = 'rgba(0,0,0,0.4)'; for (let i = 1; i < P.length - 1; i++) for (let k = 1; k < N; k++) { const g = P[i]; const q = I.p(...W(g[0] * (1 - 0.07 * k / N), sign * g[1] * bul(k / N), sheer(g[0]) * (1 - k / N) + 0.03)); ctx.fillRect(q[0], q[1], 1, 1); }
     }
-    // Rumpfumriss
-    const outline = gw.map(g => W(g[0], g[1], sheer(g[0])));
-    ctx.strokeStyle = 'rgba(20,10,5,0.7)'; ctx.lineWidth = 0.8; ctx.beginPath(); outline.forEach((q, i) => { const p = I.p(q[0], q[1], q[2]); i ? ctx.lineTo(p[0], p[1]) : ctx.moveTo(p[0], p[1]); }); ctx.closePath(); ctx.stroke();
-    // Schanzkleid innen und Deck
-    const deckZ = u => sheer(u) - 0.16;
-    const inner = gw.map(g => W(g[0] * 0.98, g[1] * 0.9, deckZ(g[0])));
-    I.poly(ctx, inner, '#8a6a44', 'rgba(20,10,5,0.6)', 0.7);
-    for (let u = -1.0; u < 1.15; u += 0.12) I.line(ctx, W(u, -0.33, deckZ(u)), W(u, 0.33, deckZ(u)), 'rgba(0,0,0,0.22)', 0.5);
-    for (let i = 0; i < gw.length; i++) { const a = gw[i], b = gw[(i + 1) % gw.length]; const my = (a[1] + b[1]) / 2; if (my * (Math.abs(heading) < 1.6 ? 1 : -1) < 0) { I.poly(ctx, [W(a[0], a[1], sheer(a[0])), W(b[0], b[1], sheer(b[0])), W(b[0] * 0.98, b[1] * 0.9, deckZ(b[0])), W(a[0] * 0.98, a[1] * 0.9, deckZ(a[0]))], '#4a2e14', 'rgba(20,10,5,0.5)', 0.5); } }
-    // Kastelle: Aufbauten mit Plankenwänden und Reling
-    const castle = (u0, u1, v, z0, h) => {
-      const pts = [W(u0, -v, z0), W(u1, -v, z0), W(u1, v, z0), W(u0, v, z0)]; const top = pts.map(p => [p[0], p[1], p[2] + h]);
-      const fs = []; for (let i = 0; i < 4; i++) { const q = [pts[i], pts[(i + 1) % 4], top[(i + 1) % 4], top[i]]; fs.push({ sy: q.reduce((m, p) => m + I.p(p[0], p[1], p[2])[1], 0), q, k: i % 2 ? 0.7 : 0.95 }); }
+    strokeW(gw.map(g => W(g[0], g[1], sheer(g[0]))), 'rgba(20,10,5,0.75)', 1.1, true);
+    // Deck mit Längsplanken, Schanzkleid innen
+    const inner = gw.map(g => W(g[0] * 0.98, g[1] * 0.88, deckZ(g[0])));
+    I.poly(ctx, inner, '#9a7a4e', 'rgba(20,10,5,0.6)', 0.7);
+    for (let v = -0.3; v <= 0.31; v += 0.075) { const pts = []; for (let u = -1.0; u <= 1.1; u += 0.15) pts.push(W(u, v, deckZ(u))); strokeW(pts, 'rgba(0,0,0,0.22)', 0.5); }
+    for (let i = 0; i < gw.length; i++) { const a = gw[i], b = gw[(i + 1) % gw.length]; if ((a[1] + b[1]) * near < 0) I.poly(ctx, [W(a[0], a[1], sheer(a[0])), W(b[0], b[1], sheer(b[0])), W(b[0] * 0.98, b[1] * 0.88, deckZ(b[0])), W(a[0] * 0.98, a[1] * 0.88, deckZ(a[0]))], '#5a3a1c', 'rgba(20,10,5,0.5)', 0.5); }
+    // Luke mit Süll und Gräting
+    const hz = deckZ(0) + 0.07, hb = [W(-0.16, -0.17, deckZ(0)), W(0.2, -0.17, deckZ(0)), W(0.2, 0.17, deckZ(0)), W(-0.16, 0.17, deckZ(0))], ht = hb.map(p => [p[0], p[1], hz]);
+    const hf = []; for (let i = 0; i < 4; i++) hf.push({ sy: I.p(...hb[i])[1] + I.p(...hb[(i + 1) % 4])[1], q: [hb[i], hb[(i + 1) % 4], ht[(i + 1) % 4], ht[i]] }); hf.sort((a, b) => a.sy - b.sy).slice(2).forEach(f => I.poly(ctx, f.q, '#5a3a1c', 'rgba(20,10,5,0.5)', 0.5));
+    I.poly(ctx, ht, '#2a1c10', 'rgba(20,10,5,0.6)', 0.6); ctx.strokeStyle = 'rgba(180,140,90,0.45)'; ctx.lineWidth = 0.6; for (let u = -0.1; u < 0.2; u += 0.06) { const a = S(u, -0.15, hz), b = S(u, 0.15, hz); ctx.beginPath(); ctx.moveTo(a[0], a[1]); ctx.lineTo(b[0], b[1]); ctx.stroke(); } for (let v = -0.11; v < 0.17; v += 0.06) { const a = S(-0.16, v, hz), b = S(0.2, v, hz); ctx.beginPath(); ctx.moveTo(a[0], a[1]); ctx.lineTo(b[0], b[1]); ctx.stroke(); }
+    // Ladung, Taurollen
+    this.crate3(ctx, W(0.42, 0.14, 0)[0], W(0.42, 0.14, 0)[1], deckZ(0.42), 0.17 * s); this.barrel3(ctx, W(-0.4, -0.2, 0)[0], W(-0.4, -0.2, 0)[1], deckZ(-0.4)); this.barrel3(ctx, W(0.45, -0.2, 0)[0], W(0.45, -0.2, 0)[1], deckZ(0.45));
+    for (const [cu, cv] of [[-0.35, 0.22], [0.25, -0.28]]) { const p = S(cu, cv, deckZ(cu)); ctx.fillStyle = '#b89a62'; ctx.beginPath(); ctx.ellipse(p[0], p[1], 3.2 * s, 1.7 * s, 0, 0, 6.28); ctx.fill(); ctx.strokeStyle = 'rgba(60,40,15,0.6)'; ctx.lineWidth = 0.6; ctx.beginPath(); ctx.ellipse(p[0], p[1], 3.2 * s, 1.7 * s, 0, 0, 6.28); ctx.stroke(); ctx.beginPath(); ctx.ellipse(p[0], p[1], 1.2 * s, 0.6 * s, 0, 0, 6.28); ctx.stroke(); }
+    // Kastelle: Achterkastell mit Kajüte und Schieferdach, offenes Vorkastell mit Reling
+    const box = (u0, u1, v, z0, h, col, planks) => {
+      const pts = [W(u0, -v, z0), W(u1, -v, z0), W(u1, v, z0), W(u0, v, z0)], top = pts.map(p => [p[0], p[1], p[2] + h]);
+      const fs = []; for (let i = 0; i < 4; i++) { const q = [pts[i], pts[(i + 1) % 4], top[(i + 1) % 4], top[i]]; fs.push({ sy: I.p(...pts[i])[1] + I.p(...pts[(i + 1) % 4])[1], q, k: 0.55 + 0.5 * lam(i % 2 ? [u0, 0] : [0, -v], i % 2 ? [u1, 0] : [0, v], i < 2 ? 1 : -1), i }); }
       fs.sort((a, b) => a.sy - b.sy);
-      for (const f of fs) { I.poly(ctx, f.q, I.shade('#6a4726', f.k), 'rgba(20,10,5,0.55)', 0.6); for (let j = 1; j < 4; j++) { const a = f.q[0], b = f.q[1]; I.line(ctx, [a[0], a[1], a[2] + h * j / 4], [b[0], b[1], b[2] + h * j / 4], 'rgba(0,0,0,0.28)', 0.5); } }
-      I.poly(ctx, top, '#9a7a4a', 'rgba(20,10,5,0.6)', 0.6);
-      for (let i = 0; i < 4; i++) { const a = top[i], b = top[(i + 1) % 4]; for (let k = 0; k <= 1.001; k += 0.2) { const px = a[0] + (b[0] - a[0]) * k, py = a[1] + (b[1] - a[1]) * k; I.line(ctx, [px, py, a[2]], [px, py, a[2] + 0.2], '#3a2410', 1.3 * s); } I.line(ctx, [a[0], a[1], a[2] + 0.2], [b[0], b[1], b[2] + 0.2], '#4a3018', 1.6 * s); }
+      for (const f of fs.slice(2)) { I.poly(ctx, f.q, I.shade(col, f.k), 'rgba(20,10,5,0.6)', 0.7); if (planks) for (let j = 1; j < planks; j++) { const a = f.q[0], b = f.q[1]; I.line(ctx, [a[0], a[1], a[2] + h * j / planks], [b[0], b[1], b[2] + h * j / planks], 'rgba(0,0,0,0.3)', 0.5); } }
+      return { top, fs };
     };
-    castle(-1.02, -0.5, 0.31, deckZ(-0.75) + 0.02, 0.42); castle(0.62, 1.02, 0.22, deckZ(0.8) + 0.02, 0.26);
-    // Ladung und Mannschaft
-    this.crate3(ctx, W(0.25, 0.08, 0)[0], W(0.25, 0.08, 0)[1], deckZ(0.25), 0.18 * s); this.barrel3(ctx, W(-0.25, -0.16, 0)[0], W(-0.25, -0.16, 0)[1], deckZ(-0.25)); this.barrel3(ctx, W(-0.35, 0.12, 0)[0], W(-0.35, 0.12, 0)[1], deckZ(-0.35));
-    if (!this.picking) { const m1 = I.p(...W(0.42, -0.2, deckZ(0.42))), m2 = I.p(...W(-0.76, 0, deckZ(-0.76) + 0.44)); this.drawPerson(ctx, m1[0], m1[1] + 3, '#5a4a7a', 'fisher', 1, false, '#d9a98a', docked ? 0 : t * 5, 1, null, null, 0.7 * s); this.drawPerson(ctx, m2[0], m2[1] + 3, '#7a3a3a', 'merchant', 1, false, '#e8c39e', 0, -1, null, null, 0.66 * s); }
-    // Mast, Stage, Wanten mit Webleinen, Mastkorb, Rah, Segel
-    const zT = deckZ(0) + 2.25, mb = W(0, 0, deckZ(0)), mt = W(0, 0, zT);
-    I.line(ctx, mb, mt, '#2f2012', 3.4 * s); I.line(ctx, mb, mt, '#5a4028', 1.6 * s);
-    for (const sd of [-1, 1]) { for (let k = 0; k < 3; k++) I.line(ctx, W(0, 0, zT - 0.35), W(-0.32 + k * 0.3, sd * 0.36, sheer(-0.32 + k * 0.3)), 'rgba(25,15,8,0.85)', 0.6); for (let j = 1; j < 7; j++) { const f = j / 7; I.line(ctx, W(-0.32 * f, sd * 0.36 * f, zT - 0.35 + (sheer(-0.32) - zT + 0.35) * f), W(0.28 * f, sd * 0.36 * f, zT - 0.35 + (sheer(0.28) - zT + 0.35) * f), 'rgba(25,15,8,0.7)', 0.45); } }
-    I.line(ctx, W(0, 0, zT), W(1.2, 0, sheer(1.2) + 0.1), 'rgba(25,15,8,0.85)', 0.6); I.line(ctx, W(0, 0, zT), W(-1.15, 0, sheer(-1.15) + 0.45), 'rgba(25,15,8,0.85)', 0.6);
-    I.cylinder(ctx, mt[0], mt[1], zT - 0.4, 0.09 * s, 0.1, '#4a3a2a', {});
-    const yw = 0.5, yz = zT - 0.5; I.line(ctx, W(0.05, -yw, yz), W(0.05, yw, yz), '#2a1a0a', 2.4 * s);
-    if (docked) { I.poly(ctx, [W(0.05, -yw, yz - 0.02), W(0.05, yw, yz - 0.02), W(0.07, yw, yz - 0.12), W(0.09, yw * 0.5, yz - 0.16), W(0.07, 0, yz - 0.12), W(0.09, -yw * 0.5, yz - 0.16), W(0.07, -yw, yz - 0.12)], '#e4d9bf', 'rgba(80,60,30,0.6)', 0.6); for (let k = -yw + 0.15; k < yw; k += 0.25) I.line(ctx, W(0.04, k, yz), W(0.1, k, yz - 0.15), 'rgba(80,60,30,0.6)', 0.6); }
-    else { const belly = 0.38 + Math.sin(t * 2) * 0.05; const sail = [W(0.05, -yw, yz), W(0.05, yw, yz), W(0.05 + belly, yw * 0.85, deckZ(0) + 0.75), W(0.05 + belly, -yw * 0.85, deckZ(0) + 0.75)]; I.poly(ctx, sail, '#efe6d2', 'rgba(80,60,30,0.6)', 0.7); const P = sail.map(q => I.p(q[0], q[1], q[2])); ctx.strokeStyle = 'rgba(120,100,70,0.35)'; for (let k = 0.15; k < 1; k += 0.14) { ctx.beginPath(); ctx.moveTo(P[0][0] + (P[1][0] - P[0][0]) * k, P[0][1] + (P[1][1] - P[0][1]) * k); ctx.lineTo(P[3][0] + (P[2][0] - P[3][0]) * k, P[3][1] + (P[2][1] - P[3][1]) * k); ctx.stroke(); } const cxs = (P[0][0] + P[1][0] + P[2][0] + P[3][0]) / 4, cys = (P[0][1] + P[1][1] + P[2][1] + P[3][1]) / 4; ctx.fillStyle = flag; ctx.beginPath(); ctx.moveTo(cxs - 5, cys - 7); ctx.lineTo(cxs + 5, cys - 7); ctx.lineTo(cxs + 5, cys + 1); ctx.quadraticCurveTo(cxs + 5, cys + 6, cxs, cys + 8); ctx.quadraticCurveTo(cxs - 5, cys + 6, cxs - 5, cys + 1); ctx.fill(); ctx.fillStyle = '#f4ead6'; ctx.fillRect(cxs - 0.8, cys - 6, 1.6, 12); ctx.fillRect(cxs - 4, cys - 3, 8, 1.6); }
-    // Steven, Bugspriet, Ruder mit Pinne, Wimpel, Heckleuchte
-    I.line(ctx, W(1.2, 0, 0.1), W(1.26, 0, sheer(1.2) + 0.3), '#3a2a1a', 3 * s); const kp = I.p(...W(1.26, 0, sheer(1.2) + 0.3)); ctx.fillStyle = '#c9a24a'; ctx.beginPath(); ctx.arc(kp[0], kp[1], 2 * s, 0, 6.28); ctx.fill();
-    I.line(ctx, W(1.1, 0, sheer(1.1) + 0.05), W(1.75, 0, sheer(1.2) + 0.5), '#4a3a2a', 2 * s);
-    I.line(ctx, W(-1.18, 0, 0.05), W(-1.26, 0, sheer(-1.18) + 0.05), '#2a1a0c', 2.6 * s); I.line(ctx, W(-1.24, 0, sheer(-1.18) + 0.02), W(-0.95, 0, deckZ(-0.95) + 0.5), '#4a3018', 1.3 * s);
-    if (!this.picking) { const fp = I.p(...mt); ctx.fillStyle = flag; ctx.beginPath(); ctx.moveTo(fp[0], fp[1]); for (let i = 1; i <= 4; i++) ctx.lineTo(fp[0] + i * 4 * s, fp[1] + Math.sin(t * 6 - i) * 1.5 * (i / 4)); ctx.lineTo(fp[0] + 16 * s, fp[1] + 3 * s); for (let i = 4; i >= 1; i--) ctx.lineTo(fp[0] + i * 4 * s, fp[1] + 3.5 * s + Math.sin(t * 6 - i) * 1.5 * (i / 4)); ctx.closePath(); ctx.fill(); }
-    const lp = I.p(...W(-1.1, 0, deckZ(-1.0) + 0.7)); ctx.fillStyle = '#c9a24a'; ctx.fillRect(lp[0] - 1.5, lp[1] - 2, 3, 3); if (this.light() < 0.7) this.lamps.push([lp[0], lp[1]]);
+    const railing = (top, idx, hgt) => { for (const i of idx) { const a = top[i], b = top[(i + 1) % 4]; const n = 5; for (let k = 0; k <= n; k++) { const px = a[0] + (b[0] - a[0]) * k / n, py = a[1] + (b[1] - a[1]) * k / n; I.line(ctx, [px, py, a[2]], [px, py, a[2] + hgt], '#3a2410', 1.3 * s); } I.line(ctx, [a[0], a[1], a[2] + hgt], [b[0], b[1], b[2] + hgt], '#5a4020', 1.8 * s); I.line(ctx, [a[0], a[1], a[2] + hgt * 0.5], [b[0], b[1], b[2] + hgt * 0.5], '#4a3018', 0.9 * s); } };
+    // Achterkastell
+    const az = deckZ(-0.75) + 0.02, ah = 0.46;
+    const ac = box(-1.05, -0.4, 0.33, az, ah, '#7a5230', 4);
+    for (const sign of [near]) { const wp = [W(-0.8, sign * 0.33, az + 0.16), W(-0.66, sign * 0.33, az + 0.16), W(-0.66, sign * 0.33, az + 0.32), W(-0.8, sign * 0.33, az + 0.32)]; I.poly(ctx, wp, '#2a2418', '#1a140c', 0.6); if (this.light() < 0.6) { const q = S(-0.73, sign * 0.34, az + 0.24); ctx.fillStyle = 'rgba(255,190,90,0.85)'; ctx.fillRect(q[0] - 1.5 * s, q[1] - 1.5 * s, 3 * s, 3 * s); } }
+    const dp = [W(-0.5, near * 0.33, az), W(-0.4, near * 0.33, az), W(-0.4, near * 0.33, az + 0.34), W(-0.5, near * 0.33, az + 0.34)]; I.poly(ctx, dp, '#2a1c10', '#1a140c', 0.6);
+    I.poly(ctx, ac.top, '#a08050', 'rgba(20,10,5,0.6)', 0.6); for (let u = -1.0; u < -0.42; u += 0.09) I.line(ctx, W(u, -0.31, az + ah), W(u, 0.31, az + ah), 'rgba(0,0,0,0.2)', 0.5);
+    // Kajütendach über dem hinteren Teil
+    const rz = az + ah, rr = [W(-1.03, 0, rz + 0.26), W(-0.72, 0, rz + 0.26)];
+    const roofSide = sign => I.poly(ctx, [W(-1.05, sign * 0.36, rz), W(-0.7, sign * 0.36, rz), rr[1], rr[0]], sign === near ? '#4a4048' : '#2e2830', 'rgba(20,10,5,0.6)', 0.7);
+    roofSide(-near); I.poly(ctx, [W(-0.7, -0.36, rz), W(-0.7, 0.36, rz), rr[1]], '#6a4a2a', 'rgba(20,10,5,0.6)', 0.6); roofSide(near);
+    for (let k = 1; k < 4; k++) { const f = k / 4; I.line(ctx, W(-1.05, near * 0.36 * (1 - f), rz + 0.26 * f), W(-0.7, near * 0.36 * (1 - f), rz + 0.26 * f), 'rgba(0,0,0,0.3)', 0.5); }
+    I.line(ctx, rr[0], rr[1], '#1e1a1e', 1.6 * s);
+    railing([ac.top[0], ac.top[1], ac.top[2], ac.top[3]].map(p => p), near > 0 ? [1, 2] : [0, 1], 0.2);
+    // Vorkastell
+    const fz = deckZ(0.85) + 0.02, fc = box(0.62, 1.05, 0.24, fz, 0.28, '#7a5230', 3);
+    I.poly(ctx, fc.top, '#a08050', 'rgba(20,10,5,0.6)', 0.6); railing(fc.top, [0, 1, 2, 3], 0.18);
+    // Mannschaft
+    if (!pk) {
+      const m1 = S(0.18, -0.3, deckZ(0.18)), m2 = S(-0.55, near * 0.1, az + ah), m3 = S(0.85, 0.06, fz + 0.28);
+      this.drawPerson(ctx, m1[0], m1[1] + 3, '#5a4a7a', 'fisher', 1, false, '#d9a98a', docked ? 0 : t * 5, 1, null, null, 0.72 * s);
+      this.drawPerson(ctx, m2[0], m2[1] + 3, '#7a3a3a', 'merchant', 1, false, '#e8c39e', 0, -1, null, null, 0.68 * s);
+      this.drawPerson(ctx, m3[0], m3[1] + 3, '#3a5a6a', 'fisher', 1, false, '#d9a98a', 0, 1, null, null, 0.62 * s);
+    }
+    // Mast, Stage, Wanten mit Webleinen, Mastkorb
+    const zT = deckZ(0) + 2.45, mb = W(0, 0, deckZ(0)), mt = W(0, 0, zT);
+    I.line(ctx, mb, mt, '#2a1a0e', 3.8 * s); I.line(ctx, [mb[0], mb[1], mb[2]], [mt[0], mt[1], mt[2]], '#6a4a2c', 1.8 * s);
+    for (const sd of [-1, 1]) { for (let k = 0; k < 3; k++) I.line(ctx, W(0, 0, zT - 0.4), W(-0.36 + k * 0.32, sd * 0.38, sheer(-0.36 + k * 0.32)), 'rgba(25,15,8,0.85)', 0.6); for (let j = 1; j < 8; j++) { const f = j / 8; I.line(ctx, W(-0.36 * f, sd * 0.38 * f, zT - 0.4 + (sheer(-0.36) - zT + 0.4) * f), W(0.28 * f, sd * 0.38 * f, zT - 0.4 + (sheer(0.28) - zT + 0.4) * f), 'rgba(25,15,8,0.7)', 0.45); } }
+    I.line(ctx, W(0, 0, zT), W(1.3, 0, sheer(1.25) + 0.15), 'rgba(25,15,8,0.85)', 0.6); I.line(ctx, W(0, 0, zT), W(-1.2, 0, rz + 0.3), 'rgba(25,15,8,0.85)', 0.6);
+    I.cylinder(ctx, mt[0], mt[1], zT - 0.45, 0.1 * s, 0.12, '#4a3a2a', {});
+    // Rah und Segel: am Kai aufgegeit (hängt halb), auf See gebläht, mit Wappen der Heimatstadt
+    const yw = 0.66, yz = zT - 0.55; I.line(ctx, W(0.04, -yw, yz), W(0.04, yw, yz), '#2a1a0a', 2.6 * s); I.line(ctx, W(0.04, -yw, yz), W(0.04, yw, yz), '#6a4a2c', 1.1 * s);
+    {
+      const belly = docked ? 0.1 : 0.36 + Math.sin(t * 2) * 0.05, hang = docked ? 0.95 : 1.55, zb = yz - hang;
+      const foot = []; const nF = 6; for (let k = 0; k <= nF; k++) { const f = -1 + 2 * k / nF; foot.push(W(0.05 + belly * (1 - f * f * 0.5), f * yw * 0.9, zb + (docked ? Math.abs(Math.sin(k * 2.3)) * 0.12 : 0))); }
+      const sail = [W(0.05, -yw, yz), W(0.05, yw, yz)].concat(foot.reverse());
+      const g0 = S(0.05, -yw, yz), g1 = S(0.05, yw, yz); const sg = ctx.createLinearGradient(g0[0], g0[1], g1[0], g1[1]); sg.addColorStop(0, '#d9ccb0'); sg.addColorStop(0.5, '#f3ead6'); sg.addColorStop(1, '#e6dcc4');
+      I.path(ctx, sail); ctx.fillStyle = sg; ctx.fill(); ctx.strokeStyle = 'rgba(80,60,30,0.7)'; ctx.lineWidth = 0.8; ctx.stroke();
+      ctx.strokeStyle = 'rgba(120,100,70,0.35)'; ctx.lineWidth = 0.6; for (let k = 1; k < 7; k++) { const f = -1 + 2 * k / 7; const a = S(0.05, f * yw, yz), b = S(0.05 + belly * (1 - f * f * 0.5), f * yw * 0.9, zb + 0.02); ctx.beginPath(); ctx.moveTo(a[0], a[1]); ctx.lineTo(b[0], b[1]); ctx.stroke(); }
+      for (let k = 1; k < 4; k++) { const f = k / 4; const pts = []; for (let j = 0; j <= 6; j++) { const g = -1 + 2 * j / 6; pts.push(W(0.05 + belly * (1 - g * g * 0.5) * f, g * yw * (1 - 0.1 * f), yz - hang * f)); } strokeW(pts, 'rgba(120,100,70,0.3)', 0.6); }
+      if (!pk) {
+        const ec = S(0.05 + belly * 0.45, 0, yz - hang * 0.45), es = 5.5 * s * (docked ? 0.8 : 1);
+        ctx.fillStyle = flag; ctx.beginPath(); ctx.moveTo(ec[0] - es, ec[1] - es * 1.2); ctx.lineTo(ec[0] + es, ec[1] - es * 1.2); ctx.lineTo(ec[0] + es, ec[1] + es * 0.2); ctx.quadraticCurveTo(ec[0] + es, ec[1] + es, ec[0], ec[1] + es * 1.3); ctx.quadraticCurveTo(ec[0] - es, ec[1] + es, ec[0] - es, ec[1] + es * 0.2); ctx.closePath(); ctx.fill(); ctx.strokeStyle = 'rgba(40,20,10,0.6)'; ctx.lineWidth = 0.7; ctx.stroke();
+        ctx.fillStyle = flag2; if (origin === 'luebeck' || origin === 'london' || origin === 'guard') { ctx.fillRect(ec[0] - es, ec[1] - es * 0.5, es * 2, es); } else if (origin === 'bruegge' || origin === 'stockholm' || origin === 'riga') { ctx.fillRect(ec[0] - es * 0.18, ec[1] - es * 1.2, es * 0.36, es * 2.4); ctx.fillRect(ec[0] - es, ec[1] - es * 0.4, es * 2, es * 0.36); } else { ctx.beginPath(); ctx.arc(ec[0], ec[1], es * 0.45, 0, 6.28); ctx.fill(); }
+      }
+      // Schoten und Brassen
+      for (const sd of [-1, 1]) { I.line(ctx, foot[sd > 0 ? 0 : nF], W(-0.5, sd * 0.36, sheer(-0.5)), 'rgba(25,15,8,0.6)', 0.5); I.line(ctx, W(0.04, sd * yw, yz), W(-1.0, sd * 0.3, az + ah), 'rgba(25,15,8,0.55)', 0.5); }
+    }
+    // Steven mit vergoldetem Knauf, Bugspriet, Ruder mit Pinne, Wimpel, Heckleuchte
+    I.line(ctx, W(1.22, 0, 0.1), W(1.3, 0, sheer(1.25) + 0.32), '#3a2a1a', 3.2 * s); const kp = S(1.3, 0, sheer(1.25) + 0.34); ctx.fillStyle = '#d4a944'; ctx.beginPath(); ctx.arc(kp[0], kp[1], 2.2 * s, 0, 6.28); ctx.fill(); ctx.strokeStyle = '#7a5a10'; ctx.lineWidth = 0.6; ctx.stroke();
+    I.line(ctx, W(1.1, 0, sheer(1.1) + 0.05), W(1.85, 0, sheer(1.25) + 0.55), '#4a3a2a', 2.2 * s);
+    I.line(ctx, W(-1.2, 0, 0.05), W(-1.3, 0, sheer(-1.2) + 0.05), '#2a1a0c', 2.8 * s); I.line(ctx, W(-1.27, 0, sheer(-1.2) + 0.02), W(-0.95, 0, az + ah + 0.15), '#5a4020', 1.4 * s);
+    if (!pk) { const fp = I.p(...mt); ctx.fillStyle = flag; ctx.beginPath(); ctx.moveTo(fp[0], fp[1] - 2 * s); for (let i = 1; i <= 5; i++) ctx.lineTo(fp[0] + i * 5 * s, fp[1] - 2 * s + Math.sin(t * 6 - i) * 1.8 * (i / 5)); ctx.lineTo(fp[0] + 25 * s, fp[1] + 2 * s); for (let i = 5; i >= 1; i--) ctx.lineTo(fp[0] + i * 5 * s, fp[1] + 3 * s + Math.sin(t * 6 - i) * 1.8 * (i / 5)); ctx.closePath(); ctx.fill(); }
+    const lp = S(-1.12, 0, rz + 0.36); ctx.fillStyle = '#2a2018'; ctx.fillRect(lp[0] - 2 * s, lp[1] - 3 * s, 4 * s, 4.5 * s); ctx.fillStyle = this.light() < 0.7 ? '#ffd070' : '#c9a24a'; ctx.fillRect(lp[0] - 1.2 * s, lp[1] - 2.2 * s, 2.4 * s, 3 * s); if (this.light() < 0.7) this.lamps.push([lp[0], lp[1]]);
     if (selected) { const hull = this.shipHull(x, y, heading, s); ctx.strokeStyle = '#ffd766'; ctx.lineWidth = 2; ctx.setLineDash([5, 4]); ctx.beginPath(); hull.forEach((q, i) => i ? ctx.lineTo(q[0], q[1]) : ctx.moveTo(q[0], q[1])); ctx.closePath(); ctx.stroke(); ctx.setLineDash([]); }
   },
   drawBoat(ctx, x, y, own, t) {

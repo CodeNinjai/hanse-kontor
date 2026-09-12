@@ -57,7 +57,7 @@ HK.BUILDINGS = [
   { id: 'f17',       kind: 'gable',  x: 17.9, y: 14.6, w: 1.3, d: 1.1, h: 1.1, wall: '#e8dcc0', roof: '#6b4a3a', name: { de: 'Bürgerhaus', en: 'Townhouse' } },
   { id: 'f18',       kind: 'eave',   x: 21.7, y: 14.6, w: 1.6, d: 1.1, h: 1.0, wall: '#e4d6b8', roof: '#8a3a2a', name: { de: 'Bürgerhaus', en: 'Townhouse' } },
   // Tor (Osttor) und Hafen (Wasser)
-  { id: 'gate',      kind: 'gate',   x: 23.7, y: 9.3,  w: 1.0, d: 1.4, h: 1.8, panel: 'gate', name: { de: 'Stadttor', en: 'Town gate' } },
+  { id: 'gate',      kind: 'gate',   x: 23.7, y: 9.3,  w: 1.1, d: 1.4, h: 2.1, panel: 'gate', name: { de: 'Stadttor', en: 'Town gate' } },
   { id: 'harbour',   kind: 'water',  x: 0, y: 0, w: 0, d: 0, h: 0, panel: 'harbour', name: { de: 'Hafen', en: 'Harbour' } },
 ];
 HK.BUILDING = {}; HK.BUILDINGS.forEach(b => HK.BUILDING[b.id] = b);
@@ -89,8 +89,8 @@ HK.ROAD_EDGES.forEach(([a, b]) => { HK.ROAD_ADJ[a].push(b); HK.ROAD_ADJ[b].push(
 
 /* Stege (von der Kaikante nach -x ins Wasser), Liegeplätze, Reede, Boote, Karawanen */
 HK.PIERS = [{ x: 11.6, y0: 16.5, y1: 19.9 }, { x: 18.6, y0: 16.5, y1: 19.9 }];
-HK.BERTHS = [{ x: 10.45, y: 18.35 }, { x: 12.75, y: 18.35 }, { x: 17.45, y: 18.35 }, { x: 19.75, y: 18.35 }];
-HK.SHIP_SCALE = 1.25;
+HK.BERTHS = [{ x: 10.2, y: 18.35 }, { x: 13.0, y: 18.35 }, { x: 17.2, y: 18.35 }, { x: 20.0, y: 18.35 }];
+HK.SHIP_SCALE = 1.4;
 HK.BERTH_HEADING = Math.PI / 2;
 HK.OWN_BERTHS = [{ x: 14.6, y: 21.8 }, { x: 16.6, y: 22.6 }, { x: 12.2, y: 22.4 }];
 HK.ISLET = { x: -2.2, y: 3.2 };

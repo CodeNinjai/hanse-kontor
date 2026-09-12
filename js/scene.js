@@ -135,7 +135,7 @@ HK.Scene = {
     const wpt = this.toWorld(x, y); if (this.isWater(wpt.x, wpt.y) && wpt.x > -12 && wpt.y < 30) return { kind: 'building', building: HK.BUILDING.harbour, panel: 'harbour', label: HK.t('harbour') };
     return null;
   },
-  shipHull(x, y, h, s) { const c = Math.cos(h), sn = Math.sin(h), pts = []; for (const [u, v] of [[-1.15, -0.4], [1.2, -0.4], [1.2, 0.4], [-1.15, 0.4]]) for (const z of [0, 2.5]) pts.push(I.p(x + (u * c - v * sn) * s, y + (u * sn + v * c) * s, z * s)); return I.hull(pts); },
+  shipHull(x, y, h, s) { const c = Math.cos(h), sn = Math.sin(h), pts = []; for (const [u, v] of [[-1.15, -0.4], [1.2, -0.4], [1.2, 0.4], [-1.15, 0.4]]) for (const z of [0, 2.7]) pts.push(I.p(x + (u * c - v * sn) * s, y + (u * sn + v * c) * s, z * s)); return I.hull(pts); },
 
   /* Tiefenschlüssel für Punktobjekte: vor einer Gebäudefront stehende Personen kommen vor das Gebäude */
   pointKey(px, py) {
@@ -156,11 +156,11 @@ HK.Scene = {
     for (const sk of this.marketSacks(HK.BUILDING.market)) items.push({ k: sk[0] + sk[1], f: c => { const q = I.p(sk[0], sk[1], 0); c.fillStyle = '#b8a070'; c.beginPath(); c.ellipse(q[0], q[1] - 2, 4, 3, 0, 0, 6.28); c.fill(); } });
     items.push({ k: HK.MOLE.x + HK.MOLE.y1 + 1, f: c => this.drawMole(c, sv) });
     items.push({ k: HK.ISLET.x + HK.ISLET.y, f: c => this.drawIslet(c, season, sv) });
-    items.push({ k: HK.GUARD_SHIP.x + HK.GUARD_SHIP.y + 0.6, f: c => this.drawShip(c, HK.GUARD_SHIP.x, HK.GUARD_SHIP.y, HK.GUARD_SHIP.heading, 1.05, 'guard', true, false) });
+    items.push({ k: HK.GUARD_SHIP.x + HK.GUARD_SHIP.y + 0.6, f: c => this.drawShip(c, HK.GUARD_SHIP.x, HK.GUARD_SHIP.y, HK.GUARD_SHIP.heading, 1.15, 'guard', true, false) });
     items.push({ k: HK.WINDMILL.x + HK.WINDMILL.y + 1, f: c => this.drawWindmill(c, t, sv) });
     items.push({ k: HK.FARM.x + HK.FARM.w + HK.FARM.y + HK.FARM.d, f: c => this.drawFarm(c, season, sv) });
     for (const p of HK.PIERS) for (let y = p.y0; y < p.y1; y += 0.6) { const seg = { x: p.x, y0: y, y1: Math.min(p.y1, y + 0.6), full: p, first: y === p.y0 }; items.push({ k: p.x + 0.25 + seg.y1, f: c => this.drawPier(c, seg, t) }); }
-    st.ownShips.forEach((sh, i) => { if (sh.status === 'port') { const b = HK.OWN_BERTHS[i]; items.push({ k: b.x + b.y + 0.5, f: c => this.drawShip(c, b.x, b.y, HK.BERTH_HEADING + 0.3, 0.8, 'own', true, false), pick: { kind: 'building', building: HK.BUILDING.harbour, panel: 'harbour', label: sh.name } }); } });
+    st.ownShips.forEach((sh, i) => { if (sh.status === 'port') { const b = HK.OWN_BERTHS[i]; items.push({ k: b.x + b.y + 0.5, f: c => this.drawShip(c, b.x, b.y, HK.BERTH_HEADING + 0.3, 0.95, 'own', true, false), pick: { kind: 'building', building: HK.BUILDING.harbour, panel: 'harbour', label: sh.name } }); } });
     for (const id in this.shipAnim) { const a = this.shipAnim[id]; const sh = st.ships.find(x => String(x.id) === id); items.push({ k: a.x + a.y + 0.6, f: c => this.drawShip(c, a.x, a.y, a.heading, HK.SHIP_SCALE, a.origin, !a.leaving && Math.abs(a.x - a.tx) + Math.abs(a.y - a.ty) < 0.05, HK.UI.selectedVisitor === Number(id) && !a.leaving), pick: sh && !a.leaving ? { kind: 'visitor', id: sh.id, panel: 'harbour', label: sh.name + ' (' + HK.name(HK.ORIGIN[sh.origin]) + ')' } : null }); }
     const nBoats = Math.min(4, 2 + st.boats);
     for (let i = 0; i < nBoats; i++) { const b = HK.BOAT_SPOTS[i]; items.push({ k: b.x + b.y, f: c => this.drawBoat(c, b.x, b.y, i >= 2, t + i) }); }
