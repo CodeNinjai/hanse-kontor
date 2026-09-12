@@ -96,6 +96,14 @@ Object.assign(HK.Scene, {
   drawChurch(ctx, b, st, season, sv) {
     const snow = season === 'winter', tw = 0.8, nx = b.x + tw, nw = b.w - tw, rh = 1.3;
     I.shadow(ctx, b.x, b.y, b.w, b.d, b.h + rh * 0.5, sv.v, sv.a);
+    // Turm zuerst: das davor liegende Schiff verdeckt seine rechte Seite unterhalb des Daches
+    const th = 4.6, ty = b.y + b.d - tw;
+    I.box(ctx, b.x, ty, 0, tw, tw, th, { wall: '#a24a3a' }, { noTop: true }); I.brickL(ctx, b.x, ty, tw, 0, tw, th); I.brickR(ctx, b.x, tw, ty, 0, tw, th);
+    for (let k = 0; k < 4; k++) { I.windowL(ctx, b.x, ty, tw, 1.0 + k * 0.95, tw / 2, 0.2, 0.42, { arch: true, frame: '#3a2a20' }); if (k > 1) I.windowR(ctx, b.x, tw, ty, 1.0 + k * 0.95, tw / 2, 0.2, 0.42, { arch: true, frame: '#3a2a20' }); }
+    I.poly(ctx, [[b.x, ty + tw, th - 0.1], [b.x + tw, ty + tw, th - 0.1], [b.x + tw, ty + tw, th], [b.x, ty + tw, th]], '#c9c0ad');
+    I.pyramid(ctx, b.x - 0.05, ty - 0.05, th, tw + 0.1, tw + 0.1, 1.9, snow ? '#dfe3e8' : '#3a3038');
+    const cp = I.p(b.x + tw / 2, ty + tw / 2, th + 1.9); ctx.strokeStyle = '#e0b040'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(cp[0], cp[1]); ctx.lineTo(cp[0], cp[1] - 14); ctx.moveTo(cp[0] - 4, cp[1] - 10); ctx.lineTo(cp[0] + 4, cp[1] - 10); ctx.stroke(); ctx.fillStyle = '#e0b040'; ctx.beginPath(); ctx.arc(cp[0], cp[1], 2.5, 0, 6.28); ctx.fill();
+    I.doorL(ctx, b.x, ty, tw, 0, tw / 2, 0.32, 0.62, true);
     // Schiff
     I.box(ctx, nx, b.y, 0, nw, b.d, b.h, { wall: '#a24a3a' }, { noTop: true }); I.brickL(ctx, nx, b.y, b.d, 0, nw, b.h); I.brickR(ctx, nx, nw, b.y, 0, b.d, b.h);
     for (let i = 0; i < 5; i++) { const u = nw * (i + 0.5) / 5; I.windowL(ctx, nx, b.y, b.d, 0.45, u, 0.22, 1.1, { arch: true, frame: '#3a2a20' }); I.box(ctx, nx + u + 0.28, b.y + b.d - 0.02, 0, 0.12, 0.18, b.h * 0.8, { wall: '#a24a3a', top: '#7e3a2c' }); }
@@ -104,15 +112,6 @@ Object.assign(HK.Scene, {
     I.gableRoof(ctx, nx, b.y, b.h, nw, b.d, rh, snow ? '#e6eaee' : '#4e4650', 'x', { overhang: 0.06, rows: 10 });
     I.stepGableR(ctx, nx, nw, b.y, b.h, b.d, rh + 0.1, '#a24a3a', 6); I.brickR(ctx, nx, nw, b.y, b.h, b.d, rh); I.windowR(ctx, nx, nw, b.y, b.h + 0.2, b.d / 2, 0.2, 0.5, { arch: true });
     I.poly(ctx, [[nx + 0.1, b.y + b.d / 2, b.h + rh], [nx + nw - 0.1, b.y + b.d / 2, b.h + rh], [nx + nw - 0.1, b.y + b.d / 2, b.h + rh + 0.08], [nx + 0.1, b.y + b.d / 2, b.h + rh + 0.08]], '#c9c0ad');
-    // Turm
-    const th = 4.6;
-    const ty = b.y + b.d - tw;
-    I.box(ctx, b.x, ty, 0, tw, tw, th, { wall: '#a24a3a' }, { noTop: true }); I.brickL(ctx, b.x, ty, tw, 0, tw, th); I.brickR(ctx, b.x, tw, ty, 0.9, tw, th - 0.9);
-    for (let k = 0; k < 4; k++) { I.windowL(ctx, b.x, ty, tw, 1.0 + k * 0.95, tw / 2, 0.2, 0.42, { arch: true, frame: '#3a2a20' }); if (k > 1) I.windowR(ctx, b.x, tw, ty, 1.0 + k * 0.95, tw / 2, 0.2, 0.42, { arch: true, frame: '#3a2a20' }); }
-    I.poly(ctx, [[b.x, ty + tw, th - 0.1], [b.x + tw, ty + tw, th - 0.1], [b.x + tw, ty + tw, th], [b.x, ty + tw, th]], '#c9c0ad');
-    I.pyramid(ctx, b.x - 0.05, ty - 0.05, th, tw + 0.1, tw + 0.1, 1.9, snow ? '#dfe3e8' : '#3a3038');
-    const cp = I.p(b.x + tw / 2, ty + tw / 2, th + 1.9); ctx.strokeStyle = '#e0b040'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(cp[0], cp[1]); ctx.lineTo(cp[0], cp[1] - 14); ctx.moveTo(cp[0] - 4, cp[1] - 10); ctx.lineTo(cp[0] + 4, cp[1] - 10); ctx.stroke(); ctx.fillStyle = '#e0b040'; ctx.beginPath(); ctx.arc(cp[0], cp[1], 2.5, 0, 6.28); ctx.fill();
-    I.doorL(ctx, b.x, ty, tw, 0, tw / 2, 0.32, 0.62, true);
   },
   drawHuts(ctx, b, st, season, sv) {
     const snow = season === 'winter';
