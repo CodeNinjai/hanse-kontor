@@ -151,7 +151,9 @@ HK.Scene = {
     const m = HK.BUILDING.market; items.push({ k: 0, f: c => { if (this.picking) I.poly(c, [[m.x, m.y, 0], [m.x + m.w, m.y, 0], [m.x + m.w, m.y + m.d, 0], [m.x, m.y + m.d, 0]], '#000'); }, pick: { kind: 'building', building: m, panel: 'market', label: HK.name(m) } });
     for (const seg of this.wallSegments()) items.push({ k: seg.k, f: c => seg.f(c, sv) });
     for (const tr of HK.TREES) items.push({ k: tr[0] + tr[1] + tr[2], f: c => this.drawTree(c, tr[0], tr[1], tr[2], season, sv) });
-    for (const p of HK.PROPS) items.push({ k: p.x + p.y + 0.3, f: c => this.drawProp(c, p, st, sv) });
+    for (const p of HK.PROPS) { if (p.t === 'stalls') continue; items.push({ k: p.x + p.y + 0.3, f: c => this.drawProp(c, p, st, sv) }); }
+    this.marketStalls(HK.BUILDING.market).forEach((sd, i) => items.push({ k: sd.x + 0.55 + sd.y + 0.35, f: c => this.drawStall(c, sd, i, st) }));
+    for (const sk of this.marketSacks(HK.BUILDING.market)) items.push({ k: sk[0] + sk[1], f: c => { const q = I.p(sk[0], sk[1], 0); c.fillStyle = '#b8a070'; c.beginPath(); c.ellipse(q[0], q[1] - 2, 4, 3, 0, 0, 6.28); c.fill(); } });
     items.push({ k: HK.MOLE.x + HK.MOLE.y1 + 1, f: c => this.drawMole(c, sv) });
     items.push({ k: HK.ISLET.x + HK.ISLET.y, f: c => this.drawIslet(c, season, sv) });
     items.push({ k: HK.GUARD_SHIP.x + HK.GUARD_SHIP.y + 0.6, f: c => this.drawShip(c, HK.GUARD_SHIP.x, HK.GUARD_SHIP.y, HK.GUARD_SHIP.heading, 1.05, 'guard', true, false) });
