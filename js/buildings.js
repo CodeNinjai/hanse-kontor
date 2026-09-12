@@ -480,8 +480,8 @@ Object.assign(HK.Scene, {
     const W = (u, v, z) => [x + (u * c - v * sn) * s, y + (u * sn + v * c) * s, z * s];
     const S = (u, v, z) => I.p(...W(u, v, z));
     const strokeW = (pts, col, lw, close) => { ctx.strokeStyle = col; ctx.lineWidth = lw; ctx.beginPath(); pts.forEach((q, i) => { const p = I.p(q[0], q[1], q[2]); i ? ctx.lineTo(p[0], p[1]) : ctx.moveTo(p[0], p[1]); }); if (close) ctx.closePath(); ctx.stroke(); };
-    const flag = { luebeck: '#c8102e', bruegge: '#3b6ac2', bergen: '#3b9a4a', danzig: '#c29a3b', riga: '#7a3bc2', stockholm: '#e0c020', london: '#a02020', own: '#e0b040', guard: '#2a4a8a' }[origin] || '#888';
-    const flag2 = { luebeck: '#f4f0e6', bruegge: '#e8c840', bergen: '#f0e8d8', danzig: '#2a2a2a', riga: '#f4f0e6', stockholm: '#2a58b8', london: '#f4f0e6', own: '#3a2a10', guard: '#f0ece0' }[origin] || '#eee';
+    const flag = { luebeck: '#c8102e', bruegge: '#3b6ac2', bergen: '#3b9a4a', danzig: '#c29a3b', riga: '#7a3bc2', stockholm: '#e0c020', london: '#a02020', own: '#e0b040', guard: '#2a4a8a', rival_kruse: '#556b2f', rival_bracht: '#8b4513', rival_detmers: '#4b0082' }[origin] || '#888';
+    const flag2 = { luebeck: '#f4f0e6', bruegge: '#e8c840', bergen: '#f0e8d8', danzig: '#2a2a2a', riga: '#f4f0e6', stockholm: '#2a58b8', london: '#f4f0e6', own: '#3a2a10', guard: '#f0ece0', rival_kruse: '#e8e0c8', rival_bracht: '#e8e0c8', rival_detmers: '#e8c840' }[origin] || '#eee';
     const bob = docked ? Math.sin(t * 1.1 + x) * 0.012 : Math.sin(t * 1.5 + x) * 0.03;
     // Deckssprung: Dollbord steigt zu Bug und Heck deutlich an
     const sheer = u => 0.72 + 0.18 * u * u + (u > 0.95 ? (u - 0.95) * 0.6 : 0) + (u < -1.0 ? (-1.0 - u) * 0.5 : 0) + bob;

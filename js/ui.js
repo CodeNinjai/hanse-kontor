@@ -56,6 +56,7 @@ HK.UI = {
     if (p === 'encounter') return HK.t('enc_' + (this.encounter ? this.encounter.type : 'citizen') + '_label');
     if (p === 'house') return HK.name(HK.BUILDINGS.find(b => b.panel === 'house' && b.plot === this.plot));
     if (p === 'workshop') return HK.name(HK.BUILDINGS.find(b => b.panel === 'workshop' && b.plot === this.plot));
+    if (p === 'rivals') return HK.t('rivals');
     const sel = HK.Scene.selected && HK.BUILDING[HK.Scene.selected]; if (sel && sel.panel === p) return HK.name(sel);
     const b = HK.BUILDINGS.find(x => x.panel === p); return b ? HK.name(b) : HK.t(p);
   },
@@ -316,7 +317,7 @@ HK.UI = {
   panel_house() {
     const st = HK.state, hs = st.houses[this.plot], b = HK.BUILDINGS.find(x => x.panel === 'house' && x.plot === this.plot);
     let h = this.head(HK.name(b), HK.t('house'));
-    if (hs.owner !== 'player') h += `<p>${HK.t('houseOwnerNpc', { price: HK.fmt(hs.price) })}</p><button data-action="buyhouse" ${st.money >= hs.price ? '' : 'disabled'}>${HK.t('buyHouse', { price: HK.fmt(hs.price) })}</button>`;
+    if (hs.owner !== 'player') { const price = HK.housePrice(st, hs); h += hs.owner === 'npc' ? `<p>${HK.t('houseOwnerNpc', { price: HK.fmt(hs.price) })}</p>` : `<p>${HK.t('ownedByRival', { rival: HK.rivalName(hs.owner) })} ${price === null ? HK.t('rivalWontSell') : HK.t('rivalSells', { price: HK.fmt(price) })}</p>`; if (price !== null) h += `<button data-action="buyhouse" ${st.money >= price ? '' : 'disabled'}>${HK.t('buyHouse', { price: HK.fmt(price) })}</button>`; }
     else {
       h += `<p><span class="tag gold">${HK.t('yours')}</span> ${HK.t('level', { level: hs.level })} · <b>${HK.t('rentPerDay', { rent: HK.houseRent(st, hs) })}</b>${hs.damaged ? ` · <span class="demand shortage">${HK.t('damaged')}</span>` : ''}</p><div class="btn-row">`;
       if (hs.damaged) h += `<button class="small" data-action="repairhouse" ${st.money >= 800 ? '' : 'disabled'}>${HK.t('repairHouse')}</button>`;
@@ -331,6 +332,7 @@ HK.UI = {
     h += st.tavernOwned ? `<p class="tag gold">${HK.t('tavernOwned', { income: HK.tavernIncome(st) })}</p>` : `<button class="small" data-action="buytavern" ${st.money >= HK.CONST.TAVERN_PRICE ? '' : 'disabled'}>${HK.t('buyTavern', { cost: HK.fmt(HK.CONST.TAVERN_PRICE) })}</button>`;
     h += `</section><section><h3>${HK.t('rumors')}</h3><button class="small" data-action="rumor" ${st.money >= HK.rumorCost(st) ? '' : 'disabled'}>${HK.t('rumor', { cost: HK.rumorCost(st) })}</button><ul class="log">${st.rumors.map(r => `<li><small>${HK.fmtDate(r.day)}</small> ${HK.t(r.key, r.vars)}</li>`).join('')}</ul></section>`;
     h += `<section><h3>${HK.t('gamble')}</h3><div class="btn-row"><label>${HK.t('bet')} <input id="bet-input" type="number" min="1" data-field="bet" value="${this.esc(this.inputs.bet)}"></label><button class="small" data-action="gamble" ${st.money >= (parseInt(this.inputs.bet, 10) || 0) && (parseInt(this.inputs.bet, 10) || 0) > 0 ? '' : 'disabled'}>🎲 ${HK.t('gamble')}</button></div></section>`;
+    h += `<section><h3>${HK.t('rivals')}</h3><p class="hint">${HK.t('rivalsTavern')}</p><button class="small" data-action="open" data-panel="rivals">${HK.t('rivals')} →</button></section>`;
     h += `<section><h3>${HK.t('hire')}</h3><div class="btn-row"><button class="small" data-action="spy" ${st.money >= HK.CONST.SPY_COST ? '' : 'disabled'}>${HK.t('hireSpy')}</button>${st.spyUntil > st.day ? `<small>${HK.t('spyActive', { days: st.spyUntil - st.day })}</small>` : ''}</div>
       <div class="btn-row"><button class="small" data-action="thugs" data-target="collect" ${st.money >= HK.thugCost(st) ? '' : 'disabled'}>${HK.t('hireThugsCollect', { cost: HK.thugCost(st) })}</button></div>
       <div class="btn-row">${HK.RIVALS.map(r => `<button class="small danger" data-action="thugs" data-target="${r.id}" ${st.money >= HK.thugCost(st) ? '' : 'disabled'}>${HK.t('hireThugsSabotage', { rival: r.name, cost: HK.thugCost(st) })}</button>`).join('')}</div></section>`;
@@ -375,7 +377,8 @@ HK.UI = {
     const o = st.ventures[v.id], cost = HK.ventureCost(st, v);
     let h = this.head(HK.name(v), HK.t('vEffect_' + (v.effect || 'plain')));
     h += `<section><p>${HK.t('ventureBase', { income: v.income })}${v.inp ? ` · ${HK.t('ventureInput', { good: HK.goodName(v.inp) })}` : ''}${v.craft ? ` · <span class="tag">${HK.t('needsCraft')}</span>` : ''}</p>`;
-    if (!o) h += `<button data-action="buyventure" data-id="${v.id}" ${st.money >= cost && (!v.craft || st.craftGuild) ? '' : 'disabled'}>${HK.t('buyVenture', { cost: HK.fmt(cost) })}</button>${v.craft && !st.craftGuild ? `<p class="hint">${HK.t('needCraftGuild')}</p>` : ''}`;
+    if (o && o.owner) { const r = st.rivals.find(x => x.id === o.owner), price = Math.round(v.cost * 1.4); h += `<p>${HK.t('ownedByRival', { rival: HK.rivalName(o.owner) })} ${r && r.attitude >= 20 ? HK.t('rivalSells', { price: HK.fmt(price) }) : HK.t('rivalWontSell')}</p>`; if (r && r.attitude >= 20) h += `<button data-action="buyventure" data-id="${v.id}" ${st.money >= price && (!v.craft || st.craftGuild) ? '' : 'disabled'}>${HK.t('buyVenture', { cost: HK.fmt(price) })}</button>`; }
+    else if (!o) h += `<button data-action="buyventure" data-id="${v.id}" ${st.money >= cost && (!v.craft || st.craftGuild) ? '' : 'disabled'}>${HK.t('buyVenture', { cost: HK.fmt(cost) })}</button>${v.craft && !st.craftGuild ? `<p class="hint">${HK.t('needCraftGuild')}</p>` : ''}`;
     else {
       h += `<p><span class="tag gold">${HK.t('yours')}</span> ${HK.t('ventureLevel', { level: o.level })} · <b>${HK.t('ventureIncome', { income: HK.ventureIncome(st, v.id) })}</b>${v.inp && HK.ventureSupply(st, v) < 0.8 ? ` · <span class="demand shortage">${HK.t('supplyLow', { good: HK.goodName(v.inp) })}</span>` : ''}</p><div class="btn-row">`;
       if (o.level < HK.CONST.VENTURE_MAX_LEVEL) h += `<button class="small" data-action="upgradeventure" data-id="${v.id}" ${st.money >= Math.round(v.cost * HK.CONST.VENTURE_UPGRADE) ? '' : 'disabled'}>${HK.t('upgradeVenture', { cost: HK.fmt(Math.round(v.cost * HK.CONST.VENTURE_UPGRADE)) })}</button>`;
@@ -386,7 +389,7 @@ HK.UI = {
   panel_storage() {
     const st = HK.state, i = this.plot, def = HK.STORAGES[i], sg = st.storages[i], b = HK.BUILDINGS.find(x => x.panel === 'storage' && x.plot === i);
     let h = this.head(HK.name(b), HK.t('storageHint', { cap: def.cap })) + `<section>`;
-    if (sg.owner !== 'player') h += `<button data-action="buystorage" ${st.money >= def.price ? '' : 'disabled'}>${HK.t('buyStorage', { price: HK.fmt(def.price) })}</button>`;
+    if (sg.owner !== 'player') { const r = sg.owner === 'npc' ? null : st.rivals.find(x => x.id === sg.owner), price = r ? Math.round(def.price * 1.5) : def.price; if (r) h += `<p>${HK.t('ownedByRival', { rival: HK.rivalName(sg.owner) })} ${r.attitude >= 20 ? HK.t('rivalSells', { price: HK.fmt(price) }) : HK.t('rivalWontSell')}</p>`; if (!r || r.attitude >= 20) h += `<button data-action="buystorage" ${st.money >= price ? '' : 'disabled'}>${HK.t('buyStorage', { price: HK.fmt(price) })}</button>`; }
     else {
       h += `<p><span class="tag gold">${HK.t('yours')}</span> ${sg.mode === 'own' ? HK.t('storageOwn', { cap: def.cap }) : `<b>${HK.t('storageRent', { rent: HK.storageRent(st, i) })}</b>`}</p><div class="btn-row"><button class="small" data-action="togglestorage">${HK.t(sg.mode === 'own' ? 'useRent' : 'useOwn')}</button><button class="small danger" data-action="sellstorage">${HK.t('sellStorage', { price: HK.fmt(Math.round(def.price * 0.7)) })}</button></div>`;
     }
@@ -443,7 +446,7 @@ HK.UI = {
     const st = HK.state, fee = Math.round(HK.CONST.CRAFT_FEE * HK.craftDiscount(st));
     let h = this.head(HK.t('craftguild'), HK.t('craftHint', { fee: HK.fmt(fee) })) + `<section>${this.personRow('craftmaster')}`;
     h += st.craftGuild ? `<p class="tag gold">${HK.t('craftMember')}</p>` : `<button data-action="joincraft" ${st.money >= fee ? '' : 'disabled'}>${HK.t('joinCraft', { fee: HK.fmt(fee) })}</button>`;
-    h += `</section><section><h3>${HK.t('ventures')}</h3><table class="plain">${HK.VENTURES.filter(v => v.craft).map(v => `<tr><td>${HK.name(v)}</td><td class="num">${st.ventures[v.id] ? `<span class="tag gold">${HK.t('yours')}</span>` : HK.fmt(HK.ventureCost(st, v)) + ' ' + HK.t('mark')}</td></tr>`).join('')}</table></section>`;
+    h += `</section><section><h3>${HK.t('ventures')}</h3><table class="plain">${HK.VENTURES.filter(v => v.craft).map(v => `<tr><td>${HK.name(v)}</td><td class="num">${st.ventures[v.id] ? (st.ventures[v.id].owner ? `<small>${HK.rivalName(st.ventures[v.id].owner)}</small>` : `<span class="tag gold">${HK.t('yours')}</span>`) : HK.fmt(HK.ventureCost(st, v)) + ' ' + HK.t('mark')}</td></tr>`).join('')}</table></section>`;
     if (st.craftGuild) h += `<section><div class="btn-row"><button class="small" data-action="apprentices" ${st.money >= HK.CONST.APPRENTICES && !(st.apprenticesUntil > st.day) ? '' : 'disabled'}>${HK.t('apprentices', { cost: HK.fmt(HK.CONST.APPRENTICES), days: HK.CONST.APPRENTICE_DAYS })}</button>${st.apprenticesUntil > st.day ? `<small>${HK.t('apprenticesActive', { days: st.apprenticesUntil - st.day })}</small>` : ''}</div>
       <div class="btn-row">${st.masterTitle ? `<span class="tag gold">${HK.t('masterTitleDone')}</span>` : `<button class="small" data-action="mastertitle" ${st.money >= HK.CONST.MASTER_TITLE && HK.ventureCount(st) >= 3 ? '' : 'disabled'}>${HK.t('masterTitle', { cost: HK.fmt(HK.CONST.MASTER_TITLE) })}</button>`}</div></section>`;
     return h;
@@ -471,6 +474,17 @@ HK.UI = {
     h += st.militia ? `<p class="tag gold">${HK.t('militiaActive', { upkeep: HK.CONST.MILITIA_UPKEEP })}</p><button class="small danger" data-action="disbandmilitia">${HK.t('disbandMilitia')}</button>` : `<p class="hint">${HK.t('militiaHint')}</p><button data-action="militia" ${st.money >= HK.CONST.MILITIA_COST ? '' : 'disabled'}>${HK.t('fundMilitia', { cost: HK.fmt(HK.CONST.MILITIA_COST), upkeep: HK.CONST.MILITIA_UPKEEP })}</button>`;
     return h + `</section>`;
   },
+  panel_rivals() {
+    const st = HK.state;
+    let h = this.head(HK.t('rivals'), HK.t('rivalsHint'));
+    for (const r of st.rivals) {
+      const def = HK.RIVAL_DEF[r.id], hold = HK.rivalHoldingsText(st, r), lbl = HK.attitudeLabel(r.attitude);
+      h += `<section><h3>${HK.rivalName(r.id)} <small>· ${HK.t('path_' + def.path)}${r.seat !== 'none' ? ' · ' + HK.t('seat_councillor') : ''}${r.ally ? ` · <span class="tag gold">${HK.t('att_allied')}</span>` : ''}</small></h3>
+        <table class="plain"><tr><td>${HK.t('attitude')}</td><td>${this.bar(50 + r.attitude / 2, r.attitude >= 25 ? 'green' : r.attitude <= -25 ? 'red' : '')} <small>${HK.t(lbl)}</small></td></tr><tr><td>${HK.t('netWorth')}</td><td class="num">${HK.fmt(r.wealth)} ${HK.t('mark')}</td></tr><tr><td>${HK.t('holdings')}</td><td class="num">${HK.t('rivalHoldings', hold)}</td></tr>${r.monopolyGood && st.town.monopolyHolder === 'rival' ? `<tr><td>${HK.t('monopoly')}</td><td class="num">${HK.goodName(r.monopolyGood)}</td></tr>` : ''}</table>
+        <div class="btn-row"><button class="small" data-action="meetrival" data-id="${r.id}" ${st.money >= HK.meetCost(st, r) && st.day - r.lastMeet >= 20 ? '' : 'disabled'}>${HK.t('meetRival', { cost: HK.fmt(HK.meetCost(st, r)) })}</button>${r.ally ? '' : `<button class="small" data-action="allyrival" data-id="${r.id}" ${r.attitude >= 45 && st.money >= 2000 ? '' : 'disabled'}>${HK.t('allyRival')}</button>`}<button class="small danger" data-action="thugs" data-target="${r.id}" ${st.money >= HK.thugCost(st) ? '' : 'disabled'}>${HK.t('hireThugsSabotage', { rival: HK.rivalName(r.id), cost: HK.thugCost(st) })}</button></div></section>`;
+    }
+    return h;
+  },
   panel_person() {
     const p = HK.PERSON[this.person]; if (!p) return '';
     const link = { customs: 'customs', priest: 'church', bailiff: 'bailiff', innkeeper: 'tavern', changer: 'bank', guild: 'guild', shipwright: 'shipyard', mayor: 'townhall', abbot: 'monastery', craftmaster: 'craftguild', harbourmaster: 'harbourmaster', divekeeper: 'dive', schoolmaster: 'school', weighmaster: 'weighhouse' }[this.person];
@@ -495,7 +509,7 @@ HK.UI = {
       <tr><td>${HK.t('influence')}</td><td class="num">${Math.floor(st.influence)}</td></tr><tr><td>${HK.t('prosperity')}</td><td>${this.bar(st.town.prosperity, 'green')}</td></tr><tr><td>${HK.t('population')}</td><td class="num">${HK.fmt(st.town.pop)}</td></tr></table></section>`;
     h += `<section><h3>${HK.t('factionsTitle')}</h3><table class="plain">${HK.FACTION_IDS.map(f => `<tr><td>${HK.FACTIONS[f][HK.LANG]}</td><td>${this.bar(st.factions[f], st.factions[f] >= 50 ? 'green' : st.factions[f] < 25 ? 'red' : '')}</td></tr>`).join('')}</table><p class="hint">${HK.t('factionsHint')}</p></section>`;
     h += `<section><h3>${HK.t('titles')}</h3><p class="hint">${HK.t('titlesHint', { years: st.years, date: HK.fmtDate(st.endDay) })}</p>${HK.TITLES.map(t => { const pr = HK.titleProgress(st, t), done = !!st.titles[t.id]; return `<details class="title ${done ? 'done' : ''}"><summary><b>${HK.name(t)}</b> ${done ? `<span class="tag gold">${HK.t('titleHeld')}</span>` : `<small>${pr.filter(c => c.done).length}/${pr.length}</small>`}</summary><p class="hint">${HK.t('title_' + t.id + '_desc')}</p><ul class="conds">${pr.map(c => `<li class="${c.done ? 'ok' : ''}">${c.done ? '✓' : '·'} ${HK.t(c.key, { v: HK.fmt(c.v), target: HK.fmt(c.target) })}</li>`).join('')}</ul></details>`; }).join('')}<div class="btn-row"><button class="small" data-action="chronicle">${HK.t('chronicleView')}</button></div></section>`;
-    h += `<section><h3>${HK.t('richest')}</h3><table class="plain">${rich.map((r, i) => `<tr class="${r.me ? 'me' : ''}"><td>${i + 1}. ${r.me ? '<b>' + r.name + '</b>' : r.name}</td><td class="num">${HK.fmt(r.w)}</td></tr>`).join('')}</table></section>`;
+    h += `<section><h3>${HK.t('richest')}</h3><table class="plain">${rich.map((r, i) => `<tr class="${r.me ? 'me' : ''}"><td>${i + 1}. ${r.me ? '<b>' + r.name + '</b>' : r.name}</td><td class="num">${HK.fmt(r.w)}</td></tr>`).join('')}</table><div class="btn-row"><button class="small" data-action="open" data-panel="rivals">${HK.t('rivals')} →</button></div></section>`;
     const inc = Object.keys(tot).filter(k => tot[k] > 0).sort((a, b) => tot[b] - tot[a]);
     let sum = 0; for (const k in tot) sum += tot[k];
     h += `<section><h3>${HK.t('incomeSources')}</h3><table class="plain">${inc.map(k => `<tr><td>${HK.t('src_' + k)}</td><td class="num">+${HK.fmt(tot[k])}</td></tr>`).join('') || `<tr><td class="hint">–</td></tr>`}<tr><td><b>${HK.t('dailyIncome')}</b></td><td class="num"><b>${HK.fmt(sum / st.ledger.length)}</b></td></tr></table></section>`;
@@ -536,7 +550,9 @@ HK.UI = {
       case 'qtyall': this.inputs.qtyAll = !this.inputs.qtyAll; break;
       case 'selvisitor': this.selectedVisitor = parseInt(d.id, 10); break;
       case 'selown': this.selectedOwnShip = parseInt(d.id, 10); break;
-      case 'open': this.panel = d.panel; HK.Scene.selected = HK.BUILDINGS.find(b => b.panel === d.panel).id; break;
+      case 'open': { this.panel = d.panel; const bb = HK.BUILDINGS.find(b => b.panel === d.panel); HK.Scene.selected = bb ? bb.id : null; break; }
+      case 'meetrival': this.result(HK.meetRival(st, d.id)); break;
+      case 'allyrival': this.result(HK.allyRival(st, d.id)); break;
       case 'vbuy': case 'vsell': {
         if (!v) return; const n = Math.min(q, this.maxQty(a, d.good, v)); if (n <= 0) { this.toast(HK.t(a === 'vbuy' ? 'notEnoughMoney' : 'notEnoughCargo'), 'bad'); break; }
         r = a === 'vbuy' ? HK.buyFromVisitor(st, v, d.good, n, this.inputs.smuggle) : HK.sellToVisitor(st, v, d.good, n, this.inputs.smuggle);

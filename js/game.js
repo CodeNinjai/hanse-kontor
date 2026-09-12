@@ -61,7 +61,7 @@ HK.netWorth = function (st) {
   let w = st.money - st.loan + HK.stockValue(st.warehouse.stock);
   for (const h of st.houses) if (h.owner === 'player') w += h.price * (0.8 + h.level * 0.2);
   for (const ws of st.workshops) if (ws.type) w += HK.WORKSHOP[ws.type].cost * 0.6;
-  for (const id in st.ventures || {}) w += HK.VENTURE[id].cost * (0.5 + st.ventures[id].level * 0.1);
+  for (const id in st.ventures || {}) if (!st.ventures[id].owner) w += HK.VENTURE[id].cost * (0.5 + st.ventures[id].level * 0.1);
   (st.storages || []).forEach((sg, i) => { if (sg.owner === 'player') w += HK.STORAGES[i].price * 0.7; });
   for (const s of st.ownShips) w += HK.CONST.SHIP_PRICE * 0.6 * (s.hull / 100) + HK.stockValue(s.cargo);
   w += st.boats * HK.CONST.BOAT_PRICE * 0.6 + st.stalls * HK.CONST.STALL_COST * 0.6;
@@ -309,7 +309,7 @@ HK.sermon = function (st, kind) {
     if (p.loyalty < 60) return { ok: false, msg: 'needLoyalty' };
     if (st.money < 800) return { ok: false, msg: 'notEnoughMoney' };
     HK.book(st, 'church', -800);
-    const r = HK.pick(st.rivals); r.wealth = Math.round(r.wealth * 0.95); p.loyalty -= 15; st.suspicion = HK.clamp(st.suspicion + 4, 0, 100);
+    const r = HK.pick(st.rivals); r.wealth = Math.round(r.wealth * 0.95); p.loyalty -= 15; st.suspicion = HK.clamp(st.suspicion + 4, 0, 100); if (r.attitude !== undefined) r.attitude = HK.clamp(r.attitude - 25, -100, 100);
     HK.log(st, 'sermonAgainst', { rival: HK.RIVALS.find(x => x.id === r.id).name }, 'info');
   }
   return { ok: true };
@@ -331,6 +331,7 @@ HK.propose = function (st, lawId, value) {
     if (score > 0) yes++; else no++;
     detail.push({ id: c.id, yes: score > 0 });
   }
+  for (const r of st.rivals) if (r.seat === 'councillor') { const f = HK.RIVAL_DEF ? HK.RIVAL_DEF[r.id].faction : 'kaufleute'; const sc = (law.stance[f][value] - law.stance[f][st.town.laws[lawId]]) * 0.8 + r.attitude / 60 + (r.ally ? 0.6 : 0); if (sc > 0) yes++; else no++; }
   const passed = yes > no;
   if (passed) {
     st.town.laws[lawId] = value;
@@ -417,11 +418,13 @@ HK.demolishWorkshop = function (st, plot) {
 };
 
 /* ---------- Häuser, Taverne, Badehaus ---------- */
+HK.housePrice = function (st, h) { if (h.owner === 'npc') return h.price; const r = st.rivals.find(x => x.id === h.owner); if (!r || r.attitude < 20) return null; return Math.round(h.price * 1.5); };
 HK.buyHouse = function (st, id) {
   const h = st.houses[id];
   if (!h || h.owner === 'player') return { ok: false };
-  if (st.money < h.price) return { ok: false, msg: 'notEnoughMoney' };
-  HK.book(st, 'investments', -h.price); h.owner = 'player';
+  const price = HK.housePrice(st, h); if (price === null) return { ok: false, msg: 'rivalWontSell' };
+  if (st.money < price) return { ok: false, msg: 'notEnoughMoney' };
+  HK.book(st, 'investments', -price); if (h.owner !== 'npc') { const r = st.rivals.find(x => x.id === h.owner); if (r) { r.wealth += price; r.holdings.houses = r.holdings.houses.filter(x => x !== id); } } h.owner = 'player';
   return { ok: true };
 };
 HK.sellHouse = function (st, id) {
@@ -501,6 +504,7 @@ HK.hireThugs = function (st, target) {
   } else {
     const r = st.rivals.find(x => x.id === target);
     if (!r) return { ok: false };
+    if (r.attitude !== undefined) r.attitude = HK.clamp(r.attitude - 40, -100, 100);
     if (Math.random() < 0.75) { r.wealth = Math.round(r.wealth * 0.92); HK.log(st, 'sabotageOk', { rival: HK.RIVALS.find(x => x.id === r.id).name }, 'good'); }
     else { st.suspicion = HK.clamp(st.suspicion + 15, 0, 100); st.rep = HK.clamp(st.rep - 8, 0, 100); HK.log(st, 'sabotageFailed', { rival: HK.RIVALS.find(x => x.id === r.id).name }, 'bad'); }
   }
@@ -628,29 +632,31 @@ HK.joinCraftGuild = function (st) {
 };
 HK.ventureCost = (st, v) => Math.round(v.cost * (v.craft ? HK.craftDiscount(st) : 1));
 HK.buyVenture = function (st, id) {
-  const v = HK.VENTURE[id]; if (!v || st.ventures[id]) return { ok: false };
+  const v = HK.VENTURE[id], cur = st.ventures[id]; if (!v || (cur && !cur.owner)) return { ok: false };
   if (v.craft && !st.craftGuild) return { ok: false, msg: 'needCraftGuild' };
-  const cost = HK.ventureCost(st, v);
+  let cost = HK.ventureCost(st, v);
+  if (cur && cur.owner) { const r = st.rivals.find(x => x.id === cur.owner); if (!r || r.attitude < 20) return { ok: false, msg: 'rivalWontSell' }; cost = Math.round(v.cost * 1.4); }
   if (st.money < cost) return { ok: false, msg: 'notEnoughMoney' };
-  HK.book(st, 'investments', -cost); st.ventures[id] = { level: 1, since: st.day };
+  HK.book(st, 'investments', -cost); if (cur && cur.owner) { const r = st.rivals.find(x => x.id === cur.owner); r.wealth += cost; r.holdings.ventures = r.holdings.ventures.filter(x => x !== id); }
+  st.ventures[id] = { level: 1, since: st.day };
   HK.log(st, 'ventureBought', { venture: HK.name(v) }, 'good');
   return { ok: true };
 };
 HK.upgradeVenture = function (st, id) {
-  const v = HK.VENTURE[id], o = st.ventures[id]; if (!v || !o || o.level >= HK.CONST.VENTURE_MAX_LEVEL) return { ok: false };
+  const v = HK.VENTURE[id], o = st.ventures[id]; if (!v || !o || o.owner || o.level >= HK.CONST.VENTURE_MAX_LEVEL) return { ok: false };
   const cost = Math.round(v.cost * HK.CONST.VENTURE_UPGRADE);
   if (st.money < cost) return { ok: false, msg: 'notEnoughMoney' };
   HK.book(st, 'investments', -cost); o.level++;
   return { ok: true };
 };
 HK.sellVenture = function (st, id) {
-  const v = HK.VENTURE[id], o = st.ventures[id]; if (!v || !o) return { ok: false };
+  const v = HK.VENTURE[id], o = st.ventures[id]; if (!v || !o || o.owner) return { ok: false };
   HK.book(st, 'investments', Math.round(v.cost * (0.5 + o.level * 0.1))); delete st.ventures[id];
   return { ok: true };
 };
 HK.ventureSupply = function (st, v) { if (!v.inp) return 1; return HK.clamp((st.town.stock[v.inp] || 0) / HK.desired(v.inp), 0.3, 1.2); };
 HK.ventureIncome = function (st, id) {
-  const v = HK.VENTURE[id], o = st.ventures[id]; if (!v || !o) return 0;
+  const v = HK.VENTURE[id], o = st.ventures[id]; if (!v || !o || o.owner) return 0;
   let inc = v.income * (0.6 + st.town.prosperity / 125) * (1 + 0.35 * (o.level - 1)) * HK.ventureSupply(st, v);
   if (st.apprenticesUntil > st.day) inc *= 1.1;
   if (v.effect === 'dive') inc += st.ships.length * 6;
@@ -660,9 +666,10 @@ HK.ventureIncome = function (st, id) {
   if (v.effect === 'feed' && st.town.events.some(e => e.type === 'famine')) inc *= 1.6;
   return Math.round(inc);
 };
-HK.hasVenture = (st, id) => !!(st.ventures && st.ventures[id]);
+HK.hasVenture = (st, id) => !!(st.ventures && st.ventures[id] && !st.ventures[id].owner);
+HK.ventureOwner = (st, id) => st.ventures && st.ventures[id] ? (st.ventures[id].owner || 'player') : null;
 HK.shipRepairFactor = st => (HK.hasVenture(st, 'ropewalk') ? 0.8 : 1) * (HK.hasVenture(st, 'sailmaker') ? 0.8 : 1);
-HK.ventureCount = st => Object.keys(st.ventures).length;
+HK.ventureCount = st => Object.keys(st.ventures).filter(id => !st.ventures[id].owner).length;
 HK.hireApprentices = function (st) {
   if (st.apprenticesUntil > st.day || !st.craftGuild) return { ok: false };
   if (st.money < HK.CONST.APPRENTICES) return { ok: false, msg: 'notEnoughMoney' };
@@ -679,8 +686,9 @@ HK.masterTitle = function (st) {
 // Speicher: kaufen, Nutzung umschalten (eigener Lagerplatz oder Vermietung)
 HK.buyStorage = function (st, i) {
   const s = st.storages[i], def = HK.STORAGES[i]; if (!s || s.owner === 'player') return { ok: false };
-  if (st.money < def.price) return { ok: false, msg: 'notEnoughMoney' };
-  HK.book(st, 'investments', -def.price); s.owner = 'player'; s.mode = 'own'; st.warehouse.cap += def.cap;
+  let price = def.price; if (s.owner !== 'npc') { const r = st.rivals.find(x => x.id === s.owner); if (!r || r.attitude < 20) return { ok: false, msg: 'rivalWontSell' }; price = Math.round(def.price * 1.5); }
+  if (st.money < price) return { ok: false, msg: 'notEnoughMoney' };
+  HK.book(st, 'investments', -price); if (s.owner !== 'npc') { const r = st.rivals.find(x => x.id === s.owner); r.wealth += price; r.holdings.storages = r.holdings.storages.filter(x => x !== i); } s.owner = 'player'; s.mode = 'own'; st.warehouse.cap += def.cap;
   return { ok: true };
 };
 HK.toggleStorage = function (st, i) {
@@ -1060,7 +1068,7 @@ HK.tick = function (st) {
     const o = HK.ORIGIN[s.dest];
     if (s.phase === 'out' && s.daysLeft <= o.days + 1) {
       s.phase = 'back';
-      if (Math.random() < (st.blessedUntil > st.day ? 0.02 : 0.05) * (st.militia ? 0.7 : 1)) { s.cargo = {}; s.hull = Math.max(5, s.hull - 25); HK.log(st, 'expeditionPirates', { ship: s.name }, 'bad'); }
+      if (Math.random() < (st.blessedUntil > st.day ? 0.02 : 0.05) * (st.militia ? 0.7 : 1) * (HK.rivalAlly && HK.rivalAlly(st) ? 0.6 : 1)) { s.cargo = {}; s.hull = Math.max(5, s.hull - 25); HK.log(st, 'expeditionPirates', { ship: s.name }, 'bad'); }
       let rev = 0;
       for (const g in s.cargo) rev += s.cargo[g] * Math.round(HK.GOOD[g].base * (o.want[g] ? 0.75 + o.want[g] * 0.4 : 0.8));
       s.cargo = {}; s.revenue = rev;
@@ -1082,7 +1090,7 @@ HK.tick = function (st) {
   st.influence += 0.1 + st.rep / 300 + (st.seat === 'mayor' ? 1 : st.seat === 'councillor' ? 0.5 : 0);
   for (const pid in st.persons) st.persons[pid].loyalty = HK.clamp(st.persons[pid].loyalty - 0.05, 0, 100);
   // Konkurrenten
-  for (const r of st.rivals) r.wealth = Math.round(r.wealth * (1 + (0.0007 + st.town.prosperity * 0.000006) * HK.rnd(0.6, 1.4)) + HK.visitors(st).length * 30);
+  for (const r of st.rivals) r.wealth = Math.round(r.wealth * (1 + (0.00025 + st.town.prosperity * 0.000003) * HK.rnd(0.6, 1.4)) + HK.visitors(st).length * 25);
 
   // Vogtei
   if (st.investigation) {

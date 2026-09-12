@@ -163,6 +163,7 @@ HK.BERTHS = [{ x: 10.2, y: 20.35 }, { x: 13.0, y: 20.35 }, { x: 17.2, y: 20.35 }
 HK.SHIP_SCALE = 1.4;
 HK.BERTH_HEADING = Math.PI / 2;
 HK.OWN_BERTHS = [{ x: 14.6, y: 23.8 }, { x: 16.6, y: 24.6 }, { x: 12.2, y: 24.4 }];
+HK.RIVAL_ANCHORAGE = [{ x: 20.8, y: 23.6, h: 2.1 }, { x: 23.4, y: 24.4, h: 1.9 }, { x: 9.6, y: 23.2, h: 2.3 }];
 HK.ISLET = { x: -3.6, y: 5.6 };
 HK.BOAT_SPOTS = [{ x: 6.2, y: -1.2 }, { x: 5.5, y: -0.4 }, { x: 15.6, y: 20.4 }, { x: 25.2, y: 20.2 }];
 HK.GUARD_SHIP = { x: 15.6, y: 24.6, heading: 0.35 };
