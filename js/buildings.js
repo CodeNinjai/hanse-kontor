@@ -429,9 +429,14 @@ Object.assign(HK.Scene, {
       ctx.strokeStyle = 'rgba(120,100,70,0.35)'; ctx.lineWidth = 0.6; for (let k = 1; k < 7; k++) { const f = -1 + 2 * k / 7; const a = S(0.05, f * yw, yz), b = S(0.05 + belly * (1 - f * f * 0.5), f * yw * 0.9, zb + 0.02); ctx.beginPath(); ctx.moveTo(a[0], a[1]); ctx.lineTo(b[0], b[1]); ctx.stroke(); }
       for (let k = 1; k < 4; k++) { const f = k / 4; const pts = []; for (let j = 0; j <= 6; j++) { const g = -1 + 2 * j / 6; pts.push(W(0.05 + belly * (1 - g * g * 0.5) * f, g * yw * (1 - 0.1 * f), yz - hang * f)); } strokeW(pts, 'rgba(120,100,70,0.3)', 0.6); }
       if (!pk) {
-        const ec = S(0.05 + belly * 0.45, 0, yz - hang * 0.45), es = 5.5 * s * (docked ? 0.8 : 1);
-        ctx.fillStyle = flag; ctx.beginPath(); ctx.moveTo(ec[0] - es, ec[1] - es * 1.2); ctx.lineTo(ec[0] + es, ec[1] - es * 1.2); ctx.lineTo(ec[0] + es, ec[1] + es * 0.2); ctx.quadraticCurveTo(ec[0] + es, ec[1] + es, ec[0], ec[1] + es * 1.3); ctx.quadraticCurveTo(ec[0] - es, ec[1] + es, ec[0] - es, ec[1] + es * 0.2); ctx.closePath(); ctx.fill(); ctx.strokeStyle = 'rgba(40,20,10,0.6)'; ctx.lineWidth = 0.7; ctx.stroke();
-        ctx.fillStyle = flag2; if (origin === 'luebeck' || origin === 'london' || origin === 'guard') { ctx.fillRect(ec[0] - es, ec[1] - es * 0.5, es * 2, es); } else if (origin === 'bruegge' || origin === 'stockholm' || origin === 'riga') { ctx.fillRect(ec[0] - es * 0.18, ec[1] - es * 1.2, es * 0.36, es * 2.4); ctx.fillRect(ec[0] - es, ec[1] - es * 0.4, es * 2, es * 0.36); } else { ctx.beginPath(); ctx.arc(ec[0], ec[1], es * 0.45, 0, 6.28); ctx.fill(); }
+        // Wappen liegt in der Segelfläche: Punkte über die gleiche Parametrisierung wie das Segeltuch (quer f in -1..1, Höhe g in 0..1)
+        const SP = (f, g) => W(0.05 + belly * (1 - f * f * 0.5) * g, f * yw * (1 - 0.1 * g), yz - hang * g + 0.005);
+        const sw = docked ? 0.26 : 0.3, g0 = 0.22, g1 = docked ? 0.66 : 0.6, gm = (g0 + g1) / 2, gh = g1 - g0;
+        const shield = [SP(-sw, g0), SP(sw, g0), SP(sw, g0 + gh * 0.55)]; for (let k = 1; k <= 5; k++) { const a = k / 5; shield.push(SP(sw * Math.cos(a * Math.PI / 2), g0 + gh * (0.55 + 0.45 * Math.sin(a * Math.PI / 2)))); } for (let k = 4; k >= 0; k--) { const a = k / 5; shield.push(SP(-sw * Math.cos(a * Math.PI / 2), g0 + gh * (0.55 + 0.45 * Math.sin(a * Math.PI / 2)))); }
+        I.poly(ctx, shield, flag, 'rgba(40,20,10,0.6)', 0.7);
+        if (origin === 'luebeck' || origin === 'london' || origin === 'guard') I.poly(ctx, [SP(-sw, gm - gh * 0.2), SP(sw, gm - gh * 0.2), SP(sw, gm + gh * 0.2), SP(-sw, gm + gh * 0.2)], flag2);
+        else if (origin === 'bruegge' || origin === 'stockholm' || origin === 'riga') { I.poly(ctx, [SP(-sw * 0.18, g0), SP(sw * 0.18, g0), SP(sw * 0.18, g1), SP(-sw * 0.18, g1)], flag2); I.poly(ctx, [SP(-sw, gm - gh * 0.12), SP(sw, gm - gh * 0.12), SP(sw, gm + gh * 0.12), SP(-sw, gm + gh * 0.12)], flag2); }
+        else { const disc = []; for (let k = 0; k < 12; k++) { const a = k / 12 * Math.PI * 2; disc.push(SP(Math.cos(a) * sw * 0.5, gm + Math.sin(a) * gh * 0.22)); } I.poly(ctx, disc, flag2); }
       }
       // Schoten und Brassen
       for (const sd of [-1, 1]) { I.line(ctx, foot[sd > 0 ? 0 : nF], W(-0.5, sd * 0.36, sheer(-0.5)), 'rgba(25,15,8,0.6)', 0.5); I.line(ctx, W(0.04, sd * yw, yz), W(-0.6, sd * vAt(-0.6) * 0.9, aTop(-0.6)), 'rgba(25,15,8,0.55)', 0.5); }
