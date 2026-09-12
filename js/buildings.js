@@ -153,7 +153,7 @@ Object.assign(HK.Scene, {
     const p = I.p(b.x + b.w + 0.02, b.y + 0.05, b.h); ctx.fillStyle = ws.idle ? '#a03030' : '#3a9a4a'; ctx.beginPath(); ctx.arc(p[0], p[1], 2.5, 0, 6.28); ctx.fill();
   },
   drawMarket(ctx, b, st) {
-    const stalls = [[b.x + 0.3, b.y + 0.3, '#c23b3b'], [b.x + 1.3, b.y + 0.25, '#3b6ac2'], [b.x + 2.3, b.y + 0.3, '#3b9a4a'], [b.x + 0.3, b.y + 1.9, '#c29a3b'], [b.x + 2.3, b.y + 2.0, '#7a3bc2'], [b.x + 1.3, b.y + 2.7, '#c23b3b']];
+    const stalls = [[b.x + 0.25, b.y + 0.12, '#c23b3b'], [b.x + 1.25, b.y + 0.1, '#3b6ac2'], [b.x + 2.25, b.y + 0.12, '#3b9a4a'], [b.x + 2.5, b.y + 1.3, '#c29a3b'], [b.x + 2.5, b.y + 2.3, '#7a3bc2'], [b.x + 0.08, b.y + 1.5, '#c23b3b']];
     stalls.forEach(([x, y, c], i) => {
       const mine = i < st.stalls, col = mine ? '#e0b040' : c;
       I.box(ctx, x, y, 0, 0.55, 0.35, 0.3, { wall: '#7a5a3a', top: '#9a7a4a' });
@@ -163,7 +163,7 @@ Object.assign(HK.Scene, {
       for (let k = 0; k < 4; k++) { const p = I.p(x + 0.1 + k * 0.12, y + 0.4, 0.32); ctx.fillStyle = goods[k % 2]; ctx.beginPath(); ctx.arc(p[0], p[1], 2, 0, 6.28); ctx.fill(); }
       if (mine) this.gableFlag(ctx, x + 0.55, y, 0.75);
     });
-    for (const [sx, sy] of [[b.x + 0.5, b.y + 1.3], [b.x + 0.7, b.y + 1.35], [b.x + 2.8, b.y + 1.4]]) { const p = I.p(sx, sy, 0); ctx.fillStyle = '#b8a070'; ctx.beginPath(); ctx.ellipse(p[0], p[1] - 2, 4, 3, 0, 0, 6.28); ctx.fill(); }
+    for (const [sx, sy] of [[b.x + 0.4, b.y + 2.3], [b.x + 0.6, b.y + 2.35], [b.x + 2.0, b.y + 3.1]]) { const p = I.p(sx, sy, 0); ctx.fillStyle = '#b8a070'; ctx.beginPath(); ctx.ellipse(p[0], p[1] - 2, 4, 3, 0, 0, 6.28); ctx.fill(); }
   },
   drawGate(ctx, b, st, season, sv) {
     I.shadow(ctx, b.x, b.y, b.w, b.d, b.h, sv.v, sv.a);
@@ -253,7 +253,7 @@ Object.assign(HK.Scene, {
     switch (p.t) {
       case 'crates': this.crate3(ctx, p.x, p.y, 0, 0.26); this.crate3(ctx, p.x + 0.28, p.y + 0.05, 0, 0.22); this.crate3(ctx, p.x + 0.1, p.y + 0.02, 0.26, 0.2); break;
       case 'barrels': this.barrel3(ctx, p.x, p.y, 0); this.barrel3(ctx, p.x + 0.24, p.y + 0.02, 0); this.barrel3(ctx, p.x + 0.12, p.y + 0.22, 0); break;
-      case 'well': { I.cylinder(ctx, p.x, p.y, 0, 0.3, 0.3, '#8f887a', { brick: true }); const c = I.p(p.x, p.y, 0.3); ctx.fillStyle = '#3f6a8a'; ctx.beginPath(); ctx.ellipse(c[0], c[1], 0.22 * I.TW, 0.22 * I.TH, 0, 0, 6.28); ctx.fill(); I.line(ctx, [p.x - 0.28, p.y, 0], [p.x - 0.28, p.y, 0.9], '#4a3320', 2); I.line(ctx, [p.x + 0.28, p.y, 0], [p.x + 0.28, p.y, 0.9], '#4a3320', 2); I.gableRoof(ctx, p.x - 0.35, p.y - 0.25, 0.9, 0.7, 0.5, 0.25, '#5a3a2a', 'x', { overhang: 0.05, rows: 3 }); I.line(ctx, [p.x - 0.28, p.y, 0.75], [p.x + 0.28, p.y, 0.75], '#3a2a1a', 1.5); break; }
+      case 'well': { I.cylinder(ctx, p.x, p.y, 0, 0.24, 0.28, '#8f887a', { brick: true }); const c = I.p(p.x, p.y, 0.28); ctx.fillStyle = '#3f6a8a'; ctx.beginPath(); ctx.ellipse(c[0], c[1], 0.17 * I.TW, 0.17 * I.TH, 0, 0, 6.28); ctx.fill(); I.line(ctx, [p.x - 0.22, p.y, 0], [p.x - 0.22, p.y, 0.8], '#4a3320', 2); I.line(ctx, [p.x + 0.22, p.y, 0], [p.x + 0.22, p.y, 0.8], '#4a3320', 2); I.gableRoof(ctx, p.x - 0.26, p.y - 0.18, 0.8, 0.52, 0.36, 0.18, '#5a3a2a', 'x', { overhang: 0.03, rows: 3 }); I.line(ctx, [p.x - 0.22, p.y, 0.68], [p.x + 0.22, p.y, 0.68], '#3a2a1a', 1.5); break; }
       case 'statue': { I.box(ctx, p.x - 0.22, p.y - 0.22, 0, 0.44, 0.44, 0.25, { wall: '#8f887a', top: '#a9a292' }); I.box(ctx, p.x - 0.14, p.y - 0.14, 0.25, 0.28, 0.28, 0.5, { wall: '#7d766a', top: '#9a9284' }); const s = I.p(p.x, p.y, 0.75); ctx.fillStyle = '#8f8878'; ctx.beginPath(); ctx.moveTo(s[0] - 3, s[1]); ctx.lineTo(s[0] + 3, s[1]); ctx.lineTo(s[0] + 4, s[1] - 15); ctx.lineTo(s[0] - 4, s[1] - 15); ctx.fill(); ctx.beginPath(); ctx.arc(s[0], s[1] - 17.5, 3, 0, 6.28); ctx.fill(); ctx.strokeStyle = '#8f8878'; ctx.lineWidth = 1.6; ctx.beginPath(); ctx.moveTo(s[0] + 4, s[1] - 12); ctx.lineTo(s[0] + 8, s[1] - 22); ctx.stroke(); ctx.fillStyle = '#c9a24a'; ctx.fillRect(s[0] - 6, s[1] - 11, 4, 6); break; }
       case 'stalls': this.drawMarket(ctx, HK.BUILDING.market, st); break;
       case 'nets': { for (let k = 0; k < 5; k++) I.line(ctx, [p.x, p.y + k * 0.08, 0.35], [p.x + 0.05, p.y + k * 0.08 + 0.3, 0], 'rgba(60,50,40,0.6)', 0.6); I.line(ctx, [p.x, p.y, 0], [p.x, p.y, 0.4], '#4a3a2a', 1.2); I.line(ctx, [p.x, p.y + 0.35, 0], [p.x, p.y + 0.35, 0.4], '#4a3a2a', 1.2); I.line(ctx, [p.x, p.y, 0.38], [p.x, p.y + 0.35, 0.38], '#4a3a2a', 1); break; }
