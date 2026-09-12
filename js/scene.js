@@ -11,7 +11,7 @@ HK.Scene = {
     canvas.width = HK.SCENE.W * this.RS; canvas.height = HK.SCENE.H * this.RS;
     this.makePatterns(); this.makeGrain();
     for (let i = 0; i < 70; i++) this.walkers.push(this.makeWalker(true));
-    for (let i = 0; i < 9; i++) this.gulls.push({ x: HK.rnd(40, 560), y: HK.rnd(80, 760), a: HK.rnd(0, 6.28), r: HK.rnd(25, 60), s: HK.rnd(0.25, 0.6) });
+    for (let i = 0; i < 9; i++) this.gulls.push({ x: HK.rnd(40, 700), y: HK.rnd(80, 1000), a: HK.rnd(0, 6.28), r: HK.rnd(25, 60), s: HK.rnd(0.25, 0.6) });
     this.carts = [{ a: [9.5, 2.8], b: [9.5, 17.8], t: 0.2, dir: 1, v: 0.25, ox: true }, { a: [8.0, 10], b: [27.0, 10], t: 0.7, dir: -1, v: 0.2, ox: false }, { a: [24, 2.8], b: [24, 17.8], t: 0.5, dir: 1, v: 0.22, ox: true }];
     for (let i = 0; i < 8; i++) this.chickens.push({ cx: i < 3 ? 8.9 : i < 5 ? 17.0 : 26.6, cy: i < 3 ? -0.2 : i < 5 ? 9.7 : 9.2, x: 0, y: 0, t: Math.random() * 10, a: Math.random() * 6.28 });
     this.initInput(canvas);
@@ -19,16 +19,17 @@ HK.Scene = {
   /* ---------- Kamera: Zoom und Verschieben ---------- */
   cam: { z: 1, x: 0, y: 0 },
   ZOOM_MIN: 1, ZOOM_MAX: 2.8,
-  clampCam() { const W = HK.SCENE.W, H = HK.SCENE.H, z = this.cam.z; this.cam.x = HK.clamp(this.cam.x, 0, W - W / z); this.cam.y = HK.clamp(this.cam.y, 0, H - H / z); },
+  zoomMin() { return Math.max(HK.SCENE.W / HK.MAP.W, HK.SCENE.H / HK.MAP.H); },
+  clampCam() { const z = this.cam.z; this.cam.x = HK.clamp(this.cam.x, 0, HK.MAP.W - HK.SCENE.W / z); this.cam.y = HK.clamp(this.cam.y, 0, HK.MAP.H - HK.SCENE.H / z); },
   /* Zoom um einen Ankerpunkt (Bildschirm-Szenenkoordinaten), der dabei stehen bleibt */
   setZoom(z, ax, ay) {
-    const old = this.cam.z; z = HK.clamp(z, this.ZOOM_MIN, this.ZOOM_MAX);
+    const old = this.cam.z; z = HK.clamp(z, this.zoomMin(), this.ZOOM_MAX);
     if (ax === undefined) { ax = HK.SCENE.W / 2; ay = HK.SCENE.H / 2; }
     const wx = ax / old + this.cam.x, wy = ay / old + this.cam.y;
     this.cam.z = z; this.cam.x = wx - ax / z; this.cam.y = wy - ay / z; this.clampCam();
   },
   panBy(dx, dy) { this.cam.x -= dx / this.cam.z; this.cam.y -= dy / this.cam.z; this.clampCam(); },
-  resetCam() { this.cam.z = 1; this.cam.x = 0; this.cam.y = 0; },
+  resetCam() { this.cam.z = this.zoomMin(); this.cam.x = 0; this.cam.y = 0; this.clampCam(); },
   viewTransform(ctx, scale) { const z = this.cam.z * scale; ctx.setTransform(z, 0, 0, z, -this.cam.x * z, -this.cam.y * z); },
   /* Bildschirmpunkt (Szenenpixel des Canvas) → Szenenkoordinaten der ungezoomten Karte */
   toMap(p) { return { x: p.x / this.cam.z + this.cam.x, y: p.y / this.cam.z + this.cam.y }; },
@@ -176,16 +177,17 @@ HK.Scene = {
     }
   },
   snapShips() { this.shipAnim = {}; if (!HK.state) return; HK.state.ships.forEach((s, i) => { const b = HK.BERTHS[i]; this.shipAnim[s.id] = { x: b.x, y: b.y, tx: b.x, ty: b.y, heading: HK.BERTH_HEADING, leaving: false, name: s.name, origin: s.origin }; }); },
-  isWater(wx, wy) { return wx < HK.WORLD.COAST_X || wy > HK.WORLD.COAST_Y; },
+  isWater(wx, wy) { return !I.inHull(HK.LAND, wx, wy); },
+  inTown(wx, wy) { return I.inHull(HK.TOWN, wx, wy); },
 
   /* ---------- Trefferprüfung ---------- */
   hit(x, y) {
     const st = HK.state; if (!st) return null;
     if (!this.pickCanvas || this.time - this.pickTime > 0.25) this.renderPick();
-    const px = Math.round(HK.clamp(x, 0, HK.SCENE.W - 1)), py = Math.round(HK.clamp(y, 0, HK.SCENE.H - 1));
+    const px = Math.round(HK.clamp(x, 0, HK.MAP.W - 1)), py = Math.round(HK.clamp(y, 0, HK.MAP.H - 1));
     const d = this.pickCtx.getImageData(px, py, 1, 1).data; const k = d[0] / 255;
     if (k > 0.3) { const code = Math.round(d[1] / k) + (Math.round(d[2] / k) << 8); const id = Math.round(code / 3); if (id > 0 && this.pickTable && this.pickTable[id]) return this.pickTable[id]; }
-    const wpt = this.toWorld(x, y); if (this.isWater(wpt.x, wpt.y) && wpt.x > -14 && wpt.y < 32) return { kind: 'building', building: HK.BUILDING.harbour, panel: 'harbour', label: HK.t('harbour') };
+    const wpt = this.toWorld(x, y); if (this.isWater(wpt.x, wpt.y) && wpt.x > -16 && wpt.y < 34 && wpt.x < 50) return { kind: 'building', building: HK.BUILDING.harbour, panel: 'harbour', label: HK.t('harbour') };
     return null;
   },
   shipHull(x, y, h, s) { const c = Math.cos(h), sn = Math.sin(h), pts = []; for (const [u, v] of [[-1.15, -0.4], [1.2, -0.4], [1.2, 0.4], [-1.15, 0.4]]) for (const z of [0, 2.7]) pts.push(I.p(x + (u * c - v * sn) * s, y + (u * sn + v * c) * s, z * s)); return I.hull(pts); },
@@ -212,6 +214,7 @@ HK.Scene = {
     items.push({ k: HK.GUARD_SHIP.x + HK.GUARD_SHIP.y + 0.6, f: c => this.drawShip(c, HK.GUARD_SHIP.x, HK.GUARD_SHIP.y, HK.GUARD_SHIP.heading, 1.15, 'guard', true, false) });
     items.push({ k: HK.WINDMILL.x + HK.WINDMILL.y + 1, f: c => this.drawWindmill(c, t, sv) });
     items.push({ k: HK.FARM.x + HK.FARM.w + HK.FARM.y + HK.FARM.d, f: c => this.drawFarm(c, season, sv) });
+    for (const f of HK.HAMLET) items.push({ k: f.x + f.w + f.y + f.d, f: c => this.drawFarm(c, season, sv, f) });
     for (const p of HK.PIERS) for (let y = p.y0; y < p.y1; y += 0.6) { const seg = { x: p.x, y0: y, y1: Math.min(p.y1, y + 0.6), full: p, first: y === p.y0 }; items.push({ k: p.x + 0.25 + seg.y1, f: c => this.drawPier(c, seg, t) }); }
     st.ownShips.forEach((sh, i) => { if (sh.status === 'port') { const b = HK.OWN_BERTHS[i]; items.push({ k: b.x + b.y + 0.5, f: c => this.drawShip(c, b.x, b.y, HK.BERTH_HEADING + 0.3, 0.95, 'own', true, false), pick: { kind: 'building', building: HK.BUILDING.harbour, panel: 'harbour', label: sh.name } }); } });
     for (const id in this.shipAnim) { const a = this.shipAnim[id]; const sh = st.ships.find(x => String(x.id) === id); items.push({ k: a.x + a.y + 0.6, f: c => this.drawShip(c, a.x, a.y, a.heading, HK.SHIP_SCALE, a.origin, !a.leaving && Math.abs(a.x - a.tx) + Math.abs(a.y - a.ty) < 0.05, HK.UI.selectedVisitor === Number(id) && !a.leaving), pick: sh && !a.leaving ? { kind: 'visitor', id: sh.id, panel: 'harbour', label: sh.name + ' (' + HK.name(HK.ORIGIN[sh.origin]) + ')' } : null }); }
@@ -228,11 +231,11 @@ HK.Scene = {
   /* Pick-Kanal: jedes anklickbare Objekt in eigener Kennfarbe */
   renderPick() {
     const st = HK.state; if (!st) return;
-    if (!this.pickCanvas) { this.pickCanvas = document.createElement('canvas'); this.pickCanvas.width = HK.SCENE.W; this.pickCanvas.height = HK.SCENE.H; this.pickCtx = this.pickCanvas.getContext('2d', { willReadFrequently: true }); }
+    if (!this.pickCanvas) { this.pickCanvas = document.createElement('canvas'); this.pickCanvas.width = HK.MAP.W; this.pickCanvas.height = HK.MAP.H; this.pickCtx = this.pickCanvas.getContext('2d', { willReadFrequently: true }); }
     const real = this.pickCtx; let color = '#000';
     const noop = () => {};
     const proxy = new Proxy(real, { get: (t, k) => { if (k === 'stroke' || k === 'strokeRect' || k === 'strokeText' || k === 'fillText') return noop; const v = t[k]; return typeof v === 'function' ? v.bind(t) : v; }, set: (t, k, v) => { if (k === 'fillStyle' || k === 'strokeStyle') t[k] = color; else if (k === 'globalAlpha') t[k] = 1; else t[k] = v; return true; } });
-    real.setTransform(1, 0, 0, 1, 0, 0); real.fillStyle = '#000'; real.fillRect(0, 0, HK.SCENE.W, HK.SCENE.H);
+    real.setTransform(1, 0, 0, 1, 0, 0); real.fillStyle = '#000'; real.fillRect(0, 0, HK.MAP.W, HK.MAP.H);
     const savedW = this.windows, savedL = this.lamps; this.windows = []; this.lamps = []; this.picking = true;
     const items = this.buildItems(proxy, st, this.season(), this.time);
     this.pickTable = [null];
@@ -266,7 +269,7 @@ HK.Scene = {
     this.windows = []; this.lamps = [];
     this.nightK = P.amb < 0.7 ? HK.clamp((0.7 - P.amb) / 0.4, 0, 1) : 0;
     this.drawWater(ctx, P, t);
-    ctx.drawImage(this.ground, 0, 0, W, H);
+    ctx.drawImage(this.ground, 0, 0, HK.MAP.W, HK.MAP.H);
     this.drawCoast(ctx, P, t);
     // Nachts läuft alles zusätzlich als schwarze Silhouette in die Emissionsebene, Fenster leuchten dort farbig; so verdecken vordere Gebäude die Lichter dahinter
     const dctx = this.nightK > 0 ? this.teeCtx() : ctx;
@@ -289,57 +292,69 @@ HK.Scene = {
 
   /* Wasser über die ganze Fläche, Wellen und Glitzern */
   drawWater(ctx, P, t) {
-    const W = HK.SCENE.W, H = HK.SCENE.H;
+    const W = HK.MAP.W, H = HK.MAP.H;
     const g = ctx.createLinearGradient(0, 0, W * 0.3, H); g.addColorStop(0, this.rgb(P.far)); g.addColorStop(1, this.rgb(P.near)); ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
     // Farbflecken (Tiefe, Strömung)
-    for (let i = 0; i < 26; i++) { const x = (i * 173) % W, y = (i * 97 + 40) % H, r = 60 + (i % 5) * 30; const gr = ctx.createRadialGradient(x, y, 0, x, y, r); gr.addColorStop(0, i % 2 ? 'rgba(255,255,255,0.05)' : 'rgba(0,10,30,0.10)'); gr.addColorStop(1, 'rgba(0,0,0,0)'); ctx.fillStyle = gr; ctx.fillRect(x - r, y - r, r * 2, r * 2); }
-    // Flachwasser an der Küste
-    const cx = HK.WORLD.COAST_X, cy = HK.WORLD.COAST_Y, ex = HK.WORLD.WALL_E + 0.8; I.poly(ctx, [[cx, -3.2, 0], [cx, cy + 0.5, 0], [cx - 1.4, cy + 1.9, 0], [cx - 1.4, -3.2, 0]], 'rgba(120,190,190,0.16)'); I.poly(ctx, [[cx, cy + 0.5, 0], [ex, cy + 0.5, 0], [ex, cy + 1.9, 0], [cx, cy + 1.9, 0]], 'rgba(120,190,190,0.16)');
+    for (let i = 0; i < 40; i++) { const x = (i * 173) % W, y = (i * 97 + 40) % H, r = 60 + (i % 5) * 30; const gr = ctx.createRadialGradient(x, y, 0, x, y, r); gr.addColorStop(0, i % 2 ? 'rgba(255,255,255,0.05)' : 'rgba(0,10,30,0.10)'); gr.addColorStop(1, 'rgba(0,0,0,0)'); ctx.fillStyle = gr; ctx.fillRect(x - r, y - r, r * 2, r * 2); }
+    // Flachwasser entlang der Küste: heller Saum außen an jeder Landkante
+    for (const e of this.coastEdges()) { const [P0, P1, n] = e; I.poly(ctx, [[P0[0], P0[1], 0], [P1[0], P1[1], 0], [P1[0] + n[0] * 1.3, P1[1] + n[1] * 1.3, 0], [P0[0] + n[0] * 1.3, P0[1] + n[1] * 1.3, 0]], 'rgba(120,190,190,0.16)'); }
     ctx.strokeStyle = `rgba(255,255,255,${0.08 + 0.14 * P.amb})`; ctx.lineWidth = 1;
-    for (let i = 0; i < 260; i++) { const x = ((i * 137 + t * 9) % (W + 60)) - 30, y = ((i * 89 + (i % 3) * 7) % (H + 20)) - 10 + Math.sin(t * 1.4 + i) * 1.5; const len = 6 + (i % 5) * 2.5; ctx.beginPath(); ctx.moveTo(x, y); ctx.quadraticCurveTo(x + len / 2, y - 1.5, x + len, y); ctx.stroke(); }
+    for (let i = 0; i < 420; i++) { const x = ((i * 137 + t * 9) % (W + 60)) - 30, y = ((i * 89 + (i % 3) * 7) % (H + 20)) - 10 + Math.sin(t * 1.4 + i) * 1.5; const len = 6 + (i % 5) * 2.5; ctx.beginPath(); ctx.moveTo(x, y); ctx.quadraticCurveTo(x + len / 2, y - 1.5, x + len, y); ctx.stroke(); }
     const st = this.sunT();
-    if (st !== null && this.weather !== 'rain') { const lx = W * (0.06 + 0.28 * st), ly = H * 0.42 + 140 * Math.sin(st * Math.PI); for (let i = 0; i < 70; i++) { const x = lx + Math.cos(i * 2.4) * 90 * Math.sqrt((i % 10) / 10), y = ly + Math.sin(i * 2.4) * 50 * Math.sqrt((i % 10) / 10); const a = 0.35 * (0.5 + 0.5 * Math.sin(t * 5 + i)); ctx.fillStyle = `rgba(255,245,210,${a})`; ctx.fillRect(x, y, 4, 1.2); } }
+    if (st !== null && this.weather !== 'rain') { const lx = W * (0.05 + 0.24 * st), ly = H * 0.45 + 140 * Math.sin(st * Math.PI); for (let i = 0; i < 70; i++) { const x = lx + Math.cos(i * 2.4) * 90 * Math.sqrt((i % 10) / 10), y = ly + Math.sin(i * 2.4) * 50 * Math.sqrt((i % 10) / 10); const a = 0.35 * (0.5 + 0.5 * Math.sin(t * 5 + i)); ctx.fillStyle = `rgba(255,245,210,${a})`; ctx.fillRect(x, y, 4, 1.2); } }
     const c = this.clock, fog = c > 0.22 && c < 0.42 ? 1 - Math.abs(c - 0.3) / 0.12 : 0;
-    if (fog > 0) { for (let i = 0; i < 11; i++) { const x = 40 + i * 75 + Math.sin(t * 0.3 + i) * 20, y = 120 + (i % 3) * 160 + i * 28; const gr = ctx.createRadialGradient(x, y, 5, x, y, 110); gr.addColorStop(0, `rgba(235,235,240,${0.35 * fog})`); gr.addColorStop(1, 'rgba(235,235,240,0)'); ctx.fillStyle = gr; ctx.fillRect(x - 110, y - 110, 220, 220); } }
+    if (fog > 0) { for (let i = 0; i < 14; i++) { const x = 40 + i * 75 + Math.sin(t * 0.3 + i) * 20, y = 160 + (i % 3) * 200 + i * 30; const gr = ctx.createRadialGradient(x, y, 5, x, y, 110); gr.addColorStop(0, `rgba(235,235,240,${0.35 * fog})`); gr.addColorStop(1, 'rgba(235,235,240,0)'); ctx.fillStyle = gr; ctx.fillRect(x - 110, y - 110, 220, 220); } }
   },
-  /* Kaikanten: sichtbare Südmauer, Schatten und Gischt an der Westkante */
+  /* Landkanten mit Normale zur Wasserseite: [P0, P1, n, quay] */
+  coastEdges() {
+    if (this._edges) return this._edges;
+    const L = HK.LAND; let area = 0; for (let i = 0; i < L.length; i++) { const a = L[i], b = L[(i + 1) % L.length]; area += a[0] * b[1] - b[0] * a[1]; }
+    const sgn = area > 0 ? 1 : -1; const out = [];
+    for (let i = 0; i < L.length; i++) { const a = L[i], b = L[(i + 1) % L.length]; if (Math.abs(a[0] - b[0]) > 20 || Math.abs(a[1] - b[1]) > 20) continue; const dx = b[0] - a[0], dy = b[1] - a[1], len = Math.hypot(dx, dy) || 1; const n = [sgn * dy / len, -sgn * dx / len]; out.push([a, b, n, a[2] === 'quay', len]); }
+    // Normale muss ins Wasser zeigen: Probe am Kantenmittelpunkt
+    for (const e of out) { const mx = (e[0][0] + e[1][0]) / 2 + e[2][0] * 0.3, my = (e[0][1] + e[1][1]) / 2 + e[2][1] * 0.3; if (I.inHull(HK.LAND, mx, my)) { e[2][0] *= -1; e[2][1] *= -1; } }
+    return this._edges = out;
+  },
+  /* Küste: gemauerte Kaikanten mit sichtbarer Stirnseite, natürliche Ufer mit Sand, Uferböschung und Gischt */
   drawCoast(ctx, P, t) {
-    const cx = HK.WORLD.COAST_X, cy = HK.WORLD.COAST_Y;
-    // Schatten der Kaimauer im Wasser (West)
-    const ex = HK.WORLD.WALL_E + 0.6;
-    I.poly(ctx, [[cx, -3.5, 0], [cx, cy + 0.4, 0], [cx - 0.45, cy + 0.4, 0], [cx - 0.45, -3.5, 0]], 'rgba(10,20,40,0.28)');
-    // Südmauer (sichtbare +y-Fläche)
-    I.poly(ctx, [[cx, cy + 0.4, 0], [ex, cy + 0.4, 0], [ex, cy + 0.4, 0.4], [cx, cy + 0.4, 0.4]], '#6f685c', 'rgba(20,15,10,0.5)');
-    ctx.strokeStyle = 'rgba(0,0,0,0.25)'; for (let x = cx; x < ex; x += 0.5) I.line(ctx, [x, cy + 0.4, 0], [x, cy + 0.4, 0.4], 'rgba(0,0,0,0.2)', 0.6);
-    I.line(ctx, [cx, cy + 0.4, 0.2], [ex, cy + 0.4, 0.2], 'rgba(0,0,0,0.2)', 0.6);
-    I.poly(ctx, [[cx, cy + 0.4, 0], [ex, cy + 0.4, 0], [ex, cy + 0.6, 0], [cx, cy + 0.6, 0]], 'rgba(40,70,60,0.4)');
-    // Gischt
-    ctx.fillStyle = 'rgba(255,255,255,0.35)';
-    for (let y = -3.5; y < cy; y += 0.25) { const p = I.p(cx - 0.05, y, 0); if ((y * 13 | 0) % 3 === 0) ctx.fillRect(p[0] - 2 + Math.sin(t * 3 + y * 5), p[1], 3, 1); }
-    for (let x = cx; x < ex; x += 0.25) { const p = I.p(x, cy + 0.65, 0); if ((x * 13 | 0) % 3 === 0) ctx.fillRect(p[0] - 2 + Math.sin(t * 3 + x * 5), p[1], 3, 1); }
+    for (const [A, B, n, quay, len] of this.coastEdges()) {
+      const vis = n[0] + n[1] > 0.05; // Stirnseite zeigt zum Betrachter (+x/+y)
+      if (quay) {
+        // Schatten der Kaimauer im Wasser, Mauerstirn wenn sichtbar
+        I.poly(ctx, [[A[0], A[1], 0], [B[0], B[1], 0], [B[0] + n[0] * 0.45, B[1] + n[1] * 0.45, 0], [A[0] + n[0] * 0.45, A[1] + n[1] * 0.45, 0]], 'rgba(10,20,40,0.28)');
+        if (vis) { I.poly(ctx, [[A[0], A[1], 0], [B[0], B[1], 0], [B[0], B[1], 0.4], [A[0], A[1], 0.4]], '#6f685c', 'rgba(20,15,10,0.5)'); for (let k = 0; k < len; k += 0.5) { const f = k / len; I.line(ctx, [A[0] + (B[0] - A[0]) * f, A[1] + (B[1] - A[1]) * f, 0], [A[0] + (B[0] - A[0]) * f, A[1] + (B[1] - A[1]) * f, 0.4], 'rgba(0,0,0,0.2)', 0.6); } I.line(ctx, [A[0], A[1], 0.2], [B[0], B[1], 0.2], 'rgba(0,0,0,0.2)', 0.6); I.poly(ctx, [[A[0], A[1], 0], [B[0], B[1], 0], [B[0] + n[0] * 0.2, B[1] + n[1] * 0.2, 0], [A[0] + n[0] * 0.2, A[1] + n[1] * 0.2, 0]], 'rgba(40,70,60,0.4)'); }
+      } else {
+        // nasser Saum und Böschung
+        I.poly(ctx, [[A[0], A[1], 0], [B[0], B[1], 0], [B[0] + n[0] * 0.25, B[1] + n[1] * 0.25, 0], [A[0] + n[0] * 0.25, A[1] + n[1] * 0.25, 0]], 'rgba(150,140,100,0.55)');
+        if (vis) I.poly(ctx, [[A[0], A[1], 0], [B[0], B[1], 0], [B[0], B[1], 0.22], [A[0], A[1], 0.22]], '#8a7a58', 'rgba(20,15,10,0.35)');
+        for (let k = 0.3; k < len; k += 0.9) { const f = k / len; const q = I.p(A[0] + (B[0] - A[0]) * f + n[0] * 0.1, A[1] + (B[1] - A[1]) * f + n[1] * 0.1, 0); ctx.fillStyle = '#7d766a'; ctx.beginPath(); ctx.ellipse(q[0], q[1], 3.5, 2, 0, 0, 6.28); ctx.fill(); }
+      }
+      // Gischt
+      ctx.fillStyle = 'rgba(255,255,255,0.35)';
+      for (let k = 0; k < len; k += 0.25) { const f = k / len; if (((k * 13) | 0) % 3) continue; const q = I.p(A[0] + (B[0] - A[0]) * f + n[0] * 0.3, A[1] + (B[1] - A[1]) * f + n[1] * 0.3, 0); ctx.fillRect(q[0] - 2 + Math.sin(t * 3 + k * 5), q[1], 3, 1); }
+    }
   },
   makeGround(season) {
-    const c = document.createElement('canvas'); c.width = HK.SCENE.W * this.RS; c.height = HK.SCENE.H * this.RS; const g = c.getContext('2d'); g.scale(this.RS, this.RS);
-    const cx = HK.WORLD.COAST_X, cy = HK.WORLD.COAST_Y, ex = HK.WORLD.WALL_E + 0.6;
+    const c = document.createElement('canvas'); c.width = HK.MAP.W * this.RS; c.height = HK.MAP.H * this.RS; const g = c.getContext('2d'); g.scale(this.RS, this.RS);
     const poly = (pts, fill, stroke) => { g.beginPath(); pts.forEach((q, i) => { const s = I.p(q[0], q[1], 0); i ? g.lineTo(s[0], s[1]) : g.moveTo(s[0], s[1]); }); g.closePath(); g.fillStyle = fill; g.fill(); if (stroke) { g.strokeStyle = stroke; g.lineWidth = 0.8; g.stroke(); } };
+    const winter = season === 'winter';
     // Land
-    poly([[cx, -30, 0], [60, -30, 0], [60, cy + 0.4, 0], [cx, cy + 0.4, 0]], season === 'winter' ? this.pat.snow : this.pat.grass);
-    if (season !== 'winter') { for (let i = 0; i < 90; i++) { const x = cx + Math.random() * 40, y = -25 + Math.random() * 42; if (y > cy) continue; const s = I.p(x, y, 0); g.fillStyle = i % 3 ? 'rgba(40,80,25,0.18)' : 'rgba(200,220,120,0.16)'; g.beginPath(); g.ellipse(s[0], s[1], 8 + Math.random() * 22, 4 + Math.random() * 9, 0, 0, 6.28); g.fill(); } }
-    // Stadtboden
-    poly([[cx, 1.4, 0], [ex, 1.4, 0], [ex, cy + 0.4, 0], [cx, cy + 0.4, 0]], season === 'winter' ? this.pat.snow : this.pat.earth);
-    // Fischerdorf: festgetretener Sand
-    poly([[cx, -3.2, 0], [10.8, -3.2, 0], [10.8, 1.2, 0], [cx, 1.2, 0]], season === 'winter' ? this.pat.snow : '#c2b48c');
-    // Kaistreifen
-    poly([[cx, -3.2, 0], [cx + 0.5, -3.2, 0], [cx + 0.5, cy + 0.4, 0], [cx, cy + 0.4, 0]], this.pat.stone, 'rgba(0,0,0,0.3)');
-    poly([[cx, cy - 0.3, 0], [ex, cy - 0.3, 0], [ex, cy + 0.4, 0], [cx, cy + 0.4, 0]], this.pat.stone, 'rgba(0,0,0,0.3)');
+    poly(HK.LAND, winter ? this.pat.snow : this.pat.grass);
+    if (!winter) { for (let i = 0; i < 160; i++) { const x = 7 + Math.random() * 45, y = -30 + Math.random() * 50; if (this.isWater(x, y)) continue; const s = I.p(x, y, 0); g.fillStyle = i % 3 ? 'rgba(40,80,25,0.18)' : 'rgba(200,220,120,0.16)'; g.beginPath(); g.ellipse(s[0], s[1], 8 + Math.random() * 22, 4 + Math.random() * 9, 0, 0, 6.28); g.fill(); } }
+    // Sand (Fischerdorf, Strand)
+    for (const sa of HK.SAND) poly(sa, winter ? this.pat.snow : '#c2b48c');
+    // Stadtboden innerhalb der Mauer
+    poly(HK.TOWN, winter ? this.pat.snow : this.pat.earth);
+    // Kaistreifen entlang der gemauerten Kanten
+    for (const [A, B, n, quay] of this.coastEdges()) if (quay) poly([[A[0], A[1]], [B[0], B[1]], [B[0] - n[0] * 0.5, B[1] - n[1] * 0.5], [A[0] - n[0] * 0.5, A[1] - n[1] * 0.5]], this.pat.stone, 'rgba(0,0,0,0.3)');
     // Felder
-    for (const [fx, fy, fw, fd] of HK.FIELDS) { poly([[fx, fy, 0], [fx + fw, fy, 0], [fx + fw, fy + fd, 0], [fx, fy + fd, 0]], season === 'winter' ? '#d8dbe0' : this.pat.field, 'rgba(60,40,20,0.35)'); for (let k = 0.35; k < fd; k += 0.35) { const a = I.p(fx, fy + k, 0), b = I.p(fx + fw, fy + k, 0); g.strokeStyle = 'rgba(70,50,20,0.3)'; g.beginPath(); g.moveTo(a[0], a[1]); g.lineTo(b[0], b[1]); g.stroke(); } }
-    // Straßen
-    for (const [x1, y1, x2, y2, w] of HK.STREETS) { const pts = y1 === y2 ? [[x1, y1 - w / 2, 0], [x2, y1 - w / 2, 0], [x2, y1 + w / 2, 0], [x1, y1 + w / 2, 0]] : [[x1 - w / 2, y1, 0], [x1 + w / 2, y1, 0], [x1 + w / 2, y2, 0], [x1 - w / 2, y2, 0]]; const outside = x1 > HK.WORLD.WALL_E || x2 > HK.WORLD.WALL_E || y1 < 1.4 || y2 < 1.4; poly(pts, season === 'winter' ? '#cfd3d8' : (outside ? '#a89474' : this.pat.cobble), 'rgba(60,45,25,0.35)'); }
+    for (const [fx, fy, fw, fd] of HK.FIELDS) { poly([[fx, fy, 0], [fx + fw, fy, 0], [fx + fw, fy + fd, 0], [fx, fy + fd, 0]], winter ? '#d8dbe0' : this.pat.field, 'rgba(60,40,20,0.35)'); for (let k = 0.35; k < fd; k += 0.35) { const a = I.p(fx, fy + k, 0), b = I.p(fx + fw, fy + k, 0); g.strokeStyle = 'rgba(70,50,20,0.3)'; g.beginPath(); g.moveTo(a[0], a[1]); g.lineTo(b[0], b[1]); g.stroke(); } }
+    // Straßen in beliebiger Richtung: Rechteck um die Strecke
+    for (const [x1, y1, x2, y2, w] of HK.STREETS) { const dx = x2 - x1, dy = y2 - y1, len = Math.hypot(dx, dy) || 1, nx = -dy / len * w / 2, ny = dx / len * w / 2; const pts = [[x1 + nx, y1 + ny], [x2 + nx, y2 + ny], [x2 - nx, y2 - ny], [x1 - nx, y1 - ny]]; const outside = !this.inTown((x1 + x2) / 2, (y1 + y2) / 2); poly(pts, winter ? '#cfd3d8' : (outside ? '#a89474' : this.pat.cobble), 'rgba(60,45,25,0.35)'); }
     // Marktplatz
-    const m = HK.BUILDING.market; poly([[m.x, m.y, 0], [m.x + m.w, m.y, 0], [m.x + m.w, m.y + m.d, 0], [m.x, m.y + m.d, 0]], season === 'winter' ? '#d3d6da' : this.pat.cobble, 'rgba(60,45,25,0.4)');
+    const m = HK.BUILDING.market; poly([[m.x, m.y, 0], [m.x + m.w, m.y, 0], [m.x + m.w, m.y + m.d, 0], [m.x, m.y + m.d, 0]], winter ? '#d3d6da' : this.pat.cobble, 'rgba(60,45,25,0.4)');
     // Pfützen, Schmutz
-    for (let i = 0; i < 90; i++) { const x = 8 + Math.random() * 19, y = 2 + Math.random() * 16; const s = I.p(x, y, 0); g.fillStyle = 'rgba(70,55,30,0.12)'; g.beginPath(); g.ellipse(s[0], s[1], 5 + Math.random() * 10, 2 + Math.random() * 3, 0, 0, 6.28); g.fill(); }
+    for (let i = 0; i < 120; i++) { const x = 8 + Math.random() * 23, y = -2 + Math.random() * 20; if (!this.inTown(x, y)) continue; const s = I.p(x, y, 0); g.fillStyle = 'rgba(70,55,30,0.12)'; g.beginPath(); g.ellipse(s[0], s[1], 5 + Math.random() * 10, 2 + Math.random() * 3, 0, 0, 6.28); g.fill(); }
     this.ground = c;
   },
 

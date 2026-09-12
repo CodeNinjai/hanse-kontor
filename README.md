@@ -1,6 +1,6 @@
 # Hanse-Kontor
 
-Eine Wirtschaftssimulation für einen Spieler in **Sundhaven**, einer Hansestadt auf einer Halbinsel, anno 1372: Altstadt mit Markt und Kirche, Hafenviertel am Südkai, Handwerkerviertel mit Kloster und Spital im Osten, Fischerdorf vor der Nordmauer und Umland mit Galgen, Mühle und Feldern. Die Stadt ist eine isometrisch gezeichnete, belebte Szene: Koggen laufen an den Stegen ein, Karawanen lagern vor dem Tor, Bürger gehen ihren Wegen nach, die Windmühle dreht sich, nachts leuchten Fenster und Laternen, im Winter liegt Schnee auf den Dächern. Jedes Gebäude und jede Person lässt sich anklicken und öffnet ein eigenes Spielsystem: Handel, Betriebe, Besitz, Geldverleih, Politik, Kirche, Korruption.
+Eine Wirtschaftssimulation für einen Spieler in **Sundhaven**, einer Hansestadt auf einer Halbinsel, anno 1372: Altstadt mit Markt und Kirche, Neustadt hinter der alten Nordmauer, Hafenviertel am Südkai, Handwerkerviertel mit Kloster und Spital im Osten, Bollwerk im Südosten, Fischerdorf am Strand, ein Dorf im Umland und eine unregelmäßige Küste mit Buchten und Landzungen. Die Karte ist größer als der Bildausschnitt und lässt sich zoomen und verschieben. Die Stadt ist eine isometrisch gezeichnete, belebte Szene: Koggen laufen an den Stegen ein, Karawanen lagern vor dem Tor, Bürger gehen ihren Wegen nach, die Windmühle dreht sich, nachts leuchten Fenster und Laternen, im Winter liegt Schnee auf den Dächern. Jedes Gebäude und jede Person lässt sich anklicken und öffnet ein eigenes Spielsystem: Handel, Betriebe, Besitz, Geldverleih, Politik, Kirche, Korruption.
 
 Reines HTML, CSS und JavaScript ohne Build-Schritt: `index.html` öffnen und spielen. Oberfläche auf Deutsch und Englisch umschaltbar.
 
@@ -29,6 +29,8 @@ Reines HTML, CSS und JavaScript ohne Build-Schritt: `index.html` öffnen und spi
 | **Handwerkerviertel** | Zunfthaus (Beitritt, Lehrlinge, Ältermann-Titel) und zehn Betriebe: Bäckerei, Fleischerei, Böttcherei, Seilerei, Segelmacherei, Fischräucherei, Gerberei, Töpferei, Färberei, Spelunke – jeder mit Tageseinnahmen, Ausbaustufen und eigenen Nebenwirkungen |
 | **Kloster, Spital, Lateinschule** | Klosterladen mit Bier und Wachs, Reliquienstiftung, Skriptorium mit Handelsbriefen, Spitalstiftungen für Ruf und Frömmigkeit, Schulstiftungen für Einfluss |
 | **Fischerdorf vor der Mauer** | Fang direkt vom Strand kaufen |
+| **Neustadt** | Marstall, Kornspeicher, Stadtwaage mit Waagepacht, Goldschmied, Apotheke, Kapelle St. Gertrud (Schiffssegen), Herberge |
+| **Bollwerk** | Zeughaus mit Bürgermiliz, Holzhof, Lotsenhaus |
 
 Dazu Stadtereignisse (Hungersnot, Pest, Brand, Vitalienbrüder, Sturm, Jahrmarkt, Sonderabgabe), Kirchenfeste mit Nachfragespitzen, drei Konkurrenten, Ränge, Autosave im Browser sowie Export und Import als JSON.
 

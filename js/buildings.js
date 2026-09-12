@@ -84,6 +84,10 @@ Object.assign(HK.Scene, {
       case 'pot': ctx.fillStyle = '#b06a3a'; ctx.beginPath(); ctx.moveTo(-2, -1.5); ctx.lineTo(2, -1.5); ctx.lineTo(1.4, 2.4); ctx.lineTo(-1.4, 2.4); ctx.fill(); ctx.fillRect(-2.4, -2.4, 4.8, 1); break;
       case 'book': ctx.fillStyle = '#7a2a2a'; ctx.fillRect(-2.6, -2, 5.2, 4); ctx.fillStyle = '#f4ead6'; ctx.fillRect(-2.1, -1.5, 2, 3); ctx.fillRect(0.2, -1.5, 2, 3); break;
       case 'cross': ctx.fillStyle = '#c8102e'; ctx.fillRect(-0.7, -2.6, 1.4, 5.2); ctx.fillRect(-2.4, -0.7, 4.8, 1.4); break;
+      case 'scale': ctx.strokeStyle = '#3a2a1a'; ctx.lineWidth = 0.9; ctx.beginPath(); ctx.moveTo(0, -2.6); ctx.lineTo(0, 2.4); ctx.moveTo(-2.6, -1.4); ctx.lineTo(2.6, -1.4); ctx.moveTo(-2.6, -1.4); ctx.lineTo(-2.6, 0.6); ctx.moveTo(2.6, -1.4); ctx.lineTo(2.6, 0.6); ctx.stroke(); ctx.fillStyle = '#c9a24a'; ctx.beginPath(); ctx.ellipse(-2.6, 1, 1.4, 0.7, 0, 0, 6.28); ctx.ellipse(2.6, 1, 1.4, 0.7, 0, 0, 6.28); ctx.fill(); break;
+      case 'ring': ctx.strokeStyle = '#e0b040'; ctx.lineWidth = 1.4; ctx.beginPath(); ctx.arc(0, 0.4, 2.1, 0, 6.28); ctx.stroke(); ctx.fillStyle = '#c23b3b'; ctx.beginPath(); ctx.arc(0, -2, 1.1, 0, 6.28); ctx.fill(); break;
+      case 'mortar': ctx.fillStyle = '#7d766a'; ctx.beginPath(); ctx.moveTo(-2.4, -0.4); ctx.lineTo(2.4, -0.4); ctx.lineTo(1.6, 2.4); ctx.lineTo(-1.6, 2.4); ctx.fill(); ctx.strokeStyle = '#5a4a3a'; ctx.lineWidth = 1.2; ctx.beginPath(); ctx.moveTo(0.4, -0.6); ctx.lineTo(2.2, -2.8); ctx.stroke(); break;
+      case 'anchor': ctx.strokeStyle = '#2a3a6b'; ctx.lineWidth = 1.1; ctx.beginPath(); ctx.moveTo(0, -2.6); ctx.lineTo(0, 2.2); ctx.moveTo(-2, -1.2); ctx.lineTo(2, -1.2); ctx.moveTo(-2.4, 0.8); ctx.quadraticCurveTo(0, 3.2, 2.4, 0.8); ctx.stroke(); ctx.beginPath(); ctx.arc(0, -3.1, 0.8, 0, 6.28); ctx.stroke(); break;
       default: ctx.fillStyle = '#e0b040'; ctx.beginPath(); ctx.arc(0, 0, 2.2, 0, 6.28); ctx.fill();
     }
     ctx.restore();
@@ -99,7 +103,7 @@ Object.assign(HK.Scene, {
     // Ecktürmchen
     const tx = b.x + b.w - 0.02, ty = b.y + 0.02;
     I.cylinder(ctx, tx, ty, b.h * 0.45, 0.2, b.h * 0.7, '#a24a3a', { brick: true, noTop: true }); I.cone(ctx, tx, ty, b.h * 1.15, 0.24, 0.5, season === 'winter' ? '#e6eaee' : '#3a3038');
-    if (b.banner) { const p = I.p(b.x + b.w, b.y + b.d * 0.5, b.h * 0.85); ctx.fillStyle = b.banner === 'green' ? '#2a6a3a' : '#6a2a8a'; ctx.fillRect(p[0] - 3, p[1], 7, 18); ctx.fillStyle = '#e0b040'; ctx.fillRect(p[0] - 1, p[1] + 4, 3, 3); ctx.fillStyle = '#3a2a1a'; ctx.fillRect(p[0] - 5, p[1] - 1, 11, 1.5); }
+    if (b.banner) { const p = I.p(b.x + b.w, b.y + b.d * 0.5, b.h * 0.85); ctx.fillStyle = b.banner === 'green' ? '#2a6a3a' : b.banner === 'red' ? '#8f2a24' : '#6a2a8a'; ctx.fillRect(p[0] - 3, p[1], 7, 18); ctx.fillStyle = '#e0b040'; ctx.fillRect(p[0] - 1, p[1] + 4, 3, 3); ctx.fillStyle = '#3a2a1a'; ctx.fillRect(p[0] - 5, p[1] - 1, 11, 1.5); }
     if (b.id === 'bailiff') { const p = I.p(b.x + b.w, b.y + b.d * 0.5, 0.9); this.lamps.push([p[0] + 3, p[1]]); ctx.fillStyle = '#3a2a1a'; ctx.fillRect(p[0] + 2, p[1] - 6, 1.5, 7); }
   },
   drawTownhall(ctx, b, st, season, sv) {
@@ -252,6 +256,33 @@ Object.assign(HK.Scene, {
     I.box(ctx, b.x + 0.2, yy + 0.12, 0, 0.7, 0.18, 0.18, { wall: '#7a5a3a', top: '#a08a5a' });
     if (!this.picking) { const p1 = I.p(b.x + 0.45, yy + 0.32, 0); this.drawPerson(ctx, p1[0], p1[1], '#8a8a7a', 'beggar', 1, false, '#d9a98a', 0, 1, null, null, 0.8); }
   },
+  /* Marstall: langes niedriges Stallgebäude mit offener Front, Pferde davor */
+  drawStable(ctx, b, st, season, sv) {
+    this.drawHouse(ctx, Object.assign({}, b, { wall: '#c9b48a', roof: '#9a8352', noWindowsUpper: true }), st, season, sv, false);
+    const yy = b.y + b.d;
+    for (let u = 0.35; u < b.w - 0.2; u += 0.55) I.poly(ctx, [[b.x + u - 0.18, yy + 0.005, 0.12], [b.x + u + 0.18, yy + 0.005, 0.12], [b.x + u + 0.18, yy + 0.005, 0.5], [b.x + u - 0.18, yy + 0.005, 0.5]], '#2a1c10', 'rgba(20,10,5,0.5)', 0.5);
+    for (const [hx, hy, col] of [[b.x + 0.4, yy + 0.35, '#5a3a22'], [b.x + 1.3, yy + 0.3, '#8a6a4a']]) { const p = I.p(hx, hy, 0); ctx.fillStyle = 'rgba(0,0,0,0.2)'; ctx.beginPath(); ctx.ellipse(p[0], p[1] + 1, 9, 3, 0, 0, 6.28); ctx.fill(); ctx.fillStyle = col; ctx.beginPath(); ctx.ellipse(p[0], p[1] - 7, 8, 4.5, 0, 0, 6.28); ctx.fill(); ctx.fillRect(p[0] - 6, p[1] - 6, 2, 6); ctx.fillRect(p[0] + 4, p[1] - 6, 2, 6); ctx.beginPath(); ctx.moveTo(p[0] + 6, p[1] - 9); ctx.lineTo(p[0] + 11, p[1] - 14); ctx.lineTo(p[0] + 13, p[1] - 9); ctx.lineTo(p[0] + 9, p[1] - 7); ctx.fill(); ctx.strokeStyle = col; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.moveTo(p[0] - 8, p[1] - 8); ctx.lineTo(p[0] - 11, p[1] - 2); ctx.stroke(); }
+    for (let u = 0; u <= b.w; u += 0.25) I.line(ctx, [b.x + u, yy + 0.6, 0], [b.x + u, yy + 0.6, 0.2], '#6a4a2a', 1); I.line(ctx, [b.x, yy + 0.6, 0.16], [b.x + b.w, yy + 0.6, 0.16], '#6a4a2a', 1);
+  },
+  /* Holzhof: Stapel aus Stämmen und Brettern, Sägebock */
+  drawTimberyard(ctx, b, st, season, sv) {
+    I.poly(ctx, [[b.x, b.y, 0], [b.x + b.w, b.y, 0], [b.x + b.w, b.y + b.d, 0], [b.x, b.y + b.d, 0]], 'rgba(90,70,40,0.25)', 'rgba(60,40,20,0.3)');
+    for (let u = 0; u <= b.w; u += 0.2) I.line(ctx, [b.x + u, b.y + b.d, 0], [b.x + u, b.y + b.d, 0.2], '#6a4a2a', 1); I.line(ctx, [b.x, b.y + b.d, 0.16], [b.x + b.w, b.y + b.d, 0.16], '#6a4a2a', 1);
+    const logs = (lx, ly, n, len) => { for (let r = 0; r < 3; r++) for (let i = 0; i < n - r; i++) { const y = ly + i * 0.14 + r * 0.07, z = r * 0.12; I.line(ctx, [lx, y, z + 0.07], [lx + len, y, z + 0.07], '#7a5a34', 3.2); const e = I.p(lx + len, y, z + 0.07); ctx.fillStyle = '#c9a878'; ctx.beginPath(); ctx.ellipse(e[0], e[1], 1.8, 2.2, 0, 0, 6.28); ctx.fill(); } };
+    logs(b.x + 0.1, b.y + 0.1, 4, 0.7); logs(b.x + 0.1, b.y + 0.6, 3, 0.5);
+    for (let i = 0; i < 5; i++) I.box(ctx, b.x + 0.9, b.y + 0.15, i * 0.05, 0.35, 0.6, 0.05, { wall: '#9a7a4a', top: '#b89a62' });
+    I.line(ctx, [b.x + 0.95, b.y + 0.85, 0], [b.x + 1.15, b.y + 0.85, 0.35], '#4a3320', 1.5); I.line(ctx, [b.x + 1.15, b.y + 0.85, 0.35], [b.x + 1.35, b.y + 0.85, 0], '#4a3320', 1.5);
+  },
+  /* Kapelle: kleiner Backsteinbau mit Chorfenster, Dachreiter, Kreuz */
+  drawChapel(ctx, b, st, season, sv) {
+    this.drawHouse(ctx, Object.assign({}, b, { brick: true, roof: '#4e4650' }), st, season, sv, true);
+    const rh = Math.min(b.w, b.d) * 0.62 + 0.12;
+    I.windowR(ctx, b.x, b.w, b.y, 0.3, b.d * 0.5, 0.22, 0.7, { arch: true, frame: '#3a2a20' });
+    const cx = b.x + b.w * 0.3, cy = b.y + b.d * 0.5;
+    I.box(ctx, cx - 0.1, cy - 0.1, b.h + rh * 0.6, 0.2, 0.2, 0.35, { wall: '#5a4a44' }, { noTop: true }); I.pyramid(ctx, cx - 0.13, cy - 0.13, b.h + rh * 0.6 + 0.35, 0.26, 0.26, 0.4, season === 'winter' ? '#e6eaee' : '#3a3038');
+    const cp = I.p(cx, cy, b.h + rh * 0.6 + 0.75); ctx.strokeStyle = '#e0b040'; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.moveTo(cp[0], cp[1]); ctx.lineTo(cp[0], cp[1] - 8); ctx.moveTo(cp[0] - 2.5, cp[1] - 5.5); ctx.lineTo(cp[0] + 2.5, cp[1] - 5.5); ctx.stroke();
+    if (this.light() < 0.6) { const lp = I.p(b.x + b.w + 0.05, b.y + b.d * 0.5, 0.9); this.lamps.push([lp[0], lp[1]]); }
+  },
   drawGate(ctx, b, st, season, sv) {
     I.shadow(ctx, b.x, b.y, b.w, b.d, b.h, sv.v, sv.a);
     I.box(ctx, b.x, b.y, 0, b.w, b.d, b.h, { wall: '#736d63' }, { stroke: 'rgba(0,0,0,0)', noTop: true }); this.masonry(ctx, true, true, b.x, b.y, b.w, b.d, 0, b.h);
@@ -276,18 +307,49 @@ Object.assign(HK.Scene, {
     if (faceL) I.poly(ctx, [[x, y + d, z0], [x + w, y + d, z0], [x + w, y + d, z0 + 0.22], [x, y + d, z0 + 0.22]], 'rgba(20,20,15,0.22)');
     if (faceR) I.poly(ctx, [[x + w, y, z0], [x + w, y + d, z0], [x + w, y + d, z0 + 0.22], [x + w, y, z0 + 0.22]], 'rgba(20,20,15,0.26)');
   },
+  /* Prisma über beliebigem konvexen Viereck (Weltkoordinaten): sichtbare Seiten nach Tiefe, dann Deckel.
+     Schattierung nach Ausrichtung der Fläche (nach +y hell, nach +x dunkler). */
+  prism(ctx, base, z0, h, col, o) {
+    o = o || {}; let area = 0; for (let i = 0; i < 4; i++) { const a = base[i], b = base[(i + 1) % 4]; area += a[0] * b[1] - b[0] * a[1]; }
+    const sgn = area > 0 ? 1 : -1, faces = [];
+    for (let i = 0; i < 4; i++) { const a = base[i], b = base[(i + 1) % 4]; const dx = b[0] - a[0], dy = b[1] - a[1], len = Math.hypot(dx, dy) || 1; const n = [sgn * dy / len, -sgn * dx / len]; if (n[0] + n[1] <= 0.02) continue; const f = (n[1] - n[0] + 1) / 2; faces.push({ a, b, n, k: 0.74 + 0.26 * f, depth: (a[0] + a[1] + b[0] + b[1]) / 2 }); }
+    faces.sort((p, q) => p.depth - q.depth);
+    for (const f of faces) { I.poly(ctx, [[f.a[0], f.a[1], z0], [f.b[0], f.b[1], z0], [f.b[0], f.b[1], z0 + h], [f.a[0], f.a[1], z0 + h]], I.shade(col.wall, f.k), o.stroke || 'rgba(0,0,0,0)'); if (o.masonry) this.masonryFace(ctx, f.a, f.b, z0, h); }
+    if (!o.noTop) I.poly(ctx, base.map(q => [q[0], q[1], z0 + h]), I.shade(col.top || col.wall, 1.08), o.stroke || 'rgba(0,0,0,0)');
+    return faces;
+  },
+  masonryFace(ctx, a, b, z0, h) {
+    const course = 0.13, len = Math.hypot(b[0] - a[0], b[1] - a[1]); let row = 0;
+    for (let z = z0 + course; z < z0 + h; z += course, row++) { I.line(ctx, [a[0], a[1], z], [b[0], b[1], z], 'rgba(0,0,0,0.28)', 0.6); I.line(ctx, [a[0], a[1], z + 0.02], [b[0], b[1], z + 0.02], 'rgba(255,255,255,0.07)', 0.6); for (let u = (row % 2) * 0.17; u < len; u += 0.34) { const f = u / len; I.line(ctx, [a[0] + (b[0] - a[0]) * f, a[1] + (b[1] - a[1]) * f, z - course], [a[0] + (b[0] - a[0]) * f, a[1] + (b[1] - a[1]) * f, z], 'rgba(0,0,0,0.22)', 0.6); } }
+    I.poly(ctx, [[a[0], a[1], z0], [b[0], b[1], z0], [b[0], b[1], z0 + 0.22], [a[0], a[1], z0 + 0.22]], 'rgba(20,20,15,0.22)');
+  },
+  /* Stadtmauer entlang HK.WALL: Stücke von höchstens 2,2 Einheiten, Tore als Lücken, Türme an Knicken und Toren */
   wallSegments() {
-    const segs = [], W = HK.WORLD, t = 0.6, h = 1.35, stone = { wall: '#736d63', top: '#8a847a' }, ns = { stroke: 'rgba(0,0,0,0)' };
-    const parapet = (ctx, x, y, w, d, along) => {
-      // Wehrgang: Brüstung mit Zinnen an der sichtbaren Außenkante
-      const L = along ? w : d, ph = 0.12, mh = 0.34, mw = 0.24, gap = 0.16;
-      if (along) { I.box(ctx, x, y + d - 0.16, h, w, 0.16, ph, stone, ns); for (let u = 0.04; u + mw <= L; u += mw + gap) I.box(ctx, x + u, y + d - 0.16, h + ph, mw, 0.16, mh, stone, { stroke: 'rgba(0,0,0,0.35)' }); I.box(ctx, x, y, h, w, 0.14, ph + 0.1, stone, ns); }
-      else { I.box(ctx, x + w - 0.16, y, h, 0.16, d, ph, stone, ns); for (let v = 0.04; v + mw <= L; v += mw + gap) I.box(ctx, x + w - 0.16, y + v, h + ph, 0.16, mw, mh, stone, { stroke: 'rgba(0,0,0,0.35)' }); I.box(ctx, x, y, h, 0.14, d, ph + 0.1, stone, ns); }
+    const segs = [], Wd = HK.WALL, t = Wd.t, h = Wd.h, stone = { wall: '#736d63', top: '#7d776c' };
+    const piece = (a, b, dir, nOut) => {
+      const base = [[a[0] + nOut[0] * t / 2, a[1] + nOut[1] * t / 2], [b[0] + nOut[0] * t / 2, b[1] + nOut[1] * t / 2], [b[0] - nOut[0] * t / 2, b[1] - nOut[1] * t / 2], [a[0] - nOut[0] * t / 2, a[1] - nOut[1] * t / 2]];
+      const k = Math.max(...base.map(q => q[0] + q[1]));
+      segs.push({ k, f: (ctx) => {
+        this.prism(ctx, base, 0, h, stone, { masonry: true });
+        // Wehrgang: Brüstung mit Zinnen an der sichtbaren Längskante, niedrige Brüstung an der anderen
+        const visOut = nOut[0] + nOut[1] > 0.02, nIn = [-nOut[0], -nOut[1]], nz = visOut ? nOut : nIn;
+        const edgeA = [a[0] + nz[0] * (t / 2 - 0.08), a[1] + nz[1] * (t / 2 - 0.08)], edgeB = [b[0] + nz[0] * (t / 2 - 0.08), b[1] + nz[1] * (t / 2 - 0.08)];
+        const other = [[a[0] - nz[0] * (t / 2 - 0.07), a[1] - nz[1] * (t / 2 - 0.07)], [b[0] - nz[0] * (t / 2 - 0.07), b[1] - nz[1] * (t / 2 - 0.07)]];
+        const quad = (p, q, w) => [[p[0] + nz[0] * w, p[1] + nz[1] * w], [q[0] + nz[0] * w, q[1] + nz[1] * w], [q[0] - nz[0] * w, q[1] - nz[1] * w], [p[0] - nz[0] * w, p[1] - nz[1] * w]];
+        this.prism(ctx, quad(edgeA, edgeB, 0.08), h, 0.12, stone, {}); this.prism(ctx, quad(other[0], other[1], 0.07), h, 0.22, stone, {});
+        const len = Math.hypot(b[0] - a[0], b[1] - a[1]);
+        for (let u = 0.05; u + 0.24 <= len; u += 0.4) { const f0 = u / len, f1 = (u + 0.24) / len; const p = [edgeA[0] + (edgeB[0] - edgeA[0]) * f0, edgeA[1] + (edgeB[1] - edgeA[1]) * f0], q = [edgeA[0] + (edgeB[0] - edgeA[0]) * f1, edgeA[1] + (edgeB[1] - edgeA[1]) * f1]; this.prism(ctx, quad(p, q, 0.08), h + 0.12, 0.34, { wall: '#736d63', top: '#8a847a' }, { stroke: 'rgba(0,0,0,0.35)' }); }
+      } });
     };
-    const seg = (x, y, w, d, k) => segs.push({ k, f: (ctx, sv) => { I.box(ctx, x, y, 0, w, d, h, stone, ns); this.masonry(ctx, true, true, x, y, w, d, 0, h); I.poly(ctx, [[x, y, h], [x + w, y, h], [x + w, y + d, h], [x, y + d, h]], '#7d776c'); parapet(ctx, x, y, w, d, w > d); } });
-    for (let x = W.COAST_X + 0.5; x < W.WALL_E; x += 2) { const x1 = Math.min(x + 2, W.WALL_E); if (x < 15.3 && x1 > 15.7) { seg(x, W.WALL_N - t, 15.3 - x, t, x + 2 + W.WALL_N); seg(15.7, W.WALL_N - t, x1 - 15.7, t, x + 2 + W.WALL_N); } else seg(x, W.WALL_N - t, x1 - x, t, x + 2 + W.WALL_N); }
-    segs.push({ k: 15.5 + W.WALL_N + 2, f: (ctx) => { I.box(ctx, 15.25, W.WALL_N - t - 0.1, 0, 0.5, t + 0.2, h + 0.7, stone, ns); this.masonry(ctx, true, true, 15.25, W.WALL_N - t - 0.1, 0.5, t + 0.2, 0, h + 0.7); I.poly(ctx, [[15.32, W.WALL_N + 0.1, 0], [15.68, W.WALL_N + 0.1, 0], [15.68, W.WALL_N + 0.1, 0.7], [15.5, W.WALL_N + 0.1, 0.95], [15.32, W.WALL_N + 0.1, 0.7]], '#1e1a18'); I.pyramid(ctx, 15.2, W.WALL_N - t - 0.15, h + 0.7, 0.6, t + 0.3, 0.55, '#3a3038'); } });
-    for (const [ya, yb] of [[W.WALL_N, 9.3], [10.7, W.COAST_Y]]) for (let y = ya; y < yb; y += 2) { const y1 = Math.min(y + 2, yb); seg(W.WALL_E, y, t, y1 - y, W.WALL_E + t + y1); }
+    for (let i = 0; i < Wd.pts.length - 1; i++) {
+      const A = Wd.pts[i], B = Wd.pts[i + 1], dx = B[0] - A[0], dy = B[1] - A[1], len = Math.hypot(dx, dy), dir = [dx / len, dy / len];
+      const nOut = [dir[1], -dir[0]]; // Stadt liegt rechts der Laufrichtung, außen ist links
+      const gates = Wd.gates.filter(g => g.seg === i).map(g => { const along = Math.abs(dir[0]) > Math.abs(dir[1]) ? (g.at - A[0]) / dir[0] : (g.at - A[1]) / dir[1]; return [along - g.w / 2, along + g.w / 2]; }).sort((p, q) => p[0] - q[0]);
+      const ranges = []; let s0 = 0; for (const [g0, g1] of gates) { ranges.push([s0, g0]); s0 = g1; } ranges.push([s0, len]);
+      for (const [r0, r1] of ranges) for (let u = r0; u < r1 - 0.01; u += 2.2) { const u1 = Math.min(u + 2.2, r1); piece([A[0] + dir[0] * u, A[1] + dir[1] * u], [A[0] + dir[0] * u1, A[1] + dir[1] * u1], dir, nOut); }
+    }
+    // Nordtor: Torhaus mit Durchfahrt und Zeltdach
+    segs.push({ k: 15.5 - 2.4 + 2.6, f: (ctx) => { const gx = 15.05, gy = -2.4 - t / 2 - 0.1, gw = 0.9, gd = t + 0.2; I.box(ctx, gx, gy, 0, gw, gd, h + 0.7, stone, { stroke: 'rgba(0,0,0,0)', noTop: true }); this.masonry(ctx, true, true, gx, gy, gw, gd, 0, h + 0.7); I.poly(ctx, [[15.3, gy + gd + 0.005, 0], [15.7, gy + gd + 0.005, 0], [15.7, gy + gd + 0.005, 0.7], [15.5, gy + gd + 0.005, 0.95], [15.3, gy + gd + 0.005, 0.7]], '#1e1a18'); I.pyramid(ctx, gx - 0.05, gy - 0.05, h + 0.7, gw + 0.1, gd + 0.1, 0.55, '#3a3038'); } });
     // Türme: Mauerwerk, Schießscharten, Kragsteinkranz, Zinnen, Kegeldach
     const tower = (cx, cy, r, hh, k) => segs.push({ k, f: (ctx, sv) => {
       I.cylinder(ctx, cx, cy, 0, r, hh, '#736d63', { noTop: true });
@@ -300,11 +362,7 @@ Object.assign(HK.Scene, {
       const T = I.p(cx, cy, hh + 1.57), B = I.p(cx, cy, hh + 0.42); ctx.strokeStyle = 'rgba(0,0,0,0.3)'; ctx.lineWidth = 0.6; for (let a = 0.2; a < Math.PI; a += 0.5) { ctx.beginPath(); ctx.moveTo(T[0], T[1]); ctx.lineTo(B[0] + Math.cos(a) * (r + 0.02) * I.TW, B[1] + Math.sin(a) * (r + 0.02) * I.TH); ctx.stroke(); }
       I.line(ctx, [cx, cy, hh + 1.57], [cx, cy, hh + 2.05], '#3a2a1a', 1.2); this.pennant(ctx, cx, cy, hh + 2.05, 0.5, 0.22, ['#c8102e'], true);
     } });
-    tower(W.WALL_E + 0.3, W.WALL_N - 0.3, 0.62, 2.3, W.WALL_E + W.WALL_N + 1.3);
-    tower(W.WALL_E + 0.3, W.COAST_Y + 0.1, 0.62, 2.3, W.WALL_E + W.COAST_Y + 1.3);
-    tower(W.COAST_X + 0.6, W.WALL_N - 0.3, 0.5, 2.0, W.COAST_X + W.WALL_N + 1.0);
-    tower(15.0, W.WALL_N - 0.3, 0.42, 1.9, 15 + W.WALL_N + 1); tower(16.0, W.WALL_N - 0.3, 0.42, 1.9, 16 + W.WALL_N + 1);
-    tower(W.WALL_E + 0.3, 6.0, 0.5, 2.0, W.WALL_E + 6.0 + 1.1); tower(W.WALL_E + 0.3, 13.5, 0.5, 2.0, W.WALL_E + 13.5 + 1.1);
+    for (const [cx, cy, r, hh] of Wd.towers) tower(cx, cy, r, hh, cx + cy + r + 0.6);
     return segs;
   },
   drawMole(ctx, sv) {
@@ -333,7 +391,7 @@ Object.assign(HK.Scene, {
     for (let k = 0; k < 4; k++) { const a = a0 + k * Math.PI / 2; const ex = hub[0] + Math.cos(a) * 30, ey = hub[1] + Math.sin(a) * 30 * 0.8; ctx.strokeStyle = '#3a2a1a'; ctx.lineWidth = 1.6; ctx.beginPath(); ctx.moveTo(hub[0], hub[1]); ctx.lineTo(ex, ey); ctx.stroke(); ctx.fillStyle = 'rgba(240,232,210,0.9)'; ctx.beginPath(); ctx.moveTo(hub[0] + Math.cos(a) * 8, hub[1] + Math.sin(a) * 6.4); ctx.lineTo(ex, ey); ctx.lineTo(ex + Math.cos(a + 1.57) * 7, ey + Math.sin(a + 1.57) * 5.6); ctx.lineTo(hub[0] + Math.cos(a) * 8 + Math.cos(a + 1.57) * 7, hub[1] + Math.sin(a) * 6.4 + Math.sin(a + 1.57) * 5.6); ctx.fill(); ctx.strokeStyle = 'rgba(60,40,20,0.5)'; ctx.lineWidth = 0.6; ctx.stroke(); }
     ctx.fillStyle = '#3a2a1a'; ctx.beginPath(); ctx.arc(hub[0], hub[1], 2.5, 0, 6.28); ctx.fill();
   },
-  drawFarm(ctx, season, sv) { const f = HK.FARM; this.drawHouse(ctx, { x: f.x, y: f.y, w: f.w, d: f.d, h: f.h, wall: '#d8c9a6', roof: '#9a8352' }, HK.state, season, sv, false); for (let u = 0; u < 1.6; u += 0.18) I.line(ctx, [f.x - 0.4 + u, f.y + f.d + 0.5, 0], [f.x - 0.4 + u, f.y + f.d + 0.5, 0.2], '#6a4a2a', 1); I.line(ctx, [f.x - 0.4, f.y + f.d + 0.5, 0.15], [f.x + 1.2, f.y + f.d + 0.5, 0.15], '#6a4a2a', 1); for (const [sx, sy] of [[f.x + 0.2, f.y + f.d + 0.25], [f.x + 0.6, f.y + f.d + 0.3], [f.x + 1.0, f.y + f.d + 0.2]]) { const p = I.p(sx, sy, 0); ctx.fillStyle = '#f0ece0'; ctx.beginPath(); ctx.ellipse(p[0], p[1] - 2, 3.5, 2.5, 0, 0, 6.28); ctx.fill(); ctx.fillStyle = '#3a3030'; ctx.fillRect(p[0] + 2.5, p[1] - 3.5, 2, 2); } },
+  drawFarm(ctx, season, sv, farm) { const f = farm || HK.FARM; this.drawHouse(ctx, { x: f.x, y: f.y, w: f.w, d: f.d, h: f.h || 0.85, wall: farm ? '#cdbf98' : '#d8c9a6', roof: '#9a8352', thatchLine: true }, HK.state, season, sv, false); for (let u = 0; u < 1.6; u += 0.18) I.line(ctx, [f.x - 0.4 + u, f.y + f.d + 0.5, 0], [f.x - 0.4 + u, f.y + f.d + 0.5, 0.2], '#6a4a2a', 1); I.line(ctx, [f.x - 0.4, f.y + f.d + 0.5, 0.15], [f.x + 1.2, f.y + f.d + 0.5, 0.15], '#6a4a2a', 1); for (const [sx, sy] of [[f.x + 0.2, f.y + f.d + 0.25], [f.x + 0.6, f.y + f.d + 0.3], [f.x + 1.0, f.y + f.d + 0.2]]) { const p = I.p(sx, sy, 0); ctx.fillStyle = '#f0ece0'; ctx.beginPath(); ctx.ellipse(p[0], p[1] - 2, 3.5, 2.5, 0, 0, 6.28); ctx.fill(); ctx.fillStyle = '#3a3030'; ctx.fillRect(p[0] + 2.5, p[1] - 3.5, 2, 2); } },
   drawPier(ctx, p, t) {
     const w = 0.5, x0 = p.x - w / 2, last = p.y1 >= p.full.y1 - 0.01;
     for (let y = p.y0 + 0.3; y < p.y1; y += 0.35) { I.line(ctx, [x0 + 0.05, y, -0.3], [x0 + 0.05, y, 0.2], '#4a3320', 2); I.line(ctx, [x0 + w - 0.05, y, -0.3], [x0 + w - 0.05, y, 0.2], '#3a2a1a', 2); }
@@ -383,6 +441,8 @@ Object.assign(HK.Scene, {
       case 'tollbar': { I.line(ctx, [p.x, p.y - 0.55, 0], [p.x, p.y - 0.55, 0.6], '#4a3a2a', 2); I.line(ctx, [p.x, p.y + 0.55, 0], [p.x, p.y + 0.55, 0.6], '#4a3a2a', 2); const up = HK.state && HK.state.caravans.length ? 0.9 : 0; I.line(ctx, [p.x, p.y - 0.55, 0.5], [p.x, p.y + 0.55, 0.5 + up], '#c8102e', 2.2); for (let k = 0.15; k < 1.0; k += 0.3) I.line(ctx, [p.x, p.y - 0.55 + k, 0.5 + up * k / 1.1], [p.x, p.y - 0.55 + k + 0.15, 0.5 + up * (k + 0.15) / 1.1], '#f0ece0', 2.2); I.box(ctx, p.x - 0.2, p.y - 0.85, 0, 0.35, 0.3, 0.35, { wall: '#7a5a3a' }, { noTop: true }); I.pyramid(ctx, p.x - 0.2, p.y - 0.85, 0.35, 0.35, 0.3, 0.2, '#5a4a3a'); break; }
       case 'boatup': { I.poly(ctx, [[p.x, p.y, 0], [p.x + 0.85, p.y - 0.05, 0], [p.x + 0.8, p.y + 0.25, 0.14], [p.x + 0.05, p.y + 0.3, 0.14]], '#4a3018', 'rgba(0,0,0,0.4)'); for (let k = 0.1; k < 0.8; k += 0.15) I.line(ctx, [p.x + k, p.y + 0.02, 0.02], [p.x + k, p.y + 0.27, 0.13], 'rgba(0,0,0,0.3)', 0.5); I.line(ctx, [p.x + 0.9, p.y + 0.35, 0], [p.x + 1.05, p.y + 0.35, 0.8], '#4a3a2a', 1.6); for (let k = 0; k < 6; k++) I.line(ctx, [p.x + 0.92 + k * 0.02, p.y + 0.35 + k * 0.05, 0.1 + k * 0.1], [p.x + 0.7, p.y + 0.45 + k * 0.06, 0], 'rgba(90,80,60,0.6)', 0.5); break; }
       case 'fishracks': { for (const u of [0, 0.5, 1.0]) I.line(ctx, [p.x + u, p.y, 0], [p.x + u, p.y, 0.6], '#4a3a2a', 1.3); I.line(ctx, [p.x, p.y, 0.58], [p.x + 1.0, p.y, 0.58], '#4a3a2a', 1); I.line(ctx, [p.x, p.y, 0.38], [p.x + 1.0, p.y, 0.38], '#4a3a2a', 1); for (let k = 0.06; k < 1.0; k += 0.11) { I.line(ctx, [p.x + k, p.y, 0.58], [p.x + k, p.y, 0.44], '#9fb3c8', 1.4); I.line(ctx, [p.x + k + 0.05, p.y, 0.38], [p.x + k + 0.05, p.y, 0.24], '#7d93a8', 1.4); } break; }
+      case 'logs': { for (let r = 0; r < 3; r++) for (let i = 0; i < 4 - r; i++) { const y = p.y + i * 0.14 + r * 0.07, z = r * 0.12; I.line(ctx, [p.x, y, z + 0.07], [p.x + 0.8, y, z + 0.07], '#7a5a34', 3.2); const e = I.p(p.x + 0.8, y, z + 0.07); ctx.fillStyle = '#c9a878'; ctx.beginPath(); ctx.ellipse(e[0], e[1], 1.8, 2.2, 0, 0, 6.28); ctx.fill(); } break; }
+      case 'shrine': { I.box(ctx, p.x - 0.12, p.y - 0.12, 0, 0.24, 0.24, 0.9, { wall: '#8f887a', top: '#a9a292' }); I.box(ctx, p.x - 0.16, p.y - 0.16, 0.9, 0.32, 0.32, 0.25, { wall: '#7d766a' }, { noTop: true }); I.pyramid(ctx, p.x - 0.2, p.y - 0.2, 1.15, 0.4, 0.4, 0.22, '#3a3038'); const q = I.p(p.x + 0.16, p.y + 0.06, 1.02); ctx.fillStyle = '#c9a24a'; ctx.fillRect(q[0] - 1, q[1] - 2, 2, 3); if (!this.picking) { ctx.fillStyle = 'rgba(255,180,80,0.8)'; ctx.fillRect(q[0] - 0.6, q[1] + 2, 1.2, 1.2); } break; }
       case 'cross': { I.line(ctx, [p.x, p.y, 0], [p.x, p.y, 0.9], '#5a5048', 2.4); I.line(ctx, [p.x - 0.15, p.y, 0.7], [p.x + 0.15, p.y, 0.7], '#5a5048', 2.4); break; }
       case 'laundry': { const a = I.p(p.x, p.y, 0.6), b = I.p(p.x + 1.1, p.y, 0.6); I.line(ctx, [p.x, p.y, 0], [p.x, p.y, 0.65], '#4a3320', 1.2); I.line(ctx, [p.x + 1.1, p.y, 0], [p.x + 1.1, p.y, 0.65], '#4a3320', 1.2); ctx.strokeStyle = '#333'; ctx.lineWidth = 0.7; ctx.beginPath(); ctx.moveTo(a[0], a[1]); ctx.quadraticCurveTo((a[0] + b[0]) / 2, (a[1] + b[1]) / 2 + 3, b[0], b[1]); ctx.stroke(); ['#e8e0c8', '#7a3a3a', '#3a5a7a', '#e8e0c8'].forEach((c, i) => { const t = 0.18 + i * 0.2, lx = a[0] + (b[0] - a[0]) * t, ly = a[1] + (b[1] - a[1]) * t + 2, sw = Math.sin(this.time * 3 + i) * 1.5; ctx.fillStyle = c; ctx.beginPath(); ctx.moveTo(lx, ly); ctx.lineTo(lx + 5, ly + 2); ctx.lineTo(lx + 5 + sw, ly + 9); ctx.lineTo(lx + sw, ly + 7); ctx.fill(); }); break; }
       case 'crane': { I.line(ctx, [p.x, p.y, 0], [p.x, p.y, 1.6], '#4a3320', 4); I.cylinder(ctx, p.x, p.y, 0.2, 0.28, 0.35, '#5a4020', { noTop: false }); I.line(ctx, [p.x, p.y, 1.55], [p.x - 1.0, p.y - 0.3, 1.1], '#4a3320', 3.5); I.line(ctx, [p.x, p.y, 0.9], [p.x - 0.7, p.y - 0.2, 1.25], '#4a3320', 1.5); const hz = 0.35 + Math.sin(this.time * 0.8) * 0.25; I.line(ctx, [p.x - 1.0, p.y - 0.3, 1.1], [p.x - 1.0, p.y - 0.3, hz], '#222', 0.8); this.crate3(ctx, p.x - 1.1, p.y - 0.4, hz - 0.22, 0.22); break; }
@@ -404,6 +464,9 @@ Object.assign(HK.Scene, {
       case 'monastery': this.drawMonastery(ctx, b, st, season, sv); break;
       case 'hospital': this.drawHospital(ctx, b, st, season, sv); break;
       case 'school': this.drawHouse(ctx, b, st, season, sv, false); break;
+      case 'stable': this.drawStable(ctx, b, st, season, sv); break;
+      case 'timberyard': this.drawTimberyard(ctx, b, st, season, sv); break;
+      case 'chapel': this.drawChapel(ctx, b, st, season, sv); break;
       case 'market': return;
     }
     const owned = (b.panel === 'house' && st.houses[b.plot].owner === 'player') || (b.panel === 'workshop' && st.workshops[b.plot].type) || (b.id === 'tavern' && st.tavernOwned) || (b.id === 'bathhouse' && st.bathhouseOwned) || (b.panel === 'venture' && st.ventures && st.ventures[b.id]) || (b.panel === 'storage' && st.storages && st.storages[b.plot] && st.storages[b.plot].owner === 'player') || (b.id === 'dive' && st.ventures && st.ventures.dive);

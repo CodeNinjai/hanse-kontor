@@ -61,6 +61,11 @@ HK.VENTURES = [
   { id: 'tannery',   name: { de: 'Gerberei',        en: 'Tannery' },       cost: 6000,  income: 42, craft: true, effect: 'stink' },
   { id: 'potter',    name: { de: 'Töpferei',        en: 'Pottery' },       cost: 3500,  income: 16, craft: true },
   { id: 'dyer',      name: { de: 'Färberei',        en: 'Dye works' },     cost: 9000,  income: 38, craft: true, inp: 'cloth', effect: 'cloth' },
+  { id: 'stables',   name: { de: 'Marstall',        en: 'Stables' },       cost: 8500,  income: 30, craft: false, effect: 'caravans' },
+  { id: 'inn',       name: { de: 'Herberge „Zum Wegweiser“', en: 'The Signpost inn' }, cost: 7000, income: 26, craft: false, effect: 'inn' },
+  { id: 'goldsmith', name: { de: 'Goldschmied',     en: 'Goldsmith' },     cost: 12000, income: 52, craft: true, effect: 'gold' },
+  { id: 'apothecary', name: { de: 'Apotheke',       en: 'Apothecary' },    cost: 7500,  income: 28, craft: true, effect: 'plague' },
+  { id: 'timberyard', name: { de: 'Holzhof',        en: 'Timber yard' },   cost: 6500,  income: 24, craft: false, inp: 'timber', effect: 'timber' },
 ];
 HK.VENTURE = {}; HK.VENTURES.forEach(v => HK.VENTURE[v.id] = v);
 /* Speicher: eigener Lagerplatz oder Vermietung an andere Kaufleute */
@@ -68,6 +73,7 @@ HK.STORAGES = [
   { id: 'saltstore', price: 7000, cap: 200, rent: 42 },
   { id: 'storage2',  price: 8500, cap: 260, rent: 50 },
   { id: 'storage3',  price: 8500, cap: 260, rent: 50 },
+  { id: 'granary',   price: 9500, cap: 300, rent: 56 },
 ];
 
 /* Personen mit Loyalität */
@@ -90,6 +96,7 @@ HK.PERSONS = [
   { id: 'harbourmaster', name: 'Klaus Brede',       title: { de: 'Hafenmeister', en: 'Harbour master' } },
   { id: 'divekeeper', name: 'Peer Lüdtke',          title: { de: 'Wirt der Spelunke', en: 'Dive keeper' } },
   { id: 'schoolmaster', name: 'Magister Johannes Kock', title: { de: 'Schulmeister', en: 'Schoolmaster' } },
+  { id: 'weighmaster', name: 'Lambert Vaget',       title: { de: 'Waagemeister', en: 'Weigh master' } },
 ];
 HK.PERSON = {}; HK.PERSONS.forEach(p => HK.PERSON[p.id] = p);
 HK.FACTIONS = { patrizier: { de: 'Patrizier', en: 'Patricians' }, kaufleute: { de: 'Kaufleute', en: 'Merchants' }, zuenfte: { de: 'Zünfte', en: 'Guilds' }, kirche: { de: 'Kirche', en: 'Church' } };
@@ -161,4 +168,5 @@ HK.CONST = {
   HOSPITAL_DONATION: 1000, HOSPITAL_ENDOW: 8000, SCHOOL_DONATION: 1500, SCHOOL_ENDOW: 6000,
   HARBOUR_BOOK: 200, HARBOUR_BOOK_DAYS: 20, BERTH_PRIORITY: 800, EXTRA_BERTH: 15000, MAX_BERTHS: 5,
   APPRENTICES: 1000, APPRENTICE_DAYS: 60, MASTER_TITLE: 5000, FISHMARKET_CAP: 25,
+  WEIGH_FARM_DAYS: 365, BLESSING_COST: 300, BLESSING_DAYS: 60, MILITIA_COST: 4000, MILITIA_UPKEEP: 12,
 };

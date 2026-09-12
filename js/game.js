@@ -36,7 +36,7 @@ HK.newGame = function (opts) {
     investigation: null, log: [], history: [], ledger: [{}], stats: { profit: 0, volume: 0, smuggled: 0, bribes: 0 },
     rank: 0, won: false, gameOver: false, negDays: 0, nextId: 1, usedNames: [], rumors: [], spyUntil: 0,
     ventures: {}, storages: HK.STORAGES.map(() => ({ owner: 'npc', mode: 'own' })), dive: { offer: null, fenced: 0 }, monastery: { stock: { beer: HK.CONST.MONK_BEER, wax: HK.CONST.MONK_WAX }, day: 0 },
-    craftGuild: false, masterTitle: false, hospitalEndowed: false, schoolEndowed: false, apprenticesUntil: 0, watchUntil: 0, scriptUntil: 0, harbourBookUntil: 0, fishSold: 0,
+    craftGuild: false, masterTitle: false, hospitalEndowed: false, schoolEndowed: false, militia: false, blessedUntil: 0, weighFarm: null, apprenticesUntil: 0, watchUntil: 0, scriptUntil: 0, harbourBookUntil: 0, fishSold: 0,
   };
   for (const g of HK.GOODS) st.town.stock[g.id] = g.cons * 18 + g.prod * 20;
   for (const k in HK.LAWS) st.town.laws[k] = HK.LAWS[k].init;
@@ -151,6 +151,7 @@ HK.dockShip = function (st, originId) {
 HK.dockCaravan = function (st, originId) {
   if (st.caravans.length >= 2) return false;
   const v = HK.makeVisitor(st, originId);
+  if (HK.hasVenture(st, 'stables')) { for (const g in v.cargo) v.cargo[g].qty = Math.round(v.cargo[g].qty * 1.2); for (const g in v.wants) v.wants[g].qty = Math.round(v.wants[g].qty * 1.2); v.daysLeft += 1; }
   st.caravans.push(v);
   HK.log(st, 'caravanArrived', { origin: HK.name(HK.ORIGIN[originId]) }, 'arrival');
   return true;
@@ -545,10 +546,11 @@ HK.bribeBailiff = function (st) {
 };
 
 /* ---------- Werft, eigene Schiffe, Fischerei ---------- */
+HK.shipPrice = st => Math.round(HK.CONST.SHIP_PRICE * (HK.hasVenture(st, 'timberyard') ? 0.85 : 1));
 HK.buyShip = function (st) {
-  if (st.money < HK.CONST.SHIP_PRICE) return { ok: false, msg: 'notEnoughMoney' };
+  if (st.money < HK.shipPrice(st)) return { ok: false, msg: 'notEnoughMoney' };
   if (st.ownShips.length >= 3) return { ok: false, msg: 'maxShips' };
-  HK.book(st, 'investments', -HK.CONST.SHIP_PRICE);
+  HK.book(st, 'investments', -HK.shipPrice(st));
   const avail = HK.SHIP_NAMES.filter(n => !st.usedNames.includes(n));
   const name = HK.pick(avail.length ? avail : HK.SHIP_NAMES); st.usedNames.push(name);
   st.ownShips.push({ id: st.nextId++, name, status: 'port', dest: null, daysLeft: 0, cargo: {}, bringBack: null, hull: 100 });
@@ -648,6 +650,8 @@ HK.ventureIncome = function (st, id) {
   if (st.apprenticesUntil > st.day) inc *= 1.1;
   if (v.effect === 'dive') inc += st.ships.length * 6;
   if (v.effect === 'ships') inc += (st.ships.length + st.ownShips.length) * 3;
+  if (v.effect === 'inn' || v.effect === 'caravans') inc += st.caravans.length * 12;
+  if (v.effect === 'gold') inc *= 0.7 + st.town.prosperity / 150;
   if (v.effect === 'feed' && st.town.events.some(e => e.type === 'famine')) inc *= 1.6;
   return Math.round(inc);
 };
@@ -810,6 +814,31 @@ HK.fishmarketSell = function (st, g, qty) {
   return { ok: true, cost: rev, qty };
 };
 
+/* ---------- Stadtwaage, Kapelle, Zeughaus ---------- */
+HK.weighFarmPrice = st => Math.round(HK.law(st, 'marketFee') * 120 * (0.8 + st.town.prosperity / 200) * 9);
+HK.weighFarmIncome = st => Math.round(HK.law(st, 'marketFee') * (18 + st.town.prosperity * 0.9) / 5);
+HK.buyWeighFarm = function (st) {
+  if (st.weighFarm && st.weighFarm.until > st.day) return { ok: false };
+  const cost = HK.weighFarmPrice(st); if (st.money < cost) return { ok: false, msg: 'notEnoughMoney' };
+  HK.book(st, 'politics', -cost); st.weighFarm = { until: st.day + HK.CONST.WEIGH_FARM_DAYS };
+  HK.log(st, 'weighFarmBought', { days: HK.CONST.WEIGH_FARM_DAYS }, 'good');
+  return { ok: true };
+};
+HK.blessShips = function (st) {
+  if (st.blessedUntil > st.day) return { ok: false };
+  if (st.money < HK.CONST.BLESSING_COST) return { ok: false, msg: 'notEnoughMoney' };
+  HK.book(st, 'church', -HK.CONST.BLESSING_COST); st.blessedUntil = st.day + HK.CONST.BLESSING_DAYS; st.piety = HK.clamp(st.piety + 2, 0, 100);
+  return { ok: true };
+};
+HK.fundMilitia = function (st) {
+  if (st.militia) return { ok: false };
+  if (st.money < HK.CONST.MILITIA_COST) return { ok: false, msg: 'notEnoughMoney' };
+  HK.book(st, 'politics', -HK.CONST.MILITIA_COST); st.militia = true; st.rep = HK.clamp(st.rep + 6, 0, 100); st.influence += 4;
+  HK.log(st, 'militiaFunded', {}, 'good');
+  return { ok: true };
+};
+HK.disbandMilitia = function (st) { if (!st.militia) return { ok: false }; st.militia = false; return { ok: true }; };
+
 /* Fehlende Felder in alten Spielständen ergänzen */
 HK.migrate = function (st) {
   if (!st.ventures) st.ventures = {};
@@ -817,7 +846,9 @@ HK.migrate = function (st) {
   if (!st.dive) { st.dive = { offer: null, fenced: 0 }; HK.refreshContraband(st); }
   if (!st.monastery) st.monastery = { stock: { beer: HK.CONST.MONK_BEER, wax: HK.CONST.MONK_WAX }, day: st.day };
   for (const p of HK.PERSONS) if (!st.persons[p.id]) st.persons[p.id] = { loyalty: HK.rndi(15, 35) };
-  for (const k of ['craftGuild', 'masterTitle', 'hospitalEndowed', 'schoolEndowed']) if (st[k] === undefined) st[k] = false;
+  for (const k of ['craftGuild', 'masterTitle', 'hospitalEndowed', 'schoolEndowed', 'militia']) if (st[k] === undefined) st[k] = false;
+  while (st.storages.length < HK.STORAGES.length) st.storages.push({ owner: 'npc', mode: 'own' });
+  if (st.blessedUntil === undefined) st.blessedUntil = 0; if (st.weighFarm === undefined) st.weighFarm = null;
   for (const k of ['apprenticesUntil', 'watchUntil', 'scriptUntil', 'harbourBookUntil', 'fishSold']) if (st[k] === undefined) st[k] = 0;
   return st;
 };
@@ -877,6 +908,7 @@ HK.fireEvent = function (st) {
   else { for (const g in st.warehouse.stock) st.warehouse.stock[g] = Math.floor(st.warehouse.stock[g] * 0.9); HK.log(st, 'fireWarehouse', {}, 'bad'); }
 };
 HK.triggerEvent = function (st, type) {
+  if (type === 'plague' && HK.hasVenture(st, 'apothecary') && Math.random() < 0.5) { HK.log(st, 'plagueAverted', {}, 'good'); return; }
   const def = HK.TOWN_EVENTS[type];
   switch (type) {
     case 'fire': HK.fireEvent(st); return;
@@ -984,6 +1016,8 @@ HK.tick = function (st) {
   if (vInc) HK.book(st, 'ventures', vInc);
   if (HK.hasVenture(st, 'smokery')) { const q = Math.min(6 * st.ventures.smokery.level, Math.floor(st.warehouse.stock.fish || 0)); if (q >= 3) { HK.addStock(st.warehouse.stock, 'fish', -q); HK.addStock(st.warehouse.stock, 'smokedfish', Math.min(Math.floor(q * 0.7), HK.whFree(st))); } }
   if (HK.hasVenture(st, 'tannery')) st.rep = HK.clamp(st.rep - 0.03, 0, 100);
+  if (st.weighFarm) { if (st.weighFarm.until > st.day) HK.book(st, 'taxFarm', HK.weighFarmIncome(st)); else { st.weighFarm = null; HK.log(st, 'weighFarmEnded', {}, 'info'); } }
+  if (st.militia) HK.book(st, 'wages', -HK.CONST.MILITIA_COST * 0 - HK.CONST.MILITIA_UPKEEP);
   if (HK.hasVenture(st, 'dive')) { st.piety = HK.clamp(st.piety - 0.05, 0, 100); st.suspicion = HK.clamp(st.suspicion + 0.03, 0, 100); }
   let sInc = 0; st.storages.forEach((sg, i) => { if (sg.owner === 'player' && sg.mode === 'rent') sInc += HK.storageRent(st, i); });
   if (sInc) HK.book(st, 'storage', sInc);
@@ -1020,7 +1054,7 @@ HK.tick = function (st) {
     const o = HK.ORIGIN[s.dest];
     if (s.phase === 'out' && s.daysLeft <= o.days + 1) {
       s.phase = 'back';
-      if (Math.random() < 0.05) { s.cargo = {}; s.hull = Math.max(5, s.hull - 25); HK.log(st, 'expeditionPirates', { ship: s.name }, 'bad'); }
+      if (Math.random() < (st.blessedUntil > st.day ? 0.02 : 0.05) * (st.militia ? 0.7 : 1)) { s.cargo = {}; s.hull = Math.max(5, s.hull - 25); HK.log(st, 'expeditionPirates', { ship: s.name }, 'bad'); }
       let rev = 0;
       for (const g in s.cargo) rev += s.cargo[g] * Math.round(HK.GOOD[g].base * (o.want[g] ? 0.75 + o.want[g] * 0.4 : 0.8));
       s.cargo = {}; s.revenue = rev;
