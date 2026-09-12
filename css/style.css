@@ -103,3 +103,5 @@ ul.log li.bad { background: rgba(200,90,80,.14); } ul.log li.good { background: 
 @keyframes slide { from { transform: translateX(30px); opacity: 0; } to { transform: none; opacity: 1; } }
 @media (prefers-reduced-motion: reduce) { .toast { animation: none; } #scene-wrap { transition: none; } }
 @media (max-width: 900px) { #main { flex-direction: column; } #scene-wrap { flex: none; } #side { width: 100%; max-width: 100%; flex: 1; border-left: none; border-top: 4px solid var(--wood); } }
+
+details.title { border-top: 1px solid var(--border); padding: 4px 0; } details.title summary { cursor: pointer; } details.title.done summary { color: var(--gold-dark); } ul.conds { list-style: none; padding-left: 4px; margin: 4px 0; font-size: 13px; } ul.conds li { color: var(--ink-soft); } ul.conds li.ok { color: var(--green); }

@@ -84,6 +84,7 @@ HK.UI = {
         <form id="new-game-form" class="new-game">
           <label>${HK.t('playerName')}<input id="ng-name" name="name" maxlength="30" value="${this.esc(HK.t('defaultName'))}"></label>
           <fieldset><legend>${HK.t('difficulty')}</legend>${['easy', 'normal', 'hard'].map(d => `<label class="radio"><input type="radio" name="difficulty" value="${d}" ${d === 'normal' ? 'checked' : ''}> <b>${HK.t(d)}</b> <small>${HK.t('diffHint_' + d)}</small></label>`).join('')}</fieldset>
+          <fieldset><legend>${HK.t('gameLength')}</legend>${HK.YEARS_OPTIONS.map(y => `<label class="radio"><input type="radio" name="years" value="${y}" ${y === 20 ? 'checked' : ''}> <b>${y} ${HK.t('years')}</b></label>`).join('')}</fieldset>
           <button type="submit" class="big primary">${HK.t('newGame')}</button></form>
         ${hasSave && inGame ? `<button id="t-load" class="link">${HK.t('load')}</button>` : ''}<button id="t-help" class="link">${HK.t('help')}</button></div>`;
       ts.querySelectorAll('.lang-btn').forEach(b => b.addEventListener('click', () => HK.setLang(b.dataset.lang)));
@@ -96,7 +97,7 @@ HK.UI = {
         e.preventDefault();
         if (inGame && !confirm(HK.t('confirmNewGame'))) return;
         const fd = new FormData(e.target);
-        HK.startWithState(HK.newGame({ name: (fd.get('name') || '').trim() || HK.t('defaultName'), difficulty: fd.get('difficulty') }));
+        HK.startWithState(HK.newGame({ name: (fd.get('name') || '').trim() || HK.t('defaultName'), difficulty: fd.get('difficulty'), years: fd.get('years') }));
         HK.autosave();
       });
     };
@@ -112,11 +113,23 @@ HK.UI = {
   },
   closeModal() { this.$('modal').hidden = true; this.$('modal').innerHTML = ''; this.modalOpen = false; this.modalRender = null; },
   showHelp() { const r = () => this.modal(`<h2>${HK.t('helpTitle')}</h2><div class="help">${HK.t('helpText')}</div><div class="modal-actions"><button data-close class="primary">${HK.t('close')}</button></div>`); r(); this.modalRender = r; },
-  showEnd(won) {
+  showEnd(won) { if (won) this.showChronicle(); else { HK.setSpeed(0); this.modal(`<h2>${HK.t('gameOver')}</h2><p>${HK.t('bankrupt')}</p><p>${HK.t('day')} ${HK.state.day} · ${HK.t('netWorth')}: ${HK.fmt(HK.netWorth(HK.state))} ${HK.t('mark')}</p><div class="modal-actions"><button id="end-new" class="primary">${HK.t('newGame')}</button></div>`).querySelector('#end-new').addEventListener('click', () => { this.closeModal(); this.showTitle(false); }); } },
+  showTitleWon(t) {
     HK.setSpeed(0);
-    this.modal(`<h2>${won ? HK.t('won') : HK.t('gameOver')}</h2><p>${won ? '' : HK.t('bankrupt')}</p><p>${HK.t('day')} ${HK.state.day} · ${HK.t('netWorth')}: ${HK.fmt(HK.netWorth(HK.state))} ${HK.t('mark')}</p>
-      <div class="modal-actions">${won ? `<button data-close class="primary">${HK.t('continuePlay')}</button>` : ''}<button id="end-new" class="${won ? '' : 'primary'}">${HK.t('newGame')}</button></div>`)
-      .querySelector('#end-new').addEventListener('click', () => { this.closeModal(); this.showTitle(false); });
+    this.modal(`<h2>${HK.t('titleWonHead')}</h2><p class="lede"><b>${HK.name(t)}</b></p><p>${HK.t('title_' + t.id + '_desc')}</p><p class="hint">${HK.t('titleWonHint')}</p><div class="modal-actions"><button data-close class="primary">${HK.t('continuePlay')}</button></div>`);
+  },
+  showChronicle() {
+    HK.setSpeed(0); const st = HK.state, c = HK.chronicle(st);
+    const r = () => {
+      const rows = [[HK.t('netWorth'), HK.fmt(c.worth) + ' ' + HK.t('mark')], [HK.t('rank'), HK.name(c.rank) + ' · ' + HK.t('seat_' + c.seat)], [HK.t('titles'), c.titles.length ? c.titles.map(t => HK.name(t)).join(', ') : HK.t('none')], [HK.t('population'), HK.fmt(c.pop)], [HK.t('prosperity'), c.prosperity], [HK.t('holdings'), HK.t('holdingsText', c.holdings)], [HK.t('rivalsBeaten'), c.rivals.filter(x => x.beaten).length + '/' + c.rivals.length]];
+      this.modal(`<h2>${HK.t('chronicleTitle')}</h2><p class="lede">${HK.t(c.ended ? 'chronicleEnded' : 'chronicleSoFar', { name: this.esc(st.name), years: c.years })}</p>
+        <table class="plain">${rows.map(([k, v]) => `<tr><td>${k}</td><td class="num">${v}</td></tr>`).join('')}</table>
+        <p><b>${HK.t('epitaph')}</b> ${c.lines.map(k => HK.t(k, { name: this.esc(st.name) })).join(' ')}</p>
+        <p>${HK.FACTION_IDS.map(f => `${HK.FACTIONS[f][HK.LANG]}: ${Math.round(c.factions[f])}`).join(' · ')}</p>
+        <div class="modal-actions"><button data-close class="${c.ended ? '' : 'primary'}">${HK.t(c.ended ? 'continueAnyway' : 'close')}</button>${c.ended ? `<button id="end-new" class="primary">${HK.t('newGame')}</button>` : ''}</div>`);
+      const b = this.$('end-new'); if (b) b.addEventListener('click', () => { this.closeModal(); this.showTitle(false); });
+    };
+    r(); this.modalRender = r;
   },
   toast(msg, kind, ms) {
     const c = this.$('toasts'), el = document.createElement('div');
@@ -480,6 +493,8 @@ HK.UI = {
       <tr><td>${HK.t('netWorth')}</td><td class="num"><b>${HK.fmt(worth)} ${HK.t('mark')}</b></td></tr><tr><td>${HK.t('rank')}</td><td class="num">${HK.name(HK.RANKS[st.rank])} · ${HK.t('seat_' + st.seat)}</td></tr>
       <tr><td>${HK.t('rep')}</td><td>${this.bar(st.rep)}</td></tr><tr><td>${HK.t('piety')}</td><td>${this.bar(st.piety, 'blue')}</td></tr><tr><td>${HK.t('suspicion')}</td><td>${this.bar(st.suspicion, 'red')}</td></tr>
       <tr><td>${HK.t('influence')}</td><td class="num">${Math.floor(st.influence)}</td></tr><tr><td>${HK.t('prosperity')}</td><td>${this.bar(st.town.prosperity, 'green')}</td></tr><tr><td>${HK.t('population')}</td><td class="num">${HK.fmt(st.town.pop)}</td></tr></table></section>`;
+    h += `<section><h3>${HK.t('factionsTitle')}</h3><table class="plain">${HK.FACTION_IDS.map(f => `<tr><td>${HK.FACTIONS[f][HK.LANG]}</td><td>${this.bar(st.factions[f], st.factions[f] >= 50 ? 'green' : st.factions[f] < 25 ? 'red' : '')}</td></tr>`).join('')}</table><p class="hint">${HK.t('factionsHint')}</p></section>`;
+    h += `<section><h3>${HK.t('titles')}</h3><p class="hint">${HK.t('titlesHint', { years: st.years, date: HK.fmtDate(st.endDay) })}</p>${HK.TITLES.map(t => { const pr = HK.titleProgress(st, t), done = !!st.titles[t.id]; return `<details class="title ${done ? 'done' : ''}"><summary><b>${HK.name(t)}</b> ${done ? `<span class="tag gold">${HK.t('titleHeld')}</span>` : `<small>${pr.filter(c => c.done).length}/${pr.length}</small>`}</summary><p class="hint">${HK.t('title_' + t.id + '_desc')}</p><ul class="conds">${pr.map(c => `<li class="${c.done ? 'ok' : ''}">${c.done ? '✓' : '·'} ${HK.t(c.key, { v: HK.fmt(c.v), target: HK.fmt(c.target) })}</li>`).join('')}</ul></details>`; }).join('')}<div class="btn-row"><button class="small" data-action="chronicle">${HK.t('chronicleView')}</button></div></section>`;
     h += `<section><h3>${HK.t('richest')}</h3><table class="plain">${rich.map((r, i) => `<tr class="${r.me ? 'me' : ''}"><td>${i + 1}. ${r.me ? '<b>' + r.name + '</b>' : r.name}</td><td class="num">${HK.fmt(r.w)}</td></tr>`).join('')}</table></section>`;
     const inc = Object.keys(tot).filter(k => tot[k] > 0).sort((a, b) => tot[b] - tot[a]);
     let sum = 0; for (const k in tot) sum += tot[k];
@@ -598,6 +613,7 @@ HK.UI = {
       case 'berthpriority': this.result(HK.berthPriority(st)); break;
       case 'extraberth': this.result(HK.buyExtraBerth(st)); break;
       case 'weighfarm': this.result(HK.buyWeighFarm(st)); break;
+      case 'chronicle': this.showChronicle(); break;
       case 'bless': this.result(HK.blessShips(st)); break;
       case 'militia': this.result(HK.fundMilitia(st)); break;
       case 'disbandmilitia': this.result(HK.disbandMilitia(st)); break;

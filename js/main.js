@@ -63,6 +63,8 @@ document.addEventListener('DOMContentLoaded', () => {
   HK.UI.init(); HK.Scene.init(document.getElementById('scene'));
   HK.onLog = e => HK.UI.onLog(e);
   HK.onWin = () => HK.UI.showEnd(true);
+  HK.onTitle = t => HK.UI.showTitleWon(t);
+  HK.onChronicle = () => HK.UI.showChronicle();
   HK.onGameOver = () => HK.UI.showEnd(false);
   let hasSave = false; try { hasSave = !!localStorage.getItem(HK.SAVE_KEY); } catch (e) { /* */ }
   // Vorschau der Stadt im Abendlicht hinter dem Titelbild
