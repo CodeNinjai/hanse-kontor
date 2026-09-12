@@ -24,8 +24,8 @@ HK.BUILDINGS = [
   // Block Vogtei
   { id: 'bailiff',   kind: 'hall',   x: 21.7, y: 2.6,  w: 1.7, d: 1.5, h: 1.5, brick: true, turret: true, panel: 'bailiff', name: { de: 'Vogtei', en: "Bailiff's court" } },
   // Block Rathaus und Markt
-  { id: 'townhall',  kind: 'townhall', x: 10.2, y: 6.1, w: 4.6, d: 1.3, h: 1.7, panel: 'townhall', name: { de: 'Rathaus', en: 'Town hall' } },
-  { id: 'market',    kind: 'market', x: 10.2, y: 7.6,  w: 4.6, d: 1.9, h: 0, panel: 'market', name: { de: 'Marktplatz', en: 'Market square' } },
+  { id: 'townhall',  kind: 'townhall', x: 10.2, y: 6.1, w: 1.3, d: 3.4, h: 1.6, panel: 'townhall', name: { de: 'Rathaus', en: 'Town hall' } },
+  { id: 'market',    kind: 'market', x: 11.7, y: 6.1,  w: 3.1, d: 3.4, h: 0, panel: 'market', name: { de: 'Marktplatz', en: 'Market square' } },
   // Block Taverne
   { id: 'tavern',    kind: 'eave',   x: 16.2, y: 6.2,  w: 1.7, d: 1.3, h: 1.2, wall: '#c99a66', roof: '#5a3a2a', sign: 'tavern', panel: 'tavern', name: { de: 'Taverne „Zum Goldenen Hering“', en: 'The Golden Herring Tavern' } },
   { id: 'bank',      kind: 'eave',   x: 18.3, y: 6.2,  w: 1.4, d: 1.2, h: 1.3, wall: '#cfc6b4', roof: '#4e4a52', stone: true, sign: 'bank', panel: 'bank', name: { de: 'Geldwechsler', en: 'Money changer' } },
@@ -74,15 +74,15 @@ HK.ROAD_NODES = {
   M1: [15.5, 2.2], M2: [15.5, 5.5], M23: [15.5, 8.5], M3: [15.5, 10], M4: [15.5, 14], M5: [15.5, 16.2],
   O1: [21, 2.2], O2: [21, 5.5], O3: [21, 10], O4: [21, 14], O5: [21, 16.2],
   C1: [23.5, 5.5], C2: [23.5, 10], C3: [23.5, 14],
-  S1: [11.5, 8.5], S2: [13.8, 8.5], S3: [13, 9.6], MK: [13, 10],
+  S1: [12.4, 6.9], S2: [14.3, 6.9], S3: [13.3, 9.2], MK: [13, 10], N1: [12.4, 5.5],
   PA: [11.6, 19.4], PB: [18.6, 19.4], SP1: [11.6, 16.2], SP2: [18.6, 16.2], G: [24.6, 10], OUT: [27, 10], OUT2: [30, 10], NG: [15.5, 0.6],
 };
 HK.ROAD_EDGES = [
   ['Q1', 'Q2'], ['Q2', 'Q3'], ['Q3', 'Q4'], ['Q4', 'Q5'], ['H1', 'H2'], ['H2', 'H23'], ['H23', 'H3'], ['H3', 'H4'], ['H4', 'H5'],
   ['M1', 'M2'], ['M2', 'M23'], ['M23', 'M3'], ['M3', 'M4'], ['M4', 'M5'], ['O1', 'O2'], ['O2', 'O3'], ['O3', 'O4'], ['O4', 'O5'],
-  ['Q1', 'H1'], ['H1', 'M1'], ['M1', 'O1'], ['Q2', 'H2'], ['H2', 'M2'], ['M2', 'O2'], ['O2', 'C1'], ['Q3', 'H3'], ['H3', 'MK'], ['MK', 'M3'], ['M3', 'O3'], ['O3', 'C2'], ['C2', 'G'], ['G', 'OUT'], ['OUT', 'OUT2'],
+  ['Q1', 'H1'], ['H1', 'M1'], ['M1', 'O1'], ['Q2', 'H2'], ['M2', 'O2'], ['O2', 'C1'], ['Q3', 'H3'], ['H3', 'MK'], ['MK', 'M3'], ['M3', 'O3'], ['O3', 'C2'], ['C2', 'G'], ['G', 'OUT'], ['OUT', 'OUT2'],
   ['Q4', 'H4'], ['H4', 'M4'], ['M4', 'O4'], ['O4', 'C3'], ['Q5', 'H5'], ['H5', 'SP1'], ['SP1', 'M5'], ['M5', 'SP2'], ['SP2', 'O5'], ['C1', 'C2'], ['C2', 'C3'],
-  ['H23', 'S1'], ['S1', 'S2'], ['S2', 'M23'], ['S1', 'S3'], ['S2', 'S3'], ['S3', 'MK'], ['PA', 'SP1'], ['PB', 'SP2'], ['M1', 'NG'],
+  ['S1', 'S2'], ['S2', 'M23'], ['S1', 'S3'], ['S2', 'S3'], ['S3', 'MK'], ['H2', 'N1'], ['N1', 'M2'], ['N1', 'S1'], ['PA', 'SP1'], ['PB', 'SP2'], ['M1', 'NG'],
 ];
 HK.ROAD_ADJ = {}; Object.keys(HK.ROAD_NODES).forEach(k => HK.ROAD_ADJ[k] = []);
 HK.ROAD_EDGES.forEach(([a, b]) => { HK.ROAD_ADJ[a].push(b); HK.ROAD_ADJ[b].push(a); });
@@ -113,7 +113,7 @@ HK.STATIC_NPCS = [
   { person: 'bailiff', x: 22.6, y: 4.4, color: '#2a2a2a' },
   { person: 'changer', x: 19.0, y: 7.7, color: '#4a6a3a' },
   { person: 'shipwright', x: 8.5, y: 12.85, color: '#6a4a2a' },
-  { person: 'mayor', x: 12.6, y: 7.9, color: '#6b1f1f' },
+  { person: 'mayor', x: 11.9, y: 8.3, color: '#6b1f1f' },
 ];
 HK.WALKER_TYPES = [
   { id: 'citizen', weight: 6, colors: ['#7a5a3a', '#5a6a4a', '#6a4a6a', '#4a5a7a', '#8a6a3a', '#7a3a3a', '#3a5a5a'] },
@@ -131,7 +131,7 @@ HK.TREES = [
 ];
 HK.PROPS = [
   { t: 'crates', x: 8.9, y: 5.0 }, { t: 'barrels', x: 9.0, y: 9.4 }, { t: 'crates', x: 7.6, y: 9.7 }, { t: 'barrels', x: 7.7, y: 10.4 }, { t: 'crane', x: 7.6, y: 12.2 },
-  { t: 'barrels', x: 17.9, y: 7.7 }, { t: 'well', x: 12.5, y: 9.0 }, { t: 'statue', x: 13.9, y: 8.3 }, { t: 'stalls', x: 0, y: 0 },
+  { t: 'barrels', x: 17.9, y: 7.7 }, { t: 'well', x: 12.4, y: 8.9 }, { t: 'statue', x: 13.4, y: 7.9 }, { t: 'stalls', x: 0, y: 0 },
   { t: 'crates', x: 5.0, y: 5.6 }, { t: 'barrels', x: 6.2, y: 10.6 }, { t: 'nets', x: 8.6, y: 4.3 }, { t: 'cross', x: 9.9, y: 16.0 }, { t: 'laundry', x: 18.9, y: 9.35 },
   { t: 'crates', x: 22.1, y: 9.6 }, { t: 'barrels', x: 16.0, y: 4.7 },
 ];
