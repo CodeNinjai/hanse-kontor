@@ -418,7 +418,7 @@ HK.demolishWorkshop = function (st, plot) {
 };
 
 /* ---------- Häuser, Taverne, Badehaus ---------- */
-HK.housePrice = function (st, h) { if (h.owner === 'npc') return h.price; const r = st.rivals.find(x => x.id === h.owner); if (!r || r.attitude < 20) return null; return Math.round(h.price * 1.5); };
+HK.housePrice = function (st, h) { if (h.owner === 'npc') return Math.round(h.price * (st.cheapHousesUntil > st.day ? 0.75 : 1)); const r = st.rivals.find(x => x.id === h.owner); if (!r || r.attitude < 20) return null; return Math.round(h.price * 1.5); };
 HK.buyHouse = function (st, id) {
   const h = st.houses[id];
   if (!h || h.owner === 'player') return { ok: false };
@@ -985,7 +985,7 @@ HK.tick = function (st) {
 
   // Ankünfte
   const shipRate = 0.5 * diff.shipRate * (winter ? 0.45 : 1) * (HK.law(st, 'staple') ? 1.3 : 1) * (st.town.berths / 3);
-  if (Math.random() < shipRate) HK.scheduleArrival(st, true);
+  if (Math.random() < shipRate && !(st.harbourClosedUntil > st.day)) HK.scheduleArrival(st, true);
   if (Math.random() < 0.25) HK.scheduleArrival(st, false);
   for (const inc of st.incoming.slice()) {
     inc.days--;
@@ -1023,7 +1023,7 @@ HK.tick = function (st) {
   }
   if (st.boats) { const q = Math.min(st.boats * HK.CONST.BOAT_FISH * (winter ? 0.5 : 1), HK.whFree(st)); if (q > 0) HK.addStock(st.warehouse.stock, 'fish', Math.floor(q)); wages += st.boats * 4; }
   st.hutFish = HK.rndi(10, 40);
-  if (wages) HK.book(st, 'wages', -wages);
+  if (wages) HK.book(st, 'wages', -Math.round(wages * (st.wageModUntil > st.day ? 1.25 : 1)));
 
   // Betriebe, Speicher, Räucherei, Spelunke, Kloster, Fischmarkt
   let vInc = 0; for (const id in st.ventures) vInc += HK.ventureIncome(st, id);
@@ -1063,7 +1063,7 @@ HK.tick = function (st) {
 
   // Eigene Schiffe
   for (const s of st.ownShips) {
-    if (s.status !== 'away') continue;
+    if (s.status !== 'away' || s.phase === 'hunt') continue;
     s.daysLeft--;
     const o = HK.ORIGIN[s.dest];
     if (s.phase === 'out' && s.daysLeft <= o.days + 1) {

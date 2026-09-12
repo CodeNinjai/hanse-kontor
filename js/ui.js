@@ -119,6 +119,14 @@ HK.UI = {
     HK.setSpeed(0);
     this.modal(`<h2>${HK.t('titleWonHead')}</h2><p class="lede"><b>${HK.name(t)}</b></p><p>${HK.t('title_' + t.id + '_desc')}</p><p class="hint">${HK.t('titleWonHint')}</p><div class="modal-actions"><button data-close class="primary">${HK.t('continuePlay')}</button></div>`);
   },
+  showDecision(ch) {
+    HK.setSpeed(0); const st = HK.state, def = HK.CHAINS[ch.id], sd = def.stages[ch.stage], vars = Object.assign({ good: ch.data.good ? HK.goodName(ch.data.good) : '', qty: ch.data.qty || '', price: ch.data.price || '', cost: HK.fmt((ch.data.qty || 0) * (ch.data.price || 0)) }, ch.data);
+    const r = () => {
+      const box = this.modal(`<h2>${HK.t('chainName_' + ch.id)}</h2><p class="lede">${HK.t('dec_' + ch.id + '_' + ch.stage, vars)}</p><div class="choices">${sd.choices.map(c => `<button class="choice" data-choice="${c}"><b>${HK.t('ch_' + ch.id + '_' + ch.stage + '_' + c, vars)}</b><small>${HK.t('chh_' + ch.id + '_' + ch.stage + '_' + c, vars)}</small></button>`).join('')}</div>`);
+      box.querySelectorAll('[data-choice]').forEach(b => b.addEventListener('click', () => { const res = HK.decide(st, ch.id, b.dataset.choice); if (this.result(res)) { this.closeModal(); this.renderAll(); } }));
+    };
+    r(); this.modalRender = r;
+  },
   showChronicle() {
     HK.setSpeed(0); const st = HK.state, c = HK.chronicle(st);
     const r = () => {
@@ -536,7 +544,8 @@ HK.UI = {
     let sum = 0; for (const k in tot) sum += tot[k];
     h += `<section><h3>${HK.t('incomeSources')}</h3><table class="plain">${inc.map(k => `<tr><td>${HK.t('src_' + k)}</td><td class="num">+${HK.fmt(tot[k])}</td></tr>`).join('') || `<tr><td class="hint">–</td></tr>`}<tr><td><b>${HK.t('dailyIncome')}</b></td><td class="num"><b>${HK.fmt(sum / st.ledger.length)}</b></td></tr></table></section>`;
     const ev = st.town.events.map(e => `<span class="tag">${HK.t('evn_' + e.type)}</span>`); const se = HK.seasonEvent(st); if (se) ev.push(`<span class="tag gold">${HK.t('season_' + se.id)}</span>`);
-    if (ev.length) h += `<section><h3>${HK.t('activeEvents')}</h3><p>${ev.join(' ')}</p></section>`;
+    for (const ch of (st.chains ? st.chains.active : [])) ev.push(`<span class="tag">${HK.t('chainName_' + ch.id)} · ${HK.t('stage_' + ch.id + '_' + ch.stage)}</span>`);
+    if (ev.length) h += `<section><h3>${HK.t('activeEvents')}</h3><p>${ev.join(' ')}</p>${st.pendingDecision ? `<button class="small" data-action="decision">${HK.t('openDecision')}</button>` : ''}</section>`;
     h += `<section><h3>${HK.t('chart')}</h3><canvas id="chart" width="460" height="200"></canvas></section>`;
     return h;
   },
@@ -654,6 +663,7 @@ HK.UI = {
       case 'extraberth': this.result(HK.buyExtraBerth(st)); break;
       case 'weighfarm': this.result(HK.buyWeighFarm(st)); break;
       case 'chronicle': this.showChronicle(); break;
+      case 'decision': { const ch = st.chains.active.find(c => c.id === st.pendingDecision.chain); if (ch) this.showDecision(ch); break; }
       case 'bless': this.result(HK.blessShips(st)); break;
       case 'militia': this.result(HK.fundMilitia(st)); break;
       case 'disbandmilitia': this.result(HK.disbandMilitia(st)); break;
