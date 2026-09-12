@@ -187,6 +187,23 @@ HK.Scene = {
     this.picking = false; this.windows = savedW; this.lamps = savedL; this.pickTime = this.time;
   },
 
+  /* Zeichenkontext, der jeden Füllbefehl zusätzlich als schwarze Silhouette in die Emissionsebene schreibt */
+  teeCtx() {
+    if (this.tee) { this.em.setTransform(1, 0, 0, 1, 0, 0); this.em.clearRect(0, 0, HK.SCENE.W, HK.SCENE.H); return this.tee; }
+    const c = document.createElement('canvas'); c.width = HK.SCENE.W; c.height = HK.SCENE.H; this.emCanvas = c; const em = this.em = c.getContext('2d');
+    const real = this.ctx, tee = {}, skip = new Set(['stroke', 'strokeRect', 'strokeText', 'fillText', 'measureText', 'getImageData', 'putImageData', 'createImageData', 'createLinearGradient', 'createRadialGradient', 'createConicGradient', 'createPattern', 'getTransform', 'isPointInPath', 'isPointInStroke', 'getLineDash', 'getContextAttributes', 'drawFocusIfNeeded']);
+    const proto = Object.getPrototypeOf(real); let o = proto; const keys = new Set(); while (o && o !== Object.prototype) { Object.getOwnPropertyNames(o).forEach(k => keys.add(k)); o = Object.getPrototypeOf(o); }
+    for (const k of keys) {
+      if (k === 'constructor') continue;
+      const d = Object.getOwnPropertyDescriptor(proto, k) || {};
+      if (typeof real[k] === 'function') { tee[k] = skip.has(k) ? (...a) => real[k](...a) : (...a) => { const r = real[k](...a); em[k](...a); return r; }; }
+      else Object.defineProperty(tee, k, { get: () => real[k], set: v => { real[k] = v; em[k] = k === 'fillStyle' || k === 'strokeStyle' ? '#000' : k === 'globalAlpha' ? 1 : k === 'globalCompositeOperation' ? 'source-over' : v; } });
+    }
+    this.tee = tee; em.setTransform(1, 0, 0, 1, 0, 0); em.clearRect(0, 0, HK.SCENE.W, HK.SCENE.H); return tee;
+  },
+  /* Leuchtendes Fenster in die Emissionsebene schreiben (Weltkoordinaten) */
+  emit(pts, col) { if (!this.em || !this.nightK || this.picking) return; const em = this.em; em.save(); em.fillStyle = col; em.beginPath(); pts.forEach((q, i) => { const p = I.p(q[0], q[1], q[2]); i ? em.lineTo(p[0], p[1]) : em.moveTo(p[0], p[1]); }); em.closePath(); em.fill(); em.restore(); },
+
   /* ---------- Zeichnen ---------- */
   draw() {
     const ctx = this.ctx, st = HK.state; if (!st) return;
@@ -194,10 +211,13 @@ HK.Scene = {
     const P = this.palette(), t = this.time, W = HK.SCENE.W, H = HK.SCENE.H, season = this.season();
     if (season !== this.lastSeason) { this.lastSeason = season; this.makeGround(season); }
     this.windows = []; this.lamps = [];
+    this.nightK = P.amb < 0.7 ? HK.clamp((0.7 - P.amb) / 0.4, 0, 1) : 0;
     this.drawWater(ctx, P, t);
     ctx.drawImage(this.ground, 0, 0, W, H);
     this.drawCoast(ctx, P, t);
-    for (const it of this.buildItems(ctx, st, season, t)) it.f(ctx);
+    // Nachts läuft alles zusätzlich als schwarze Silhouette in die Emissionsebene, Fenster leuchten dort farbig; so verdecken vordere Gebäude die Lichter dahinter
+    const dctx = this.nightK > 0 ? this.teeCtx() : ctx;
+    for (const it of this.buildItems(dctx, st, season, t)) it.f(dctx);
     // Rauch, Möwen
     for (const s of this.smoke) { ctx.fillStyle = `rgba(215,215,220,${0.32 * (1 - s.age / 4.5)})`; ctx.beginPath(); ctx.arc(s.x, s.y, 1.5 + s.age * 2, 0, 6.28); ctx.fill(); }
     ctx.strokeStyle = 'rgba(255,255,255,0.9)'; ctx.lineWidth = 1.1;
@@ -279,7 +299,7 @@ HK.Scene = {
     if (l < 0.7) {
       const k = HK.clamp((0.7 - l) / 0.4, 0, 1);
       ctx.save(); ctx.globalCompositeOperation = 'lighter';
-      for (const [x, y, w, h] of this.windows) { if (((x * 7 + y * 13) | 0) % 5 === 0) continue; ctx.fillStyle = `rgba(255,170,70,${0.5 * k})`; ctx.fillRect(x, y, w, h); const g = ctx.createRadialGradient(x + w / 2, y + h / 2, 1, x + w / 2, y + h / 2, 10); g.addColorStop(0, `rgba(255,160,60,${0.2 * k})`); g.addColorStop(1, 'rgba(255,160,60,0)'); ctx.fillStyle = g; ctx.fillRect(x - 10, y - 10, w + 20, h + 20); }
+      if (this.emCanvas && this.nightK) { ctx.save(); ctx.globalAlpha = 0.55 * k; ctx.filter = 'blur(6px)'; ctx.drawImage(this.emCanvas, 0, 0, 960, 640); ctx.filter = 'blur(1.5px)'; ctx.globalAlpha = 0.8 * k; ctx.drawImage(this.emCanvas, 0, 0, 960, 640); ctx.restore(); }
       for (const [x, y] of this.lamps) { const g = ctx.createRadialGradient(x, y, 1, x, y, 40); g.addColorStop(0, `rgba(255,190,90,${0.5 * k})`); g.addColorStop(0.3, `rgba(255,170,70,${0.18 * k})`); g.addColorStop(1, 'rgba(255,160,60,0)'); ctx.fillStyle = g; ctx.fillRect(x - 40, y - 40, 80, 80); ctx.fillStyle = `rgba(255,230,160,${0.9 * k})`; ctx.beginPath(); ctx.arc(x, y - 1, 1.8, 0, 6.28); ctx.fill(); }
       ctx.restore();
     }
