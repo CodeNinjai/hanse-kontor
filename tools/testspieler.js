@@ -10,7 +10,7 @@ function seeded(seed) { let s = seed >>> 0; return () => { s = (s + 0x6D2B79F5) 
 function load(seed) {
   const M = Object.create(Math); M.random = seeded(seed);
   const ctx = { console, Intl, Math: M, Date, JSON }; vm.createContext(ctx);
-  for (const f of ['data', 'town', 'i18n', 'game', 'paths', 'rivals', 'contracts', 'sea', 'family', 'offices', 'faith', 'chains']) vm.runInContext(fs.readFileSync(ROOT + '/js/' + f + '.js', 'utf8'), ctx, { filename: f });
+  for (const f of ['data', 'town', 'i18n', 'game', 'paths', 'rivals', 'contracts', 'sea', 'family', 'offices', 'faith', 'deals', 'chains']) vm.runInContext(fs.readFileSync(ROOT + '/js/' + f + '.js', 'utf8'), ctx, { filename: f });
   vm.runInContext('globalThis.HK = HK', ctx);
   return ctx.HK;
 }
@@ -120,7 +120,7 @@ function makeBot(HK, st, path) {
         const vc = st.contracts.active.find(c => c.type === 'voyage' && c.dest === o.id && !c.shipId); if (vc) profit += vc.reward;
         if (!best || profit > best.profit) best = { o, profit, plan, back: bm > 1.25 ? back : null };
       }
-      if (!best || best.profit < (st.contracts.active.some(c => c.type === 'voyage' && !c.shipId) ? -300 : 500)) continue;
+      if (!best || best.profit < (st.contracts.active.some(c => c.type === 'voyage' && !c.shipId) ? -300 : 500)) { if (HK.hasMarque(st) && s.hull >= 50 && !HK.stockUsed(s.cargo)) HK.privateer(st, s.id); continue; }
       for (const p of best.plan) { if (p.src === 'mk') { if (!HK.marketBuy(st, p.g, p.q).ok) continue; } HK.loadShip(st, s.id, p.g, p.q); }
       if (HK.stockUsed(s.cargo) < 10) { for (const g in s.cargo) HK.unloadShip(st, s.id, g, s.cargo[g]); continue; }
       HK.sendShip(st, s.id, best.o.id, best.back);
@@ -145,8 +145,9 @@ function makeBot(HK, st, path) {
       if (d.chain === 'bishop' && d.stage === 'council') choice = path === 'patron' ? 'tithe' : (path === 'mayor' && st.influence >= 40 ? 'mediate' : 'council');
       if (d.chain === 'bishop' && d.stage === 'settlement') choice = (path === 'patron' || path === 'mayor') && free() > 6000 ? 'fund' : (path === 'merchant' && free() > 5000 ? 'farm' : 'stayout');
       if (d.chain === 'hansetag' && d.stage === 'envoy') choice = st.rep >= 60 && free() > 4000 ? 'go' : (st.rivals.some(r => r.ally) ? 'delegate' : 'decline');
+      if (d.chain === 'feud' && d.stage === 'council') choice = st.militia ? 'militia' : (free() > 6000 ? 'peace' : 'ignore');
       if (d.chain === 'hansetag' && d.stage === 'negotiation') choice = free() > 15000 ? 'bribe' : (st.influence >= 25 ? 'plead' : 'stand');
-      const r = HK.decide(st, d.chain, choice); if (!r.ok) HK.decide(st, d.chain, { offer: 'ignore', council: d.chain === 'bishop' ? 'council' : 'stayout', hospital: 'refuse', procession: 'stay', settlement: 'stayout', envoy: 'decline', negotiation: 'stand' }[d.stage]);
+      const r = HK.decide(st, d.chain, choice); if (!r.ok) HK.decide(st, d.chain, { offer: 'ignore', council: d.chain === 'bishop' ? 'council' : 'stayout', hospital: 'refuse', procession: 'stay', settlement: 'stayout', envoy: 'decline', negotiation: 'stand' }[d.stage] || (d.chain === 'feud' ? 'ignore' : undefined));
       T.decisions.push(d.chain + ':' + d.stage + ':' + choice);
     }
     if (st.family.offer) HK.answerOffer(st, true);
@@ -186,12 +187,14 @@ function makeBot(HK, st, path) {
         if (st.rank >= 2 && !st.kontors.luebeck) L.push([HK.CONST.KONTOR_PRICE, () => HK.buyKontor(st, 'luebeck')]);
         if (st.warehouse.cap < 1300) L.push([HK.CONST.WAREHOUSE_EXPAND_COST, () => HK.expandWarehouse(st)]);
         ws('smokehouse'); house(); if (st.rank >= 2 && !st.kontors.bruegge) L.push([HK.CONST.KONTOR_PRICE, () => HK.buyKontor(st, 'bruegge')]);
+        if (st.rank >= 1 && !HK.hasTreaty(st, 'luebeck')) L.push([HK.CONST.TREATY_COST, () => HK.signTreaty(st, 'luebeck')]);
         break;
       case 'shipowner':
         ship('schnigge'); craft(); v('ropewalk'); ship('kogge'); v('sailmaker'); v('timberyard'); ship('kogge'); ship('holk'); ship('holk'); if (st.rank >= 2 && !st.kontors.luebeck) L.push([HK.CONST.KONTOR_PRICE, () => HK.buyKontor(st, 'luebeck')]);
         if (st.blessedUntil <= st.day && st.ownShips.some(s => s.status === 'port')) L.push([HK.CONST.BLESSING_COST, () => HK.blessShips(st)]);
         if (!st.militia && st.ownShips.length >= 3) L.push([HK.CONST.MILITIA_COST, () => HK.fundMilitia(st)]);
         if (st.rank >= 2 && !st.kontors.bruegge) L.push([HK.CONST.KONTOR_PRICE, () => HK.buyKontor(st, 'bruegge')]);
+        if (!HK.hasMarque(st) && st.rep >= 50 && st.ownShips.length >= 3) L.push([HK.CONST.MARQUE_COST, () => HK.buyMarque(st)]);
         break;
       case 'patron':
         house(); church('altar'); v('inn'); if (st.day % 20 === 0 && free() > 6000) L.push([1000, () => HK.donate(st, 1000)]); if (st.relicDay === undefined) L.push([HK.CONST.RELIC_COST, () => HK.donateRelic(st)]); if (!st.brotherhood && st.piety >= 50 && st.rep >= 40) L.push([HK.CONST.BROTHERHOOD_COST, () => HK.foundBrotherhood(st)]); church('bells'); storage(); if (!st.hospitalEndowed) L.push([HK.CONST.HOSPITAL_ENDOW, () => HK.hospitalEndow(st)]); church('chapel'); if (!st.churchBuild.done.aisle && !st.churchBuild.active) L.push([12000, () => HK.startChurchBuild(st, 'aisle')]); if (!st.pilgrimage) L.push([HK.CONST.PILGRIMAGE_COST, () => HK.callPilgrimage(st)]); v('stables'); house(); if (st.churchBuild.done.aisle && !st.churchBuild.done.tower && !st.churchBuild.active) L.push([20000, () => HK.startChurchBuild(st, 'tower')]); ship('kogge');
@@ -214,6 +217,7 @@ function makeBot(HK, st, path) {
         if (st.day % 5 === 0 && st.persons.bailiff.loyalty < 70 && HK.giftCost(st, 'bailiff') < free() * 0.1) L.push([HK.giftCost(st, 'bailiff'), () => HK.gift(st, 'bailiff')]);
         if (st.day % 5 === 2 && st.persons.customs.loyalty < 80 && HK.giftCost(st, 'customs') < free() * 0.1) L.push([HK.giftCost(st, 'customs'), () => HK.gift(st, 'customs')]);
         if (HK.hasVenture(st, 'dive') && st.watchUntil <= st.day) L.push([HK.CONST.WATCH_BRIBE, () => HK.bribeWatch(st)]);
+        if (HK.hasVenture(st, 'dive') && free() > 20000) for (const p of ['customs', 'bailiff', 'watch']) if (!st.network[p]) L.push([HK.NETWORK_POSTS[p], () => HK.toggleNetwork(st, p)]);
         break;
     }
     return L;

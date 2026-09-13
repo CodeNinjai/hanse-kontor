@@ -135,6 +135,12 @@ HK.LAWS = {
                 stance: { patrizier: { 0: 0, 1: -1 }, kaufleute: { 0: 1, 1: -1 }, zuenfte: { 0: 0, 1: 0 }, kirche: { 0: -1, 1: 1 } } },
   monopoly:   { name: { de: 'Handelsmonopol', en: 'Trade monopoly' }, options: ['none', 'salt', 'beer', 'cloth'], init: 'none',
                 stance: { patrizier: { none: 0, salt: 0, beer: 0, cloth: 0 }, kaufleute: { none: 1, salt: -1, beer: -1, cloth: -1 }, zuenfte: { none: 0, salt: -1, beer: -1, cloth: -1 }, kirche: { none: 0, salt: 0, beer: 0, cloth: 0 } } },
+  beerTax:    { name: { de: 'Bierziese', en: 'Beer excise' }, options: [0, 1], bool: true, init: 0,
+                stance: { patrizier: { 0: 0, 1: 1 }, kaufleute: { 0: 0, 1: 0 }, zuenfte: { 0: 1, 1: -1 }, kirche: { 0: 0, 1: 0 } } },
+  guildRule:  { name: { de: 'Zunftzwang', en: 'Guild compulsion' }, options: [0, 1], bool: true, init: 0,
+                stance: { patrizier: { 0: 0, 1: 0 }, kaufleute: { 0: 1, 1: -1 }, zuenfte: { 0: -1, 1: 1 }, kirche: { 0: 0, 1: 0 } } },
+  beggarLaw:  { name: { de: 'Bettelordnung', en: 'Beggar ordinance' }, options: [0, 1], bool: true, init: 0,
+                stance: { patrizier: { 0: 0, 1: 1 }, kaufleute: { 0: 0, 1: 0 }, zuenfte: { 0: 0, 1: 0 }, kirche: { 0: 1, 1: -1 } } },
 };
 
 HK.PROJECTS = [

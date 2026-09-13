@@ -48,6 +48,11 @@ Dazu Stadtereignisse (Hungersnot, Pest, Brand, Vitalienbrüder, Sturm, Jahrmarkt
 - **Bischofsstreit und Hansetag:** Zwei weitere Ketten. Der Bischof verlangt den Zehnt: zahlen, zum Rat stehen oder vermitteln, sonst Interdikt mit geschlossenen Kirchen; danach Vergleich oder Zehntpacht. Der Hansetag lädt nach Lübeck: selbst fahren, einen Verbündeten schicken oder ablehnen, dann verhandeln um das Privileg des zollfreien Handels.
 - **Ämter der Stadt:** Als Bürgermeister besetzt du Zöllner, Hafenmeister, Vogt und Waagemeister mit eigenen Leuten oder mit Kandidaten der Rivalen; ein Amt hält ein Jahr, ein Prozess kostet alle.
 - **Kirchenweg sichtbar:** Bruderschaft mit Mitgliedern, Beiträgen und jährlicher Prozession über den Markt; Wallfahrt mit mehr Besuchern und mehr Gefahr; Kirchenbau in Etappen (Seitenschiff, hoher Turm), der mit Gerüst auf der Karte wächst.
+- **Fehde:** Ein Ritter kapert Karawanen; Frieden kaufen, die Miliz führen, heimlich Lösegeld zahlen oder abwarten, bis der Landweg wieder frei ist.
+- **Gesetzespakete:** Bierziese, Zunftzwang und Bettelordnung als weitere Anträge im Rat, mit Wirkung auf Preise, Rivalenbetriebe, Wohlstand und Fraktionen.
+- **Kaperbrief:** Der Rat stellt Kaperbriefe aus; eigene Schiffe fahren ohne Ladung auf Beutefahrt gegen die Vitalienbrüder.
+- **Handelsverträge und Wechselbriefe:** Verträge mit Hansestädten holen deren Schiffe öfter und zu besseren Konditionen; beim Geldwechsler legst du Geld sicher oder mit Risiko an.
+- **Netzwerk der Unterwelt:** Wer die Spelunke hält, kauft Zöllner, Hafenwache, Vogt und einen Ratsherrn gegen Monatsgeld; jeder Posten senkt das Risiko, und ein aufgeflogener Schmuggel kann das ganze Netzwerk mitreißen.
 - **Balancing:** Ein geskripteter Testspieler (`node tools/testspieler.js all 3 20 normal`, Auswertung in `docs/KONZEPT.md`, Abschnitt 7.1) spielt jeden Weg zwanzig Jahre headless durch; Preise, Renditen, Rivalen und Titelbedingungen sind daran abgeglichen. Grob: Händler in Jahr 2, Kaufmann in Jahr 5, Patrizier in Jahr 8, Titel je nach Weg zwischen Jahr 4 und 12.
 
 ## Steuerung
@@ -80,6 +85,7 @@ js/sea.js       Kapitäne, Fernkontore
 js/family.js    Heirat, Kinder, Nachfolge
 js/offices.js   Ämter der Stadt
 js/faith.js     Bruderschaft, Wallfahrt, Kirchenbau
+js/deals.js     Handelsverträge, Wechselbriefe, Kaperbrief, Netzwerk, Gesetzeswirkungen
 tools/testspieler.js  Geskripteter Testspieler für Balancing-Läufe (Node, ohne Browser)
 js/ui.js        Seitenleiste, Gebäudemenüs, Dialoge
 js/main.js      Spielschleife, Speichern/Laden

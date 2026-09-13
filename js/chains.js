@@ -116,6 +116,37 @@ HK.CHAINS = {
       return { ok: false };
     },
   },
+  /* Die Fehde: ein Ritter im Umland kapert Karawanen; Frieden kaufen, Miliz schicken, Lösegeld oder abwarten */
+  feud: {
+    cooldown: 900,
+    stages: {
+      raid:    { days: 3, next: 'council' },
+      council: { choices: ['peace', 'militia', 'ransom', 'ignore'] },
+      siege:   { days: 18, next: 'end' },
+      end:     { end: true },
+    },
+    enter(st, ch, stage) {
+      if (stage === 'raid') { st.caravans = []; for (const g of ['grain', 'wool', 'timber']) st.town.stock[g] = (st.town.stock[g] || 0) * 0.85; HK.log(st, 'fd_raid', {}, 'bad'); }
+      if (stage === 'siege') {
+        const d = ch.data;
+        if (d.choice === 'peace' || d.choice === 'ransom') { HK.enterStage(st, ch, 'end'); return; }
+        if (d.choice === 'militia') {
+          if (Math.random() < 0.55 + (st.town.projects.wall ? 0.15 : 0) + (st.militia ? 0.1 : 0)) { const loot = HK.rndi(800, 2000); HK.book(st, 'expedition', loot); st.rep = HK.clamp(st.rep + 8, 0, 100); HK.fac(st, 'patrizier', 6); HK.fac(st, 'zuenfte', 4); st.influence += 6; HK.log(st, 'fd_victory', { loot: HK.fmt(loot) }, 'good'); HK.enterStage(st, ch, 'end'); return; }
+          st.militia = false; HK.fac(st, 'patrizier', -3); HK.log(st, 'fd_defeat', {}, 'bad');
+        }
+        st.landClosedUntil = st.day + 18; HK.fac(st, 'kaufleute', -4); HK.log(st, 'fd_siege', {}, 'bad');
+      }
+      if (stage === 'end') HK.log(st, 'fd_end', {}, 'info');
+    },
+    choose(st, ch, choice) {
+      const d = ch.data;
+      if (ch.stage !== 'council') return { ok: false };
+      if (choice === 'peace') { if (st.money < 3000) return { ok: false, msg: 'notEnoughMoney' }; HK.book(st, 'politics', -3000); st.rep = HK.clamp(st.rep + 4, 0, 100); HK.fac(st, 'patrizier', 4); HK.fac(st, 'kaufleute', 3); st.influence += 4; }
+      if (choice === 'militia') { if (!st.militia) return { ok: false, msg: 'needMilitia' }; }
+      if (choice === 'ransom') { if (st.money < 1500) return { ok: false, msg: 'notEnoughMoney' }; HK.book(st, 'bribes', -1500); st.rep = HK.clamp(st.rep - 5, 0, 100); HK.fac(st, 'patrizier', -6); HK.fac(st, 'kirche', -2); st.suspicion = HK.clamp(st.suspicion + 3, 0, 100); }
+      d.choice = choice; return { ok: true, next: 'siege' };
+    },
+  },
   /* Der Hansetag: Einladung, Gesandter, Verhandlung, Privileg oder Blamage */
   hansetag: {
     cooldown: 900,
@@ -188,6 +219,7 @@ HK.tickHooks.push(st => {
     else if (!(st.chains.cooldown.plague > st.day) && st.town.events.some(e => e.type === 'plague') && st.log.some(e => e.day >= st.day - 1 && e.key === 'ev_plague')) HK.startChain(st, 'plague');
     else if (st.day > 200 && !(st.chains.cooldown.bishop > st.day) && Math.random() < 0.0009) HK.startChain(st, 'bishop');
     else if (st.day > 400 && st.rank >= 2 && !(st.chains.cooldown.hansetag > st.day) && Math.random() < 0.001) HK.startChain(st, 'hansetag');
+    else if (st.day > 150 && !(st.chains.cooldown.feud > st.day) && Math.random() < 0.001) HK.startChain(st, 'feud');
   }
   // Interdikt: keine Messen, Frömmigkeit fällt, die Kirche grollt; Zehntpacht zahlt
   if (st.interdictUntil > st.day) { st.piety = HK.clamp(st.piety - 0.25, 0, 100); HK.fac(st, 'kirche', -0.04); }

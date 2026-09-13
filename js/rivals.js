@@ -3,9 +3,9 @@
 'use strict';
 
 HK.RIVAL_DEF = {
-  kruse:   { path: 'merchant',  faction: 'kaufleute', color: '#556b2f', wants: ['storage', 'house', 'venture'], ventures: ['goldsmith', 'inn', 'cooper', 'dyer'], law: ['monopoly', 'marketFee'] },
-  bracht:  { path: 'shipowner', faction: 'patrizier', color: '#8b4513', wants: ['ship', 'house', 'venture'], ventures: ['sailmaker', 'ropewalk', 'timberyard', 'smokery'], law: ['tariff', 'staple'] },
-  detmers: { path: 'patron',    faction: 'kirche',    color: '#4b0082', wants: ['house', 'venture', 'donate'], ventures: ['bakery', 'apothecary', 'potter', 'butcher'], law: ['bathBan', 'usuryBan'] },
+  kruse:   { path: 'merchant',  faction: 'kaufleute', color: '#556b2f', wants: ['storage', 'house', 'venture'], ventures: ['goldsmith', 'inn', 'cooper', 'dyer'], law: ['monopoly', 'marketFee', 'guildRule'] },
+  bracht:  { path: 'shipowner', faction: 'patrizier', color: '#8b4513', wants: ['ship', 'house', 'venture'], ventures: ['sailmaker', 'ropewalk', 'timberyard', 'smokery'], law: ['tariff', 'staple', 'beerTax'] },
+  detmers: { path: 'patron',    faction: 'kirche',    color: '#4b0082', wants: ['house', 'venture', 'donate'], ventures: ['bakery', 'apothecary', 'potter', 'butcher'], law: ['bathBan', 'usuryBan', 'beggarLaw'] },
 };
 HK.rivalName = id => HK.RIVALS.find(x => x.id === id).name;
 HK.attitudeLabel = a => a >= 60 ? 'att_allied' : a >= 25 ? 'att_friendly' : a > -25 ? 'att_neutral' : a > -60 ? 'att_cold' : 'att_hostile';
@@ -46,7 +46,7 @@ HK.rivalBuy = function (st, r, def) {
     const k = HK.pick(kinds);
     if (k === 'house' && r.holdings.houses.length < 1) { const free = st.houses.filter(h => h.owner === 'npc'); if (free.length) { const h = HK.pick(free); if (r.wealth > h.price * 4) { h.owner = r.id; r.holdings.houses.push(h.id); r.wealth -= Math.round(h.price * 0.3); HK.log(st, 'rivalBought', { rival: HK.rivalName(r.id), thing: HK.name(HK.BUILDINGS.find(b => b.panel === 'house' && b.plot === h.id)) }, 'info'); return true; } } }
     if (k === 'storage' && r.holdings.storages.length < 2) { const idx = st.storages.map((s, i) => s.owner === 'npc' ? i : -1).filter(i => i >= 0); if (idx.length) { const i = HK.pick(idx); if (r.wealth > HK.STORAGES[i].price * 4) { st.storages[i].owner = r.id; r.holdings.storages.push(i); r.wealth -= Math.round(HK.STORAGES[i].price * 0.3); HK.log(st, 'rivalBought', { rival: HK.rivalName(r.id), thing: HK.name(HK.BUILDINGS.find(b => b.panel === 'storage' && b.plot === i)) }, 'info'); return true; } } }
-    if (k === 'venture' && r.holdings.ventures.length < 3) { const free = def.ventures.filter(id => !st.ventures[id]); if (free.length) { const id = HK.pick(free), v = HK.VENTURE[id]; if (r.wealth > v.cost * 4) { st.ventures[id] = { level: 1, since: st.day, owner: r.id }; r.holdings.ventures.push(id); r.wealth -= Math.round(v.cost * 0.3); HK.log(st, 'rivalBought', { rival: HK.rivalName(r.id), thing: HK.name(v) }, 'info'); return true; } } }
+    if (k === 'venture' && r.holdings.ventures.length < 3 && !HK.law(st, 'guildRule')) { const free = def.ventures.filter(id => !st.ventures[id]); if (free.length) { const id = HK.pick(free), v = HK.VENTURE[id]; if (r.wealth > v.cost * 4) { st.ventures[id] = { level: 1, since: st.day, owner: r.id }; r.holdings.ventures.push(id); r.wealth -= Math.round(v.cost * 0.3); HK.log(st, 'rivalBought', { rival: HK.rivalName(r.id), thing: HK.name(v) }, 'info'); return true; } } }
     if (k === 'ship') { if (r.ships < 4 && r.wealth > HK.CONST.SHIP_PRICE * 5) { r.ships++; r.wealth -= Math.round(HK.CONST.SHIP_PRICE * 0.4); HK.log(st, 'rivalShip', { rival: HK.rivalName(r.id), n: r.ships }, 'info'); return true; } }
   }
   return false;

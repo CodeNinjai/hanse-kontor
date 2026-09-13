@@ -3,7 +3,7 @@
 
 HK.UI = {
   tab: 'place', panel: 'kontor', plot: 0, selectedVisitor: null, selectedOwnShip: null, person: null, encounter: null,
-  inputs: { qty: 10, qtyAll: false, smuggle: false, loan: 1000, bet: 100, donate: 200, dest: 'luebeck', bring: '' }, modalOpen: false, modalRender: null, unread: 0,
+  inputs: { qty: 10, qtyAll: false, smuggle: false, loan: 1000, bill: 1000, bet: 100, donate: 200, dest: 'luebeck', bring: '' }, modalOpen: false, modalRender: null, unread: 0,
 
   esc(s) { return String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])); },
   $(id) { return document.getElementById(id); },
@@ -253,16 +253,17 @@ HK.UI = {
     const st = HK.state;
     if (!st.ownShips.length) return `<p class="hint">${HK.t('noOwnShips')}</p>`;
     let s = st.ownShips.find(x => x.id === this.selectedOwnShip); if (!s) { s = st.ownShips[0]; this.selectedOwnShip = s.id; }
-    let h = st.ownShips.map(x => `<div class="card ${x.id === s.id ? 'selected' : ''}" data-action="selown" data-id="${x.id}" style="cursor:pointer"><div class="card-head"><b>${this.esc(x.name)}</b> <small>${HK.name(HK.SHIP_TYPE[x.type] || HK.SHIP_TYPE.kogge)}${x.captain ? ' · ' + this.esc(x.captain.name) : ''}</small><small>${x.status === 'port' ? HK.t('inPort') : HK.t('away', { dest: HK.name(HK.ORIGIN[x.dest]), days: x.daysLeft })} · ${HK.t('hull')} ${x.hull} %</small></div><small>${HK.t('cargo')}: ${Object.keys(x.cargo).map(g => x.cargo[g] + ' ' + HK.goodName(g)).join(', ') || '–'} (${HK.stockUsed(x.cargo)}/120)</small></div>`).join('');
+    let h = st.ownShips.map(x => `<div class="card ${x.id === s.id ? 'selected' : ''}" data-action="selown" data-id="${x.id}" style="cursor:pointer"><div class="card-head"><b>${this.esc(x.name)}</b> <small>${HK.name(HK.SHIP_TYPE[x.type] || HK.SHIP_TYPE.kogge)}${x.captain ? ' · ' + this.esc(x.captain.name) : ''}</small><small>${x.status === 'port' ? HK.t('inPort') : HK.t('away', { dest: HK.name(HK.ORIGIN[x.dest]), days: x.daysLeft })} · ${HK.t('hull')} ${x.hull} %</small></div><small>${HK.t('cargo')}: ${Object.keys(x.cargo).map(g => x.cargo[g] + ' ' + HK.goodName(g)).join(', ') || '–'} (${HK.stockUsed(x.cargo)}/${HK.shipCap(x)})</small></div>`).join('');
     if (s.status === 'port') {
       const seaDest = HK.ORIGINS.filter(o => o.sea);
       const dest = HK.ORIGIN[this.inputs.dest] && HK.ORIGIN[this.inputs.dest].sea ? this.inputs.dest : seaDest[0].id;
       const o = HK.ORIGIN[dest];
       h += `<p class="hint">${HK.t('expeditionHint')}</p>${this.qtyRow()}<table class="market"><thead><tr><th>${HK.t('good')}</th><th class="num">${HK.t('warehouse')}</th><th class="num">${HK.t('cargo')}</th><th class="num">${HK.name(o)}</th><th></th></tr></thead><tbody>`;
-      for (const g of HK.GOODS) { const wh = Math.floor(st.warehouse.stock[g.id] || 0), c = s.cargo[g.id] || 0; if (!wh && !c) continue; h += `<tr><td class="gname">${HK.goodName(g.id)}</td><td class="num">${wh || ''}</td><td class="num">${c || ''}</td><td class="num">${o.want[g.id] ? '<b>' + Math.round(g.base * (0.75 + o.want[g.id] * 0.4)) + '</b>' : Math.round(g.base * 0.8)}</td><td class="acts"><button class="small" data-action="load" data-good="${g.id}" ${wh ? '' : 'disabled'}>${HK.t('loadShip')}</button><button class="small" data-action="unload" data-good="${g.id}" ${c ? '' : 'disabled'}>${HK.t('unloadShip')}</button></td></tr>`; }
-      h += `</tbody></table><div class="btn-row"><label>${HK.t('destination')} <select data-field="dest">${seaDest.map(x => `<option value="${x.id}" ${x.id === dest ? 'selected' : ''}>${HK.name(x)} (${HK.t('daysTrip', { days: x.days * 2 + 1 })})</option>`).join('')}</select></label>
-        <label>${HK.t('bringBack')} <select data-field="bring"><option value="">–</option>${Object.keys(o.sell).map(g => `<option value="${g}" ${this.inputs.bring === g ? 'selected' : ''}>${HK.goodName(g)} (${Math.round(HK.GOOD[g].base * o.sell[g])})</option>`).join('')}</select></label>
+      for (const g of HK.GOODS) { const wh = Math.floor(st.warehouse.stock[g.id] || 0), c = s.cargo[g.id] || 0; if (!wh && !c) continue; h += `<tr><td class="gname">${HK.goodName(g.id)}</td><td class="num">${wh || ''}</td><td class="num">${c || ''}</td><td class="num">${o.want[g.id] ? '<b>' + Math.round(g.base * HK.wantFactor(o.want[g.id])) + '</b>' : Math.round(g.base * 0.8)}</td><td class="acts"><button class="small" data-action="load" data-good="${g.id}" ${wh ? '' : 'disabled'}>${HK.t('loadShip')}</button><button class="small" data-action="unload" data-good="${g.id}" ${c ? '' : 'disabled'}>${HK.t('unloadShip')}</button></td></tr>`; }
+      h += `</tbody></table><div class="btn-row"><label>${HK.t('destination')} <select data-field="dest">${seaDest.map(x => `<option value="${x.id}" ${x.id === dest ? 'selected' : ''}>${HK.name(x)} (${HK.t('daysTrip', { days: x.days * 4 + 3 })})</option>`).join('')}</select></label>
+        <label>${HK.t('bringBack')} <select data-field="bring"><option value="">–</option>${Object.keys(o.sell).map(g => `<option value="${g}" ${this.inputs.bring === g ? 'selected' : ''}>${HK.goodName(g)} (${Math.round(HK.GOOD[g].base * HK.sellFactor(o.sell[g]))})</option>`).join('')}</select></label>
         <button class="primary" data-action="send" ${s.hull >= 30 ? '' : 'disabled'}>${HK.t('sendShip')}</button></div>`;
+      if (HK.hasMarque(st)) h += `<div class="btn-row"><button class="small" data-action="privateer" ${s.hull >= 50 && !HK.stockUsed(s.cargo) ? '' : 'disabled'}>${HK.t('privateerSend')}</button></div>`;
     }
     return h;
   },
@@ -307,6 +308,7 @@ HK.UI = {
     h += `</table><p class="hint">${HK.t('propose')}</p></section>`;
     h += `<section><h3>${HK.t('projects')}</h3><table class="plain">${HK.PROJECTS.map(p => `<tr><td><b>${HK.name(p)}</b> <small>+${p.rep} ${HK.t('rep')}</small></td><td class="num">${st.town.projects[p.id] ? `<span class="tag gold">${HK.t('funded')}</span>` : `<button class="small" data-action="project" data-id="${p.id}" ${st.money >= p.cost ? '' : 'disabled'}>${HK.t('fund', { cost: HK.fmt(p.cost) })}</button>`}</td></tr>`).join('')}</table></section>`;
     h += `<section><h3>${HK.t('taxFarm')}</h3><p class="hint">${HK.t('taxFarmHint')}</p>${st.taxFarm && st.taxFarm.until > st.day ? `<p class="tag gold">${HK.t('taxFarmActive', { days: st.taxFarm.until - st.day })}</p>` : `<button class="small" data-action="taxfarm" ${st.money >= HK.taxFarmPrice(st) ? '' : 'disabled'}>${HK.t('buyTaxFarm', { cost: HK.fmt(HK.taxFarmPrice(st)) })}</button>`}</section>`;
+    h += `<section><h3>${HK.t('marque')}</h3><p class="hint">${HK.t('marqueHint', { cost: HK.fmt(HK.CONST.MARQUE_COST) })}</p>${HK.hasMarque(st) ? `<p class="tag gold">${HK.t('marqueActive', { days: st.marque.until - st.day })}</p>` : `<button class="small" data-action="buymarque" ${st.money >= HK.CONST.MARQUE_COST && (st.seat !== 'none' || st.rep >= 50) ? '' : 'disabled'}>${HK.t('buyMarque', { cost: HK.fmt(HK.CONST.MARQUE_COST) })}</button>`}</section>`;
     h += `<section><h3>${HK.t('offices')}</h3><p class="hint">${st.seat === 'mayor' ? HK.t('officesHint', { cost: HK.fmt(HK.CONST.OFFICE_COST), infl: HK.CONST.OFFICE_INFLUENCE }) : HK.t('officesLocked')}</p>`;
     if (st.seat === 'mayor') for (const pid of HK.OFFICES) {
       const p = st.persons[pid], can = HK.canAppoint(st, pid);
@@ -385,6 +387,8 @@ HK.UI = {
     const st = HK.state, amt = Math.max(0, parseInt(this.inputs.loan, 10) || 0), limit = HK.loanLimit(st);
     let h = this.head(HK.t('bank'), '') + `<section>${this.personRow('changer')}<table class="plain"><tr><td>${HK.t('yourLoan')}</td><td class="num">${HK.fmt(st.loan)} ${HK.t('mark')}</td></tr><tr><td>${HK.t('loanLimit')}</td><td class="num">${HK.fmt(limit)} ${HK.t('mark')}</td></tr></table><p class="hint">${HK.t('interestInfo', { pct: (HK.CONST.LOAN_RATE_DAILY * 36500).toFixed(1) })}</p>
       <div class="btn-row"><input id="loan-input" type="number" min="0" step="500" data-field="loan" value="${this.esc(this.inputs.loan)}"><button class="small" data-action="takeloan" ${amt > 0 && amt <= limit ? '' : 'disabled'}>${HK.t('takeLoan')}</button><button class="small" data-action="repayloan" ${amt > 0 && st.loan > 0 && st.money > 0 ? '' : 'disabled'}>${HK.t('repay')}</button></div></section>`;
+    const bill = Math.max(0, parseInt(this.inputs.bill, 10) || 0);
+    h += `<section><h3>${HK.t('bills')}</h3><p class="hint">${HK.t('billsHint', { min: HK.fmt(HK.CONST.BILL_MIN), max: HK.fmt(HK.CONST.BILL_MAX) })}</p><div class="btn-row"><input type="number" min="0" step="500" data-field="bill" value="${this.esc(this.inputs.bill)}"><button class="small" data-action="buybill" data-kind="safe" ${bill >= HK.CONST.BILL_MIN && bill <= HK.CONST.BILL_MAX && st.money >= bill ? '' : 'disabled'}>${HK.t('buyBillSafe')}</button><button class="small" data-action="buybill" data-kind="luebeck" ${bill >= HK.CONST.BILL_MIN && bill <= HK.CONST.BILL_MAX && st.money >= bill ? '' : 'disabled'}>${HK.t('buyBillLuebeck')}</button></div>${st.bills.length ? `<ul class="conds">${st.bills.map(b => `<li>${HK.t('billOpen', { kind: HK.t('bill_' + b.kind), amount: HK.fmt(b.amount), days: Math.max(0, b.due - st.day) })}</li>`).join('')}</ul>` : ''}</section>`;
     h += `<section><h3>${HK.t('lending')}</h3><p class="hint">${HK.t('lendingHint')}</p>${HK.law(st, 'usuryBan') ? `<p class="demand shortage">${HK.t('usuryWarning')}</p>` : ''}<table class="plain">${st.loanOffers.map(o => `<tr><td><b>${o.name}</b><br><small>${HK.fmt(o.amount)} ${HK.t('mark')} · ${HK.t('interest')} ${o.interest} % · ${HK.t('term', { days: o.days })} · ${HK.t('risk')}: ${HK.t(o.risk < 0.15 ? 'risk_low' : o.risk < 0.28 ? 'risk_mid' : 'risk_high')}</small></td><td class="num"><button class="small" data-action="lend" data-id="${o.id}" ${st.money >= o.amount ? '' : 'disabled'}>${HK.t('lend')}</button></td></tr>`).join('')}</table>`;
     if (st.loansOut.length) h += `<h4>${HK.t('outstanding')}</h4><table class="plain">${st.loansOut.map(l => `<tr><td>${l.name}</td><td class="num">${HK.fmt(l.amount)} +${l.interest} %</td><td class="num">${l.defaulted ? `<span class="demand shortage">${HK.t('defaulted')}</span>` : HK.t('dueIn', { days: Math.max(0, l.due - st.day) })}</td></tr>`).join('')}</table>`;
     return h + `</section>`;
@@ -453,6 +457,7 @@ HK.UI = {
     const dmg = st.ownShips.filter(s => s.status === 'port' && s.hull < 100);
     if (dmg.length) h += `<div class="btn-row">${dmg.map(s => `<button class="small" data-action="sailors" data-id="${s.id}" ${st.money >= HK.CONST.SAILORS_COST ? '' : 'disabled'}>${HK.t('hireSailors', { ship: this.esc(s.name), cost: HK.CONST.SAILORS_COST })}</button>`).join('')}</div>`;
     h += `</section>` + this.contractsSection('dive');
+    if (HK.hasVenture(st, 'dive')) h += `<section><h3>${HK.t('network')}</h3><p class="hint">${HK.t('networkHint')}</p><table class="plain">${Object.keys(HK.NETWORK_POSTS).map(p => `<tr><td><b>${HK.t('post_' + p)}</b><br><small>${HK.t('postHint_' + p)}</small></td><td class="num"><button class="small ${st.network[p] ? 'primary' : ''}" data-action="network" data-post="${p}" ${st.network[p] || st.money >= HK.NETWORK_POSTS[p] ? '' : 'disabled'}>${HK.t(st.network[p] ? 'networkOn' : 'networkOff', { cost: HK.NETWORK_POSTS[p] })}</button></td></tr>`).join('')}</table></section>`;
     return h;
   },
   panel_monastery() {
@@ -487,6 +492,7 @@ HK.UI = {
       <div class="btn-row"><button class="small" data-action="harbourbook" ${st.money >= HK.CONST.HARBOUR_BOOK && !(st.harbourBookUntil > st.day) ? '' : 'disabled'}>${HK.t('harbourBook', { cost: HK.CONST.HARBOUR_BOOK, days: HK.CONST.HARBOUR_BOOK_DAYS })}</button>${st.harbourBookUntil > st.day ? `<small>${HK.t('harbourBookActive', { days: st.harbourBookUntil - st.day })}</small>` : ''}</div>
       <div class="btn-row"><button class="small" data-action="berthpriority" ${st.money >= HK.berthPriorityCost(st) && st.ships.length ? '' : 'disabled'}>${HK.t('berthPriority', { cost: HK.fmt(HK.berthPriorityCost(st)) })}</button></div>
       <div class="btn-row"><button class="small" data-action="extraberth" ${st.money >= HK.CONST.EXTRA_BERTH && st.town.berths < HK.CONST.MAX_BERTHS ? '' : 'disabled'}>${HK.t('extraBerth', { cost: HK.fmt(HK.CONST.EXTRA_BERTH) })}</button> <small>${HK.t('berths')}: ${st.town.berths}/${HK.CONST.MAX_BERTHS}</small></div></section>`;
+    h += `<section><h3>${HK.t('treaties')}</h3><p class="hint">${HK.t('treatiesHint', { cost: HK.fmt(HK.CONST.TREATY_COST) })}</p><table class="plain">${HK.ORIGINS.filter(o => o.sea).map(o => `<tr><td><b>${HK.name(o)}</b></td><td class="num">${HK.hasTreaty(st, o.id) ? `<span class="tag gold">${HK.t('treatyActive', { days: st.treaties[o.id].until - st.day })}</span>` : `<button class="small" data-action="signtreaty" data-city="${o.id}" ${st.money >= HK.CONST.TREATY_COST && st.rank >= 1 ? '' : 'disabled'}>${HK.t('signTreaty', { cost: HK.fmt(HK.CONST.TREATY_COST) })}</button>`}</td></tr>`).join('')}</table></section>`;
     if (HK.knowsIncoming(st)) h += this.incomingList();
     h += this.contractsSection('harbourmaster');
     return h;
@@ -647,6 +653,11 @@ HK.UI = {
       case 'pilgrimage': this.result(HK.callPilgrimage(st)); break;
       case 'churchbuild': this.result(HK.startChurchBuild(st, d.id)); break;
       case 'appointoffice': this.result(HK.appointOffice(st, d.person, d.who)); break;
+      case 'signtreaty': this.result(HK.signTreaty(st, d.city)); break;
+      case 'buybill': if (this.result(HK.buyBill(st, d.kind, parseInt(this.inputs.bill, 10) || 0))) this.inputs.bill = ''; break;
+      case 'buymarque': this.result(HK.buyMarque(st)); break;
+      case 'privateer': if (ship) this.result(HK.privateer(st, ship.id)); break;
+      case 'network': this.result(HK.toggleNetwork(st, d.post)); break;
       case 'sermon': this.result(HK.sermon(st, d.kind)); break;
       case 'propose': { const law = HK.LAWS[d.law]; const val = law.bool || d.law === 'tariff' || d.law === 'marketFee' ? parseInt(d.value, 10) : d.value; r = HK.propose(st, d.law, val); if (this.result(r)) this.toast(HK.t(r.passed ? 'motionPassed' : 'motionFailed', { law: HK.name(law), value: HK.lawValueText(d.law, val), yes: r.yes, no: r.no }), r.passed ? 'good' : 'bad', 4000); break; }
       case 'run': r = HK.runForSeat(st); if (this.result(r)) this.toast(HK.t(r.won ? (st.seat === 'mayor' ? 'becameMayor' : 'becameCouncillor') : 'electionLost', { support: 0, need: 0 }), r.won ? 'good' : 'bad', 4000); break;
