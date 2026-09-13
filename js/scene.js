@@ -125,6 +125,7 @@ HK.Scene = {
   /* ---------- Passanten ---------- */
   makeWalker(anywhere) {
     const types = []; HK.WALKER_TYPES.forEach(t => { for (let i = 0; i < t.weight; i++) types.push(t); });
+    if (HK.state && HK.state.pilgrimage) for (let i = 0; i < 3; i++) types.push({ id: 'pilgrim', colors: ['#6a6058', '#5a4a3a', '#7a6a5a', '#4a4a4a'] });
     const t = HK.pick(types), keys = Object.keys(HK.ROAD_NODES);
     const from = HK.pick(keys), to = HK.pick(HK.ROAD_ADJ[from]);
     return { type: t.id, color: HK.pick(t.colors), from, to, t: anywhere ? Math.random() : 0, speed: HK.rnd(0.25, 0.5) * (t.id === 'child' ? 1.5 : t.id === 'beggar' ? 0.6 : 1), off: HK.rnd(-0.22, 0.22), pause: 0, nightOwl: Math.random() < 0.2 || t.id === 'guard', skin: HK.pick(['#e8c39e', '#d9a98a', '#c9946c']), hat: Math.random() < 0.5, basket: Math.random() < 0.3, phase: Math.random() * 6.28 };
@@ -156,6 +157,8 @@ HK.Scene = {
     for (const c of this.carts) { const len = Math.hypot(c.b[0] - c.a[0], c.b[1] - c.a[1]); c.t += c.dir * c.v * dt / len; if (c.t > 1) { c.t = 1; c.dir = -1; } if (c.t < 0) { c.t = 0; c.dir = 1; } }
     for (const ch of this.chickens) { ch.t += dt; if (ch.t > 2) { ch.t = 0; ch.a = Math.random() * 6.28; } ch.x = ch.cx + Math.cos(ch.a) * 0.3 * Math.sin(ch.t * 1.5); ch.y = ch.cy + Math.sin(ch.a) * 0.3 * Math.sin(ch.t * 1.5); }
     for (const g of this.gulls) g.a += g.s * dt;
+    // Wallfahrt: Pilger mischen sich nach und nach unter die Passanten
+    if (st && st.pilgrimage && Math.random() < dt * 0.5 && this.walkers.filter(w => w.type === 'pilgrim').length < 14) { const i = this.walkers.findIndex(w => w.type === 'citizen'); if (i >= 0) { const old = this.walkers[i], nw = this.makeWalker(false); Object.assign(nw, { from: old.from, to: old.to, t: old.t, type: 'pilgrim', color: HK.pick(['#6a6058', '#5a4a3a', '#7a6a5a', '#4a4a4a']), hat: false, basket: false }); this.walkers[i] = nw; } }
     // Prozession der Bruderschaft: am Festtag zieht ein Zug von der Kirche über den Markt und zurück
     if (st && st.processionDay === st.day) { if (!this.procession) this.procession = { t: 0, n: Math.min(24, 8 + Math.floor((st.brotherhood ? st.brotherhood.members : 0) / 8)), route: ['NN', 'S1', 'S3', 'MK', 'M3', 'M2', 'NN'] }; this.procession.t += dt * 0.09; }
     else this.procession = null;
@@ -228,6 +231,16 @@ HK.Scene = {
     for (const c0 of this.carts) { const wx = c0.a[0] + (c0.b[0] - c0.a[0]) * c0.t, wy = c0.a[1] + (c0.b[1] - c0.a[1]) * c0.t; items.push({ k: this.pointKey(wx, wy), f: c => this.drawCart(c, wx, wy, c0, t) }); }
     for (const ch of this.chickens) items.push({ k: this.pointKey(ch.x, ch.y), f: c => { const s2 = I.p(ch.x, ch.y, 0); this.drawChicken(c, s2[0], s2[1], t); } });
     for (const n of HK.STATIC_NPCS) { const pp = HK.PERSON[n.person]; items.push({ k: this.pointKey(n.x, n.y), f: c => { const s2 = I.p(n.x, n.y, 0); this.drawPerson(c, s2[0], s2[1], n.color, 'static', 1, this.hover && this.hover.person === n.person, null, 0, 1, n.person); }, pick: { kind: 'person', person: n.person, label: pp.name + ', ' + (pp.title[HK.LANG] || pp.title.de) } }); }
+    // Fehde: der Ritter mit seinen Reitern lauert vor dem Landtor
+    if (st && st.chains && st.chains.active.some(c => c.id === 'feud')) {
+      const K = [[33.3, 9.5, -1, true], [34.0, 10.3, -1, false], [33.9, 8.7, -1, false], [34.8, 9.6, 1, false]];
+      for (const [wx, wy, dir, mounted] of K) { const sp = I.p(wx, wy, 0); items.push({ k: this.pointKey(wx, wy), f: c => mounted ? this.drawHorseman(c, sp[0], sp[1], dir, '#5a3a22') : this.drawPerson(c, sp[0], sp[1], '#7a3030', 'guard', 1, false, '#d9a98a', this.time * 2, dir, null, null, 0.85) }); }
+      if (!this.picking) { const fp = I.p(34.4, 9.9, 0); items.push({ k: this.pointKey(34.4, 9.9), f: c => { c.fillStyle = 'rgba(255,140,40,' + (0.5 + Math.sin(this.time * 7) * 0.2) + ')'; c.beginPath(); c.ellipse(fp[0], fp[1] - 4, 4, 6, 0, 0, 6.28); c.fill(); c.fillStyle = '#4a3a2a'; c.beginPath(); c.ellipse(fp[0], fp[1], 6, 2.5, 0, 0, 6.28); c.fill(); } }); }
+    }
+    // Zunftaufstand: Handwerker mit Fackeln vor dem Rathaus
+    if (st && st.unrestUntil > st.day) {
+      for (let i = 0; i < 12; i++) { const wx = 12.35 + ((i * 37) % 13) / 10, wy = 8.55 + ((i * 53) % 11) / 10, sp = I.p(wx, wy, 0); items.push({ k: this.pointKey(wx, wy), f: c => this.drawPerson(c, sp[0], sp[1], ['#7a5a3a', '#5a6a4a', '#8a6a3a', '#6a4a6a'][i % 4], 'torch', 1, false, '#d9a98a', this.time * 2 + i, i % 2 ? 1 : -1, null, null, 0.85) }); }
+    }
     if (this.procession) {
       const P = this.procession, segs = P.route.length - 1;
       for (let i = 0; i < P.n; i++) {
@@ -271,7 +284,7 @@ HK.Scene = {
     this.tee = tee; em.setTransform(1, 0, 0, 1, 0, 0); em.clearRect(0, 0, HK.SCENE.W, HK.SCENE.H); this.viewTransform(em, 1); return tee;
   },
   /* Leuchtendes Fenster in die Emissionsebene schreiben (Weltkoordinaten) */
-  emit(pts, col) { if (!this.em || !this.nightK || this.picking) return; const em = this.em; em.save(); em.fillStyle = col; em.beginPath(); pts.forEach((q, i) => { const p = I.p(q[0], q[1], q[2]); i ? em.lineTo(p[0], p[1]) : em.moveTo(p[0], p[1]); }); em.closePath(); em.fill(); em.restore(); },
+  emit(pts, col) { if (!this.em || !this.nightK || this.picking || this.emitOff) return; const em = this.em; em.save(); em.fillStyle = col; em.beginPath(); pts.forEach((q, i) => { const p = I.p(q[0], q[1], q[2]); i ? em.lineTo(p[0], p[1]) : em.moveTo(p[0], p[1]); }); em.closePath(); em.fill(); em.restore(); },
 
   /* ---------- Zeichnen ---------- */
   draw() {

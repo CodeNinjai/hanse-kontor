@@ -896,6 +896,7 @@ HK.encounter = function (st, type) {
   const r = Math.random();
   switch (type) {
     case 'beggar': return { key: 'encBeggar', action: 'alms', cost: 20 };
+    case 'pilgrim': return { key: 'encPilgrim', action: 'alms', cost: 30 };
     case 'monk': return { key: 'encMonk', action: 'alms', cost: 50 };
     case 'merchant': {
       const inc = st.incoming.find(i => !i.known);

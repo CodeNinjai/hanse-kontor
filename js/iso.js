@@ -98,7 +98,7 @@ HK.Iso = {
     // Rahmen
     const ex = (q, k) => [q[0] + (q[0] - (a[0] + b[0] + c[0] + d[0]) / 4) * k, q[1] + (q[1] - (a[1] + b[1] + c[1] + d[1]) / 4) * k, q[2] + (q[2] - (a[2] + b[2] + c[2] + d[2]) / 4) * k];
     this.poly(ctx, pts.map(q => ex(q, 0.18)), o.frame || '#5a4028');
-    const S = HK.Scene, lit = S && S.nightK && !S.picking && (((a[0] * 7.3 + a[1] * 5.1 + a[2] * 3.7) * 10) | 0) % 5 !== 0;
+    const S = HK.Scene, lit = S && S.nightK && !S.picking && !S.emitOff && (((a[0] * 7.3 + a[1] * 5.1 + a[2] * 3.7) * 10) | 0) % 5 !== 0;
     const pane = lit ? '#e8a850' : '#23262d', shape = o.arch ? [a, b, c, [(c[0] + d[0]) / 2, (c[1] + d[1]) / 2, c[2] + (c[2] - b[2]) * 0.35], d] : pts;
     this.poly(ctx, shape, pane);
     if (lit) S.emit(shape, `rgba(255,${160 + ((a[0] * 13) | 0) % 30},${60 + ((a[1] * 17) | 0) % 30},${0.85 * S.nightK})`);

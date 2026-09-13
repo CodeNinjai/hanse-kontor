@@ -131,6 +131,7 @@ Object.assign(HK.Scene, {
     I.shadow(ctx, b.x, b.y, b.w, b.d, b.h + rh * 0.5, sv.v, sv.a);
     // Turm zuerst: das davor liegende Schiff verdeckt seine rechte Seite unterhalb des Daches
     const CB = st && st.churchBuild ? st.churchBuild : { done: {}, active: null }, prog = st && HK.churchBuildProgress ? HK.churchBuildProgress(st) : 0;
+    HK.Scene.emitOff = !!(st && st.interdictUntil > st.day);
     const towerUp = CB.done.tower ? 1 : CB.active && CB.active.id === 'tower' ? prog : 0, th = 4.6 + 1.6 * towerUp, ty = b.y + b.d - tw;
     I.box(ctx, b.x, ty, 0, tw, tw, th, { wall: '#a24a3a' }, { noTop: true }); I.brickL(ctx, b.x, ty, tw, 0, tw, th); I.brickR(ctx, b.x, tw, ty, 0, tw, th);
     for (let k = 0; k < (th > 5.8 ? 5 : 4); k++) { I.windowL(ctx, b.x, ty, tw, 1.0 + k * 0.95, tw / 2, 0.2, 0.42, { arch: true, frame: '#3a2a20' }); if (k > 1) I.windowR(ctx, b.x, tw, ty, 1.0 + k * 0.95, tw / 2, 0.2, 0.42, { arch: true, frame: '#3a2a20' }); }
@@ -157,6 +158,8 @@ Object.assign(HK.Scene, {
         for (let i = 1; i < 6; i++) { const u = ax + aw * i / 6; I.line(ctx, [u, ay - 0.02, ah + 0.42], [u, ay + ad + 0.05, ah], 'rgba(0,0,0,0.18)', 0.6); }
       } else this.drawScaffold(ctx, ax, ay, aw, ad, 0, 1.3);
     }
+    if (HK.Scene.emitOff && !this.picking) { const dp = I.p(nx + nw * 0.5, b.y + b.d + 0.05, 0.75); ctx.strokeStyle = '#3a2a20'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(dp[0] - 7, dp[1] - 6); ctx.lineTo(dp[0] + 7, dp[1] + 6); ctx.moveTo(dp[0] + 7, dp[1] - 6); ctx.lineTo(dp[0] - 7, dp[1] + 6); ctx.stroke(); }
+    HK.Scene.emitOff = false;
   },
   /* Baugerüst: Stangen und Riegel aus Holz um einen Quader */
   drawScaffold(ctx, x, y, w, d, z0, z1) {
@@ -654,6 +657,19 @@ Object.assign(HK.Scene, {
     else { const p = I.p(...W(0.4 * d, 0, 0)); this.drawPerson(ctx, p[0], p[1], '#5a6a4a', 'citizen', 1, false, '#e8c39e', t * 9, d, null, null, 0.85); }
   },
   drawChicken(ctx, x, y, t) { ctx.fillStyle = '#f0ece0'; ctx.beginPath(); ctx.ellipse(x, y - 2, 3, 2.2, 0, 0, 6.28); ctx.fill(); ctx.beginPath(); ctx.arc(x + 2.5, y - 4, 1.4, 0, 6.28); ctx.fill(); ctx.fillStyle = '#c8102e'; ctx.fillRect(x + 2, y - 6, 1, 1.2); ctx.fillStyle = '#e0a020'; ctx.fillRect(x + 3.5, y - 4, 1.2, 0.8); ctx.fillStyle = '#3a2a1a'; ctx.fillRect(x - 1, y, 0.8, 2 + Math.sin(t * 10 + x) * 0.5); ctx.fillRect(x + 1, y, 0.8, 2 - Math.sin(t * 10 + x) * 0.5); },
+  /* Reiter: Pferd als Körper mit Beinen, darauf der Ritter */
+  drawHorseman(ctx, x, y, dir, color) {
+    ctx.save(); ctx.translate(x, y); const d = dir || 1;
+    ctx.fillStyle = 'rgba(0,0,0,0.25)'; ctx.beginPath(); ctx.ellipse(0, 1, 11, 3, 0, 0, 6.28); ctx.fill();
+    ctx.strokeStyle = '#3a2a1a'; ctx.lineWidth = 2; ctx.beginPath(); for (const lx of [-6, -3, 4, 7]) { ctx.moveTo(lx, -6); ctx.lineTo(lx + (lx < 0 ? -1 : 1), 0); } ctx.stroke();
+    ctx.fillStyle = color || '#5a3a22'; ctx.beginPath(); ctx.ellipse(0, -9, 10, 4.5, 0, 0, 6.28); ctx.fill();
+    ctx.beginPath(); ctx.moveTo(8 * d, -11); ctx.lineTo(13 * d, -17); ctx.lineTo(15 * d, -14); ctx.lineTo(11 * d, -9); ctx.fill();
+    ctx.fillStyle = '#2a1a0a'; ctx.beginPath(); ctx.moveTo(9 * d, -12); ctx.lineTo(12 * d, -19); ctx.lineTo(13 * d, -17); ctx.fill();
+    ctx.strokeStyle = '#2a1a0a'; ctx.lineWidth = 1.4; ctx.beginPath(); ctx.moveTo(-10 * d, -9); ctx.lineTo(-14 * d, -3); ctx.stroke();
+    ctx.fillStyle = '#b03030'; ctx.fillRect(-4, -11, 8, 3);
+    ctx.restore();
+    this.drawPerson(ctx, x, y - 10, '#8a8a94', 'knight', 1, false, '#e8c39e', 0, d, null, null, 0.85);
+  },
   drawPerson(ctx, x, y, color, type, alpha, hover, skin, phase, dir, person, w, forceScale) {
     const d = forceScale || 0.9;
     ctx.save(); ctx.globalAlpha = alpha; ctx.translate(x, y); ctx.scale(d * (type === 'child' ? 0.7 : 1), d * (type === 'child' ? 0.7 : 1));
@@ -666,12 +682,18 @@ Object.assign(HK.Scene, {
     if (type === 'monk') { ctx.strokeStyle = '#d9c9a0'; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(-4, -8); ctx.lineTo(4, -8); ctx.stroke(); }
     if (type === 'guard') { ctx.fillStyle = '#9a9aa0'; ctx.fillRect(-3, -13, 6, 5); ctx.strokeStyle = '#6a5a4a'; ctx.lineWidth = 1.2; ctx.beginPath(); ctx.moveTo(5, 0); ctx.lineTo(5, -24); ctx.stroke(); ctx.fillStyle = '#8a8a90'; ctx.beginPath(); ctx.moveTo(5, -24); ctx.lineTo(3.5, -20); ctx.lineTo(6.5, -20); ctx.fill(); }
     if (type === 'beggar') { ctx.strokeStyle = '#6a5a4a'; ctx.lineWidth = 1.2; ctx.beginPath(); ctx.moveTo(-5, 0); ctx.lineTo(-4, -14); ctx.stroke(); }
+    if (type === 'pilgrim') { ctx.strokeStyle = '#7a5a3a'; ctx.lineWidth = 1.4; ctx.beginPath(); ctx.moveTo(6 * (dir || 1), 1); ctx.lineTo(5 * (dir || 1), -22); ctx.stroke(); ctx.fillStyle = '#e8d070'; ctx.beginPath(); ctx.arc(-1.5, -10, 1.3, 0, 6.28); ctx.fill(); }
+    if (type === 'torch') { const f = 0.7 + Math.sin((phase || 0) * 3 + x) * 0.3; ctx.strokeStyle = '#5a4020'; ctx.lineWidth = 1.4; ctx.beginPath(); ctx.moveTo(5 * (dir || 1), -6); ctx.lineTo(7 * (dir || 1), -20); ctx.stroke(); ctx.fillStyle = 'rgba(255,150,40,' + (0.25 * f) + ')'; ctx.beginPath(); ctx.arc(7 * (dir || 1), -22, 6, 0, 6.28); ctx.fill(); ctx.fillStyle = '#ffd060'; ctx.beginPath(); ctx.ellipse(7 * (dir || 1), -22, 2, 3.2 * f, 0, 0, 6.28); ctx.fill(); ctx.fillStyle = '#ff8020'; ctx.beginPath(); ctx.ellipse(7 * (dir || 1), -21, 1.2, 2, 0, 0, 6.28); ctx.fill(); }
+    if (type === 'knight') { ctx.fillStyle = '#b03030'; ctx.beginPath(); ctx.ellipse(-4 * (dir || 1), -8, 3, 4, 0, 0, 6.28); ctx.fill(); ctx.strokeStyle = '#e8d8b0'; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(-4 * (dir || 1), -11); ctx.lineTo(-4 * (dir || 1), -5); ctx.stroke(); ctx.strokeStyle = '#6a5a4a'; ctx.lineWidth = 1.4; ctx.beginPath(); ctx.moveTo(5 * (dir || 1), 0); ctx.lineTo(5 * (dir || 1), -34); ctx.stroke(); ctx.fillStyle = '#e0b040'; ctx.beginPath(); ctx.moveTo(5 * (dir || 1), -34); ctx.lineTo(5 * (dir || 1) + 9 * (dir || 1), -31); ctx.lineTo(5 * (dir || 1), -28); ctx.fill(); }
     if (w && w.basket) { ctx.fillStyle = '#b8a070'; ctx.beginPath(); ctx.ellipse(5 * (dir || 1), -6, 3, 2.5, 0, 0, 6.28); ctx.fill(); }
     ctx.strokeStyle = color; ctx.lineWidth = 1.6; ctx.beginPath(); ctx.moveTo(-3, -12); ctx.lineTo(-4 - step * 0.4, -6); ctx.moveTo(3, -12); ctx.lineTo(4 + step * 0.4, -6); ctx.stroke();
     ctx.fillStyle = skin || '#e8c39e'; ctx.beginPath(); ctx.arc(0, -16, 3.2, 0, 6.28); ctx.fill();
     if (type === 'monk') { ctx.fillStyle = color; ctx.beginPath(); ctx.arc(0, -16.5, 3.8, Math.PI * 1.05, Math.PI * 1.95); ctx.fill(); }
     else if (type === 'merchant' || type === 'static' || (w && w.hat)) { ctx.fillStyle = person === 'priest' ? '#1a1a1a' : '#2a1a0a'; ctx.fillRect(-4.5, -19.5, 9, 1.5); ctx.fillRect(-3, -23, 6, 4); }
     else if (type === 'fisher') { ctx.fillStyle = '#8a8a7a'; ctx.beginPath(); ctx.arc(0, -17, 3.6, Math.PI, 0); ctx.fill(); }
+    else if (type === 'pilgrim') { ctx.fillStyle = '#4a3a2a'; ctx.beginPath(); ctx.ellipse(0, -18.5, 6, 1.6, 0, 0, 6.28); ctx.fill(); ctx.beginPath(); ctx.arc(0, -19, 3, Math.PI, 0); ctx.fill(); }
+    else if (type === 'knight') { ctx.fillStyle = '#9a9aa4'; ctx.beginPath(); ctx.arc(0, -16.5, 3.8, 0, 6.28); ctx.fill(); ctx.fillStyle = '#3a3a44'; ctx.fillRect(-3, -16.5, 6, 1.2); ctx.fillStyle = '#e04040'; ctx.beginPath(); ctx.moveTo(-1, -20); ctx.lineTo(1, -20); ctx.lineTo(2, -25); ctx.lineTo(-2, -25); ctx.fill(); }
+    else if (type === 'torch') { ctx.fillStyle = '#c8b890'; ctx.beginPath(); ctx.arc(0, -16.5, 3.6, Math.PI * 1.1, Math.PI * 1.9); ctx.fill(); }
     else if (type === 'citizen') { ctx.fillStyle = '#e8e0c8'; ctx.beginPath(); ctx.arc(0, -16.5, 3.6, Math.PI * 1.1, Math.PI * 1.9); ctx.fill(); }
     if (person === 'priest') { ctx.fillStyle = '#f0ece0'; ctx.fillRect(-2.5, -13, 5, 1.5); }
     if (person === 'mayor') { ctx.fillStyle = '#e0b040'; ctx.fillRect(-3, -11, 6, 1.5); }

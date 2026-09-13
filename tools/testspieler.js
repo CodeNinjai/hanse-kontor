@@ -172,7 +172,7 @@ function makeBot(HK, st, path) {
     const L = [];
     const v = (id, cond) => { if (cond === false || HK.hasVenture(st, id) || (HK.VENTURE[id].craft && !st.craftGuild)) return; const cur = st.ventures[id]; if (cur && cur.owner) { const r = st.rivals.find(x => x.id === cur.owner); if (r && r.attitude < 20) { if (st.day - (r.lastMeet || -99) > 20) L.push([HK.meetCost(st, r), () => HK.meetRival(st, r.id)]); return; } L.push([Math.round(HK.VENTURE[id].cost * 1.4), () => HK.buyVenture(st, id)]); return; } L.push([HK.ventureCost(st, HK.VENTURE[id]), () => HK.buyVenture(st, id)]); };
     const ws = type => { const plot = st.workshops.find(w => !w.type); if (!plot) return; if (!st.guildMember) L.push([HK.CONST.GUILD_FEE, () => HK.joinGuild(st)]); else if (!st.licenses[type]) L.push([HK.WORKSHOP[type].license, () => HK.buyLicense(st, type)]); else L.push([HK.WORKSHOP[type].cost, () => HK.buildWorkshop(st, plot.plot, type)]); };
-    const ship = type => { if (st.ownShips.length < P.ships) L.push([HK.shipTypePrice(st, type), () => HK.buyShip(st, type)]); };
+    const ship = type => { if (st.ownShips.length < P.ships && (st.ownShips.length < 2 || (acc.expedition || 0) > st.ownShips.length * 4000 * Math.max(1, st.day / 365))) L.push([HK.shipTypePrice(st, type), () => HK.buyShip(st, type)]); };
     const storage = () => { const i = st.storages.findIndex(s => s.owner === 'npc'); if (i >= 0) L.push([HK.STORAGES[i].price, () => HK.buyStorage(st, i)]); };
     const house = () => { const h = st.houses.find(h => h.owner === 'npc'); if (h) L.push([HK.housePrice(st, h), () => HK.buyHouse(st, h.id)]); else { const u = st.houses.find(h => h.owner === 'player' && h.level < 3); if (u) L.push([HK.CONST.HOUSE_UPGRADE, () => HK.upgradeHouse(st, u.id)]); } };
     const craft = () => { if (!st.craftGuild) L.push([HK.CONST.CRAFT_FEE, () => HK.joinCraftGuild(st)]); };
@@ -240,12 +240,21 @@ function makeBot(HK, st, path) {
     const o = st.dive.offer;
     if (o && o.qty > 0 && st.suspicion < 50 && free() > o.qty * o.price) { const r = HK.buyContraband(st, o.qty); if (r.ok) noteBuy(o.good, r.qty, o.price); }
   }
+  function finance() {
+    // Wechselbriefe für überschüssiges Geld; Nachtherr: Spitzel, Erpressung, Falschgeld
+    if (free() > 40000 && st.bills.length < 2 && (path === 'merchant' || path === 'patron' || path === 'mayor')) HK.buyBill(st, 'safe', 20000);
+    if (P.smuggle) {
+      if (st.spyUntil <= st.day && free() > 5000 && st.day % 60 === 0) HK.hireSpy(st);
+      for (const r of st.rivals) if (HK.canBlackmail(st, r) && st.suspicion < 35 && r.attitude < 0) HK.blackmail(st, r.id);
+      if (HK.hasVenture(st, 'dive') && !st.counterfeit && st.suspicion < 25 && free() > 6000) HK.counterfeit(st, 3000);
+    }
+  }
   function rivals() {
     if (st.day % 30 !== 0 || free() < 5000) return;
     const r = st.rivals.filter(x => !x.ally).sort((a, b) => b.attitude - a.attitude)[0]; if (!r) return;
     if (r.attitude >= 45 && free() > 4000) HK.allyRival(st, r.id); else if (r.attitude < 45 && (path === 'merchant' || path === 'mayor' || path === 'shipowner')) HK.meetRival(st, r.id);
   }
-  return { day() { politics(); trade(); contracts(); ships(); nightlord(); invest(); rivals(); }, acc, T };
+  return { day() { politics(); trade(); contracts(); ships(); nightlord(); invest(); rivals(); finance(); }, acc, T };
 }
 
 /* ---------- Lauf ---------- */

@@ -189,6 +189,10 @@ Ein geskripteter Testspieler (`tools/testspieler.js`, Aufruf `node tools/testspi
 
 Kein Weg geht mehr bankrott, alle sechs Titel sind erreichbar, und die Ränge Händler, Kaufmann, Patrizier und Handelsfürst (30.000 / 100.000 / 300.000 / 800.000 Mark) fallen ungefähr in die Jahre 2, 5, 8 und 12. Der Herr der Nacht ist früh der reichste Weg und kauft das mit Verdacht, Bußen und Ansehen; der Ältermann ist spät der reichste, weil zehn ausgebaute Betriebe ein stetiges Einkommen sind. Auf „Schwer“ verschieben sich die Kurven um zwei bis drei Jahre, auf „Leicht“ um ein bis zwei nach vorn.
 
+**Zweiter Durchgang mit allen Systemen**
+
+Nach Bischofsstreit, Hansetag, Fehde, Zunftaufstand, Ämtern, Kirchenweg, Verträgen, Wechseln, Kaperbrief, Netzwerk, Faktor, Falschgeld und Erpressung lief der Testspieler erneut (drei Zufallsstände Normal, zwei Schwer). Ergebnis: Die Kurven liegen weiter im Rahmen der Tabelle oben, kein Weg geht bankrott, jede Partie erlebt etwa eine Ereigniskette pro Jahr (Vitalienbrüder jetzt mit längerer Pause). Zwei Ausreißer wurden nachjustiert: Erpressung brachte dem Herrn der Nacht fast 50.000 Mark im Jahr und ließ die Rivalen verarmen (jetzt 2 % des Vermögens, höchstens 4.000 Mark, einmal im Jahr je Rivale), und Falschgeld war ohne Pause eine sichere Rente (jetzt ein Monat Pause je Prägung, weniger Anrechnung auf den Titel). Der Faktor, Wechselbriefe und Handelsverträge bringen mittlere fünfstellige Beträge im Jahr und verändern die Reihenfolge der Wege nicht.
+
 **Noch offen im Balancing**
 
 - Der Herr der Nacht ist in den ersten drei Jahren zwei- bis dreimal so reich wie die anderen Wege. Eine Möglichkeit ist, dass geschmuggelte Ware bei Rivalen und Zünften Ansehen kostet, sobald der Umfang bekannt wird.

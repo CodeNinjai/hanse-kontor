@@ -4,6 +4,7 @@
 
 HK.CHAINS = {
   vitalien: {
+    cooldown: 700,
     stages: {
       rumor:   { days: 4, next: 'offer' },
       offer:   { choices: ['buy', 'report', 'ignore'] },
