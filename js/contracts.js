@@ -3,10 +3,10 @@
 'use strict';
 
 HK.CONTRACT_GIVERS = {
-  council:       { faction: 'patrizier', goods: ['grain', 'salt', 'timber', 'fish'], premium: [1.25, 1.45], panel: 'townhall' },
-  guild:         { faction: 'kaufleute', goods: ['cloth', 'iron', 'wool', 'tools'], premium: [1.2, 1.4], panel: 'guild' },
-  abbey:         { faction: 'kirche',    goods: ['wax', 'wine', 'beer', 'smokedfish'], premium: [1.3, 1.5], panel: 'monastery' },
-  dive:          { faction: 'zuenfte',   goods: ['spices', 'furs', 'wine', 'cloth'], premium: [1.7, 2.0], panel: 'dive', shady: true },
+  council:       { faction: 'patrizier', goods: ['grain', 'salt', 'timber', 'fish'], premium: [1.1, 1.25], panel: 'townhall' },
+  guild:         { faction: 'kaufleute', goods: ['cloth', 'iron', 'wool', 'tools'], premium: [1.1, 1.22], panel: 'guild' },
+  abbey:         { faction: 'kirche',    goods: ['wax', 'wine', 'beer', 'smokedfish'], premium: [1.15, 1.3], panel: 'monastery' },
+  dive:          { faction: 'zuenfte',   goods: ['spices', 'furs', 'wine', 'cloth'], premium: [1.15, 1.3], panel: 'dive', shady: true },
   harbourmaster: { faction: 'kaufleute', voyage: true, panel: 'harbourmaster' },
 };
 HK.newGameHooks.push(st => { st.contracts = { offers: [], active: [], nextRefresh: 2, done: 0, failed: 0, nextId: 1 }; });
@@ -14,8 +14,8 @@ HK.migrateHooks.push(st => { if (!st.contracts) st.contracts = { offers: [], act
 
 HK.makeContract = function (st, giverId) {
   const g = HK.CONTRACT_GIVERS[giverId], c = { id: st.contracts.nextId++, giver: giverId, offered: st.day, expires: st.day + 12 };
-  if (g.voyage) { const o = HK.pick(HK.ORIGINS.filter(x => x.sea)); c.type = 'voyage'; c.dest = o.id; c.days = o.days * 2 + 14; c.reward = Math.round((2500 + o.days * 400) * (0.8 + st.town.prosperity / 200)); }
-  else { const good = HK.pick(g.goods), base = HK.GOOD[good].base; c.type = 'deliver'; c.good = good; c.qty = HK.rndi(3, 8) * 5; c.price = Math.round(base * HK.rnd(g.premium[0], g.premium[1])); c.reward = c.qty * c.price; c.days = HK.rndi(20, 45); if (g.shady) c.shady = true; }
+  if (g.voyage) { const o = HK.pick(HK.ORIGINS.filter(x => x.sea)); c.type = 'voyage'; c.dest = o.id; c.days = o.days * 4 + 16; c.reward = Math.round((1000 + o.days * 200) * (0.8 + st.town.prosperity / 200)); }
+  else { const good = HK.pick(g.goods), base = HK.GOOD[good].base; c.type = 'deliver'; c.good = good; c.qty = HK.rndi(2, 6) * 5; c.price = Math.round(base * HK.rnd(g.premium[0], g.premium[1])); c.reward = c.qty * c.price; c.days = HK.rndi(20, 45); if (g.shady) c.shady = true; }
   return c;
 };
 HK.refreshContracts = function (st) {
@@ -41,7 +41,7 @@ HK.completeContract = function (st, c) {
   const C = st.contracts, g = HK.CONTRACT_GIVERS[c.giver];
   C.active = C.active.filter(x => x !== c); C.done++;
   HK.book(st, c.shady ? 'shipTrade' : 'contracts', c.reward); st.stats.volume += c.reward;
-  if (c.shady) { st.suspicion = HK.clamp(st.suspicion + 6, 0, 100); HK.fac(st, 'kirche', -2); HK.fac(st, 'zuenfte', 2); if (Math.random() < 0.15) { const fine = Math.round(c.reward * 0.5); HK.book(st, 'fines', -fine); st.suspicion = HK.clamp(st.suspicion + 10, 0, 100); HK.log(st, 'contractCaught', { fine: HK.fmt(fine) }, 'bad'); } }
+  if (c.shady) { st.suspicion = HK.clamp(st.suspicion + 6, 0, 100); HK.fac(st, 'kirche', -2); HK.fac(st, 'zuenfte', 2); if (Math.random() < 0.2) { const fine = Math.round(c.reward * 0.75); HK.book(st, 'fines', -fine); st.suspicion = HK.clamp(st.suspicion + 10, 0, 100); HK.log(st, 'contractCaught', { fine: HK.fmt(fine) }, 'bad'); } }
   else { HK.fac(st, g.faction, 4); st.rep = HK.clamp(st.rep + 1.5, 0, 100); if (c.giver === 'council') st.influence += 3; if (c.giver === 'abbey') st.piety = HK.clamp(st.piety + 3, 0, 100); }
   HK.log(st, 'contractDone', { giver: HK.t('giver_' + c.giver), reward: HK.fmt(c.reward) }, 'good');
 };

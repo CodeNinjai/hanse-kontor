@@ -85,7 +85,7 @@ HK.tickHooks.push(st => {
   for (const r of st.rivals) {
     HK.initRival(r); const def = HK.RIVAL_DEF[r.id];
     // Besitz trägt Vermögen; Schiffe fahren
-    r.wealth += r.holdings.houses.length * 18 + r.holdings.ventures.length * 30 + r.holdings.storages.length * 35 + r.ships * 45;
+    r.wealth += r.holdings.houses.length * 5 + r.holdings.ventures.length * 8 + r.holdings.storages.length * 8 + r.ships * 15;
     // Haltung: Neid auf Vorsprung, Groll verblasst, Bündnis hält nur bei Wohlwollen
     if (worth > r.wealth * 1.3) r.attitude -= 0.03; if (r.ally && r.attitude < 20) { r.ally = false; HK.log(st, 'allianceBroken', { rival: HK.rivalName(r.id) }, 'bad'); }
     r.attitude += (0 - r.attitude) * 0.002; r.attitude = HK.clamp(r.attitude, -100, 100);

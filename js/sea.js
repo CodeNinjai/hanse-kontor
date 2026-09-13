@@ -26,7 +26,7 @@ HK.buyKontor = function (st, city) {
   HK.log(st, 'kontorFounded', { city: HK.name(HK.ORIGIN[city]) }, 'good');
   return { ok: true };
 };
-HK.kontorIncome = st => Math.round(45 * (0.6 + st.town.prosperity / 125)) - HK.CONST.KONTOR_UPKEEP;
+HK.kontorIncome = st => Math.round(60 * (0.6 + st.town.prosperity / 125)) - HK.CONST.KONTOR_UPKEEP;
 HK.tickHooks.push(st => {
   if (st.day >= st.captainRefresh) HK.refreshCaptains(st);
   let inc = 0; for (const c in st.kontors) { inc += HK.kontorIncome(st); for (const i of st.incoming) if (i.origin === c) i.known = true; }

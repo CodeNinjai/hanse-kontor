@@ -10,14 +10,14 @@ Du kommst 1372 als kleiner Krämer nach Sundhaven. Die Stadt ist ein Uhrwerk aus
 
 **Neu:** Das Spiel endet nach einer festen Spielzeit (Vorschlag: 20 Jahre, einstellbar 10/20/30) mit der *Chronik von Sundhaven* – einer Bilanz darüber, was aus dir und der Stadt geworden ist. Vorher kann man auf sechs Wegen einen Titel erringen, der die Partie „gewinnt“, aber nicht beendet. Wer will, spielt weiter und sammelt mehrere Titel.
 
-| Weg | Titel | Bedingung (Vorschlag) | Kern-Gegenspieler |
+| Weg | Titel | Bedingung (umgesetzt) | Kern-Gegenspieler |
 | --- | --- | --- | --- |
-| Handel | **Handelsfürst** | 500.000 Mark Reinvermögen, zwei Monopole, Kontor in einer zweiten Stadt | Everd Kruse (Kaufmann) |
-| Politik | **Bürgermeister auf Lebenszeit** | Bürgermeister, drei Ratsherren treu (≥ 70), Stapelrecht durchgesetzt | Patrizier Wulflam, der Vogt |
-| Seefahrt | **Reeder der Hanse** | fünf eigene Koggen, Fernkontor in Bergen oder London, Konvoi gegen die Vitalienbrüder geführt | Vitalienbrüder, Sturm, Kruse |
-| Kirche | **Stifter von St. Nikolai** | Frömmigkeit 90, drei Kirchenstiftungen, Bischof zu Gast, Reliquie gestiftet | Bischofsstreit, die Spelunke in dir |
-| Handwerk | **Ältermann der Zünfte** | sieben Betriebe, alle Werkstätten, Zunftmeister-Titel, Zunftgesetz durchgesetzt | Kaufmannsgilde, Marquard Vrome |
-| Unterwelt | **Herr der Nacht** | 200.000 Mark aus Schmuggel und Hehlerei, Vogt und Hafenwache gekauft, nie verurteilt | Vogt Detlev von Bardowick, Ruf |
+| Handel | **Handelsfürst** | 600.000 Mark Reinvermögen, 1.000.000 Mark Umsatz, Monopol im Rat, zwei Speicher, zwei Fernkontore | Everd Kruse (Kaufmann) |
+| Politik | **Bürgermeister auf Lebenszeit** | drei Jahre Bürgermeister, drei Ratsherren treu (≥ 70), Stapelrecht, zwei Fraktionen ≥ 60, zwei Stadtbauten gestiftet | Patrizier Wulflam, der Vogt |
+| Seefahrt | **Reeder der Hanse** | vier eigene Schiffe, 100 Handelsfahrten, Seilerei und Segelmacherei, 900.000 Mark Fahrterlös | Vitalienbrüder, Sturm, Wessel Bracht |
+| Kirche | **Stifter von St. Nikolai** | Frömmigkeit 90, drei Kirchenstiftungen, Reliquie, Krankensaal, 100.000 Mark der Kirche gegeben | Katharina Detmers, die Spelunke in dir |
+| Handwerk | **Ältermann der Zünfte** | Zunftmeister-Titel, zehn Betriebe, acht davon voll ausgebaut, drei Werkstätten, Ansehen bei den Zünften 75 | Kaufmannsgilde, Marquard Vrome |
+| Unterwelt | **Herr der Nacht** | 80.000 Mark am Zoll vorbei, Spelunke, Hafenwache dreimal gekauft, Vogt gewogen (≥ 60), nie verurteilt | Vogt Detlev von Bardowick, Verdacht |
 
 Die Wege schließen sich nicht aus, aber sie reiben sich: Wer Spelunke und Schmuggel betreibt, verliert Frömmigkeit; wer die Zünfte stärkt, verärgert die Kaufleute; wer Bürgermeister ist, wird bei jedem Skandal doppelt hart getroffen.
 
@@ -162,6 +162,39 @@ Damit kein Weg alle anderen erdrückt, bekommt jede Einnahmequelle eine Obergren
 
 Verdacht bleibt die Gegenwährung zu Geld: jede schnelle Mark erzeugt Verdacht, jede Mark Ansehen kostet Zeit.
 
+### 7.1 Balancing-Durchgang (Stand nach dem ersten Abgleich)
+
+Ein geskripteter Testspieler (`tools/testspieler.js`, Aufruf `node tools/testspieler.js all 3 20 normal`) spielt jeden Weg zwanzig Jahre lang headless durch (Schwierigkeit „Normal“, drei Zufallsstände). Er handelt jeden Tag gierig, investiert in der Reihenfolge seines Weges und nimmt Aufträge an, die er erfüllen kann. Ein menschlicher Spieler liegt erfahrungsgemäß bei der Hälfte bis zwei Dritteln dieser Kurven.
+
+**Was der Durchgang aufdeckte**
+
+- Die Preisspannen waren viel zu weit: Besucher verkauften zu 60–80 % des Grundpreises, der Markt zahlte in Knappheit bis 190 %. Der Testspieler stand nach einem Jahr bei über einer Million Mark und hatte alle Titel im ersten Jahr. Jetzt liegen Besucherpreise bei 82–91 % (Verkauf) und 111–121 % (Ankauf), der Markt zwischen 65 % und 135 % des Grundpreises, mit kleineren Tagesmengen und Ladungen.
+- Werkstätten, Betriebe, Speicher, Taverne, Badehaus und Boote hatten Renditen von 250–1.400 % im Jahr. Ziel sind jetzt 80–150 %: Handel bleibt der Motor, Besitz ist die Absicherung.
+- Fahrten lohnten sich fast unabhängig von der Ladung; Schiffe haben nun weniger Laderaum (40/80/130 Fass), längere Reisen und verdienen an beiden Enden nur die Spanne zwischen Heimat- und Fremdpreis.
+- Die Rivalen wuchsen auf 16 Millionen Mark, weil Besitz und Besucher täglich fixe Beträge brachten. Jetzt enden sie bei 1–1,5 Millionen; ein guter Spieler überholt den reichsten zwischen Jahr 10 und 15.
+- Schmuggel bei jeder Kleinlieferung führte in den Bankrott; Konterbande plus Spelunkenaufträge waren dagegen eine Gelddruckmaschine. Konterbande ist knapper und teurer, Bußen sind gedeckelt (Untersuchung höchstens 2.000 Mark plus 2 % des Vermögens, Prozess 5.000 plus 6 %), Verdacht klingt schneller ab.
+- Aufträge zahlen jetzt 10–30 % Aufschlag statt 25–100 %; Fahrtaufträge haben Fristen, die zur neuen Reisedauer passen.
+
+**Gemessene Kurven (Reinvermögen des Testspielers, Normal)**
+
+| Weg | Jahr 1 | Jahr 3 | Jahr 5 | Jahr 10 | Jahr 20 | Titel erreicht |
+| --- | --- | --- | --- | --- | --- | --- |
+| Kaufmann | 16.000 | 53.000 | 100.000–130.000 | 600.000–700.000 | 1,5–1,8 Mio. | Jahr 9–13 |
+| Reeder | 36.000 | 63.000 | 190.000–390.000 | 690.000–860.000 | 1,4–1,6 Mio. | Jahr 5 |
+| Stifter | 28.000 | 37.000 | 50.000–170.000 | 300.000–470.000 | 0,9–1,0 Mio. | Jahr 3–6 |
+| Bürgermeister | 13.000 | 20.000 | 45.000–200.000 | 450.000–600.000 | 1,3–1,4 Mio. | Jahr 5–7 |
+| Ältermann | 18.000 | 51.000 | 150.000–390.000 | 1,0–1,2 Mio. | 2,3–2,7 Mio. | Jahr 3–4 |
+| Herr der Nacht | 51.000 | 250.000 | 460.000–520.000 | 880.000–1,0 Mio. | 1,6–2,0 Mio. | Jahr 7–9 |
+| Reichster Rivale | 70.000 | 130.000 | 200.000–260.000 | 450.000–650.000 | 1,1–1,5 Mio. | – |
+
+Kein Weg geht mehr bankrott, alle sechs Titel sind erreichbar, und die Ränge Händler, Kaufmann, Patrizier und Handelsfürst (30.000 / 100.000 / 300.000 / 800.000 Mark) fallen ungefähr in die Jahre 2, 5, 8 und 12. Der Herr der Nacht ist früh der reichste Weg und kauft das mit Verdacht, Bußen und Ansehen; der Ältermann ist spät der reichste, weil zehn ausgebaute Betriebe ein stetiges Einkommen sind. Auf „Schwer“ verschieben sich die Kurven um zwei bis drei Jahre, auf „Leicht“ um ein bis zwei nach vorn.
+
+**Noch offen im Balancing**
+
+- Der Herr der Nacht ist in den ersten drei Jahren zwei- bis dreimal so reich wie die anderen Wege. Eine Möglichkeit ist, dass geschmuggelte Ware bei Rivalen und Zünften Ansehen kostet, sobald der Umfang bekannt wird.
+- Der Kaufmann braucht am längsten zum Titel, weil das Monopol eine treue Ratsmehrheit verlangt und die Rivalen im Rat dagegen stimmen. Bündnisse mit Rivalen sind dafür der vorgesehene Weg; ob das auch Menschen finden, muss das Spielen zeigen.
+- Geschenke an Ratsherren sind spät im Spiel so billig, dass Wohlwollen keine Entscheidung mehr ist. Ein Preis, der mit dem Vermögen wächst, wäre konsequent.
+
 ## 8. Was existiert, was fehlt
 
 | Baustein | Stand | Aufwand |
@@ -180,6 +213,8 @@ Verdacht bleibt die Gegenwährung zu Geld: jede schnelle Mark erzeugt Verdacht, 
 | Mehrere Titel und Spielende | fehlt | klein |
 
 ## 9. Umsetzungsstand
+
+Ein erster Balancing-Durchgang mit einem geskripteten Testspieler ist abgeschlossen (Abschnitt 7.1).
 
 Alle sieben Schritte der ursprünglichen Reihenfolge sind umgesetzt (Titel und Chronik, Fraktionsansehen, Rivalen als Akteure, Aufträge, Ereignisketten Vitalienbrüder und Pestjahr, Seefahrt mit Schiffstypen, Kapitänen, Konvois und Fernkontoren samt Feintuch-Kette und Meistern, Familie und Nachfolge). Offen bleiben aus Abschnitt 4: weitere Ketten (Bischofsstreit, Fehde, Hansetag), Ratsämter vergeben, Bruderschaft als Spieleraktion, Wallfahrt und Kirchenbau.
 

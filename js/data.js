@@ -4,8 +4,8 @@ const HK = {};
 
 HK.GOODS = [
   { id: 'grain',      name: { de: 'Getreide',     en: 'Grain' },        base: 30,  cons: 22, prod: 12 },
-  { id: 'fish',       name: { de: 'Frischfisch',  en: 'Fresh fish' },   base: 40,  cons: 16, prod: 20 },
-  { id: 'smokedfish', name: { de: 'Räucherfisch', en: 'Smoked fish' },  base: 75,  cons: 6,  prod: 2 },
+  { id: 'fish',       name: { de: 'Frischfisch',  en: 'Fresh fish' },   base: 32,  cons: 16, prod: 20 },
+  { id: 'smokedfish', name: { de: 'Räucherfisch', en: 'Smoked fish' },  base: 60,  cons: 6,  prod: 2 },
   { id: 'beer',       name: { de: 'Bier',         en: 'Beer' },         base: 60,  cons: 18, prod: 10 },
   { id: 'salt',       name: { de: 'Salz',         en: 'Salt' },         base: 50,  cons: 8,  prod: 0 },
   { id: 'timber',     name: { de: 'Holz',         en: 'Timber' },       base: 25,  cons: 10, prod: 5 },
@@ -41,9 +41,9 @@ HK.BORROWER_NAMES = ['Hans Möller', 'Elsebe Kröger', 'Wenzel Barth', 'Ludeke S
 
 /* Schiffstypen, Kapitäne, Fernkontore */
 HK.SHIP_TYPES = [
-  { id: 'schnigge', name: { de: 'Schnigge', en: 'Snekkja' }, cap: 60,  price: 5000,  delta: -2, scale: 0.8 },
-  { id: 'kogge',    name: { de: 'Kogge',    en: 'Cog' },     cap: 120, price: 9000,  delta: 0,  scale: 0.95 },
-  { id: 'holk',     name: { de: 'Holk',     en: 'Hulk' },    cap: 200, price: 16000, delta: 2,  scale: 1.1 },
+  { id: 'schnigge', name: { de: 'Schnigge', en: 'Snekkja' }, cap: 40,  price: 5000,  delta: -3, scale: 0.8 },
+  { id: 'kogge',    name: { de: 'Kogge',    en: 'Cog' },     cap: 80,  price: 9000,  delta: 0,  scale: 0.95 },
+  { id: 'holk',     name: { de: 'Holk',     en: 'Hulk' },    cap: 130, price: 16000, delta: 3,  scale: 1.1 },
 ];
 HK.SHIP_TYPE = {}; HK.SHIP_TYPES.forEach(t => HK.SHIP_TYPE[t.id] = t);
 HK.CAPTAIN_TRAITS = [
@@ -53,40 +53,40 @@ HK.KONTOR_CITIES = ['luebeck', 'bruegge', 'bergen'];
 
 /* Betriebe (Werkstätten) */
 HK.WORKSHOPS = [
-  { id: 'brewery',    name: { de: 'Brauerei',    en: 'Brewery' },    out: 'beer',       qty: 6, inp: { grain: 4 },            cost: 9000,  wage: 18, license: 1500 },
-  { id: 'smokehouse', name: { de: 'Räucherei',   en: 'Smokehouse' }, out: 'smokedfish', qty: 5, inp: { fish: 6, timber: 1 },  cost: 7000,  wage: 15, license: 1200 },
-  { id: 'weaver',     name: { de: 'Weberei',     en: 'Weavery' },    out: 'cloth',      qty: 2, inp: { wool: 3 },             cost: 12000, wage: 25, license: 2500 },
-  { id: 'smithy',     name: { de: 'Schmiede',    en: 'Smithy' },     out: 'tools',      qty: 2, inp: { iron: 2, timber: 1 },  cost: 11000, wage: 22, license: 2000 },
-  { id: 'saltworks',  name: { de: 'Salzsiederei', en: 'Saltworks' }, out: 'salt',       qty: 4, inp: { timber: 2 },           cost: 14000, wage: 20, license: 3000 },
+  { id: 'brewery',    name: { de: 'Brauerei',    en: 'Brewery' },    out: 'beer',       qty: 2, inp: { grain: 2 },            cost: 9000,  wage: 30, license: 1500 },
+  { id: 'smokehouse', name: { de: 'Räucherei',   en: 'Smokehouse' }, out: 'smokedfish', qty: 2, inp: { fish: 3, timber: 1 },  cost: 7000,  wage: 15, license: 1200 },
+  { id: 'weaver',     name: { de: 'Weberei',     en: 'Weavery' },    out: 'cloth',      qty: 1, inp: { wool: 3 },             cost: 12000, wage: 25, license: 2500 },
+  { id: 'smithy',     name: { de: 'Schmiede',    en: 'Smithy' },     out: 'tools',      qty: 1, inp: { iron: 1 },             cost: 11000, wage: 20, license: 2000 },
+  { id: 'saltworks',  name: { de: 'Salzsiederei', en: 'Saltworks' }, out: 'salt',       qty: 2, inp: { timber: 2 },           cost: 14000, wage: 20, license: 3000 },
 ];
 HK.WORKSHOP = {}; HK.WORKSHOPS.forEach(w => HK.WORKSHOP[w.id] = w);
 
 /* Betriebe in der Stadt: käuflich, bringen Tageseinnahmen, manche verarbeiten Waren oder haben Nebenwirkungen.
    craft: braucht Zunftmitgliedschaft; inp: Ware, deren Knappheit in der Stadt die Einnahmen drückt */
 HK.VENTURES = [
-  { id: 'dive',      name: { de: 'Spelunke „Zum Nassen Hund“', en: 'The Wet Dog dive' }, cost: 6000,  income: 24, craft: false, effect: 'dive' },
-  { id: 'bakery',    name: { de: 'Bäckerei',        en: 'Bakery' },        cost: 5000,  income: 28, craft: true, inp: 'grain', effect: 'feed' },
-  { id: 'butcher',   name: { de: 'Fleischerei',     en: 'Butcher' },       cost: 5500,  income: 30, craft: true, effect: 'feed' },
-  { id: 'cooper',    name: { de: 'Böttcherei',      en: 'Cooperage' },     cost: 6500,  income: 26, craft: true, inp: 'timber', effect: 'cooper' },
-  { id: 'ropewalk',  name: { de: 'Seilerei',        en: 'Ropewalk' },      cost: 7000,  income: 30, craft: true, effect: 'ships' },
-  { id: 'sailmaker', name: { de: 'Segelmacherei',   en: 'Sailmaker' },     cost: 8000,  income: 34, craft: true, inp: 'cloth', effect: 'ships' },
-  { id: 'smokery',   name: { de: 'Fischräucherei',  en: 'Fish smokery' },  cost: 7500,  income: 18, craft: true, inp: 'fish', effect: 'smoke' },
-  { id: 'tannery',   name: { de: 'Gerberei',        en: 'Tannery' },       cost: 6000,  income: 42, craft: true, effect: 'stink' },
-  { id: 'potter',    name: { de: 'Töpferei',        en: 'Pottery' },       cost: 3500,  income: 16, craft: true },
-  { id: 'dyer',      name: { de: 'Färberei',        en: 'Dye works' },     cost: 9000,  income: 38, craft: true, inp: 'cloth', effect: 'cloth' },
-  { id: 'stables',   name: { de: 'Marstall',        en: 'Stables' },       cost: 8500,  income: 30, craft: false, effect: 'caravans' },
-  { id: 'inn',       name: { de: 'Herberge „Zum Wegweiser“', en: 'The Signpost inn' }, cost: 7000, income: 26, craft: false, effect: 'inn' },
-  { id: 'goldsmith', name: { de: 'Goldschmied',     en: 'Goldsmith' },     cost: 12000, income: 52, craft: true, effect: 'gold' },
-  { id: 'apothecary', name: { de: 'Apotheke',       en: 'Apothecary' },    cost: 7500,  income: 28, craft: true, effect: 'plague' },
-  { id: 'timberyard', name: { de: 'Holzhof',        en: 'Timber yard' },   cost: 6500,  income: 24, craft: false, inp: 'timber', effect: 'timber' },
+  { id: 'dive',      name: { de: 'Spelunke „Zum Nassen Hund“', en: 'The Wet Dog dive' }, cost: 6000,  income: 13, craft: false, effect: 'dive' },
+  { id: 'bakery',    name: { de: 'Bäckerei',        en: 'Bakery' },        cost: 5000,  income: 11, craft: true, inp: 'grain', effect: 'feed' },
+  { id: 'butcher',   name: { de: 'Fleischerei',     en: 'Butcher' },       cost: 5500,  income: 12, craft: true, effect: 'feed' },
+  { id: 'cooper',    name: { de: 'Böttcherei',      en: 'Cooperage' },     cost: 6500,  income: 14, craft: true, inp: 'timber', effect: 'cooper' },
+  { id: 'ropewalk',  name: { de: 'Seilerei',        en: 'Ropewalk' },      cost: 7000,  income: 15, craft: true, effect: 'ships' },
+  { id: 'sailmaker', name: { de: 'Segelmacherei',   en: 'Sailmaker' },     cost: 8000,  income: 18, craft: true, inp: 'cloth', effect: 'ships' },
+  { id: 'smokery',   name: { de: 'Fischräucherei',  en: 'Fish smokery' },  cost: 7500,  income: 10, craft: true, inp: 'fish', effect: 'smoke' },
+  { id: 'tannery',   name: { de: 'Gerberei',        en: 'Tannery' },       cost: 6000,  income: 18, craft: true, effect: 'stink' },
+  { id: 'potter',    name: { de: 'Töpferei',        en: 'Pottery' },       cost: 3500,  income: 8, craft: true },
+  { id: 'dyer',      name: { de: 'Färberei',        en: 'Dye works' },     cost: 9000,  income: 20, craft: true, inp: 'cloth', effect: 'cloth' },
+  { id: 'stables',   name: { de: 'Marstall',        en: 'Stables' },       cost: 8500,  income: 18, craft: false, effect: 'caravans' },
+  { id: 'inn',       name: { de: 'Herberge „Zum Wegweiser“', en: 'The Signpost inn' }, cost: 7000, income: 15, craft: false, effect: 'inn' },
+  { id: 'goldsmith', name: { de: 'Goldschmied',     en: 'Goldsmith' },     cost: 12000, income: 28, craft: true, effect: 'gold' },
+  { id: 'apothecary', name: { de: 'Apotheke',       en: 'Apothecary' },    cost: 7500,  income: 16, craft: true, effect: 'plague' },
+  { id: 'timberyard', name: { de: 'Holzhof',        en: 'Timber yard' },   cost: 6500,  income: 14, craft: false, inp: 'timber', effect: 'timber' },
 ];
 HK.VENTURE = {}; HK.VENTURES.forEach(v => HK.VENTURE[v.id] = v);
 /* Speicher: eigener Lagerplatz oder Vermietung an andere Kaufleute */
 HK.STORAGES = [
-  { id: 'saltstore', price: 7000, cap: 200, rent: 42 },
-  { id: 'storage2',  price: 8500, cap: 260, rent: 50 },
-  { id: 'storage3',  price: 8500, cap: 260, rent: 50 },
-  { id: 'granary',   price: 9500, cap: 300, rent: 56 },
+  { id: 'saltstore', price: 7000, cap: 200, rent: 20 },
+  { id: 'storage2',  price: 8500, cap: 260, rent: 24 },
+  { id: 'storage3',  price: 8500, cap: 260, rent: 24 },
+  { id: 'granary',   price: 9500, cap: 300, rent: 26 },
 ];
 
 /* Personen mit Loyalität */
@@ -168,7 +168,7 @@ HK.CONST = {
   STALL_COST: 2500, STALL_MAX: 3,
   HOUSE_COUNT: 5, HOUSE_PRICE: 5000, HOUSE_UPGRADE: 3000,
   TAVERN_PRICE: 12000, BATHHOUSE_PRICE: 9000,
-  SHIP_PRICE: 9000, BOAT_PRICE: 1500, BOAT_MAX: 4, BOAT_FISH: 5,
+  SHIP_PRICE: 9000, BOAT_PRICE: 3000, BOAT_MAX: 4, BOAT_FISH: 2,
   BRIBE_BASE: 300, GIFT_BASE: 150,
   RUMOR_COST: 25, SPY_COST: 600, THUG_COST: 900,
   LOAN_RATE_DAILY: 0.0006, GUILD_FEE: 2000,
@@ -176,10 +176,10 @@ HK.CONST = {
   BANKRUPT_DAYS: 60, WORKSHOP_PLOTS: 3,
   TAXFARM_DAYS: 365,
   CRAFT_FEE: 1500, VENTURE_UPGRADE: 0.5, VENTURE_MAX_LEVEL: 3,
-  CONTRABAND_QTY: 12, FENCE_CAP: 30, WATCH_BRIBE: 700, WATCH_DAYS: 15, SAILORS_COST: 350,
+  CONTRABAND_QTY: 6, FENCE_CAP: 30, WATCH_BRIBE: 700, WATCH_DAYS: 15, SAILORS_COST: 350,
   RELIC_COST: 3000, SCRIPT_COST: 400, SCRIPT_DAYS: 30, MONK_BEER: 12, MONK_WAX: 5,
   HOSPITAL_DONATION: 1000, HOSPITAL_ENDOW: 8000, SCHOOL_DONATION: 1500, SCHOOL_ENDOW: 6000,
   HARBOUR_BOOK: 200, HARBOUR_BOOK_DAYS: 20, BERTH_PRIORITY: 800, EXTRA_BERTH: 15000, MAX_BERTHS: 5,
   APPRENTICES: 1000, APPRENTICE_DAYS: 60, MASTER_TITLE: 5000, FISHMARKET_CAP: 25,
-  WEIGH_FARM_DAYS: 365, MAX_OWN_SHIPS: 5, KONTOR_PRICE: 25000, KONTOR_UPKEEP: 15, MASTER_COST: 1500, MASTER_WAGE: 8, BLESSING_COST: 300, BLESSING_DAYS: 60, MILITIA_COST: 4000, MILITIA_UPKEEP: 12,
+  WEIGH_FARM_DAYS: 365, MAX_OWN_SHIPS: 5, KONTOR_PRICE: 25000, KONTOR_UPKEEP: 15, MASTER_COST: 1500, MASTER_WAGE: 3, BLESSING_COST: 300, BLESSING_DAYS: 60, MILITIA_COST: 4000, MILITIA_UPKEEP: 12,
 };

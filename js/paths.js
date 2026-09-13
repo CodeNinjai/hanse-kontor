@@ -10,17 +10,17 @@ HK.facAvg = st => st.factions ? HK.FACTION_IDS.reduce((a, f) => a + st.factions[
 /* ---------- Titel: sechs Wege ---------- */
 HK.TITLES = [
   { id: 'merchant', name: { de: 'Handelsfürst', en: 'Merchant prince' }, conds: st => [
-    ['cond_worth', HK.netWorth(st), 500000], ['cond_volume', st.stats.volume, 600000], ['cond_monopoly', HK.law(st, 'monopoly') !== 'none' && st.town.monopolyHolder === 'player' ? 1 : 0, 1], ['cond_storages', st.storages.filter(s => s.owner === 'player').length, 2], ['cond_kontor', Object.keys(st.kontors || {}).length, 1]] },
+    ['cond_worth', HK.netWorth(st), 600000], ['cond_volume', st.stats.volume, 1000000], ['cond_monopoly', HK.law(st, 'monopoly') !== 'none' && st.town.monopolyHolder === 'player' ? 1 : 0, 1], ['cond_storages', st.storages.filter(s => s.owner === 'player').length, 2], ['cond_kontor', Object.keys(st.kontors || {}).length, 2]] },
   { id: 'mayor', name: { de: 'Bürgermeister auf Lebenszeit', en: 'Mayor for life' }, conds: st => [
-    ['cond_mayorYears', st.seat === 'mayor' && st.mayorSince !== undefined ? Math.floor((st.day - st.mayorSince) / 365) : 0, 2], ['cond_loyalCouncil', HK.councillors().filter(c => st.persons[c.id].loyalty >= 70).length, 3], ['cond_staple', HK.law(st, 'staple') ? 1 : 0, 1], ['cond_factionsHigh', HK.FACTION_IDS.filter(f => st.factions[f] >= 60).length, 2]] },
+    ['cond_mayorYears', st.seat === 'mayor' && st.mayorSince !== undefined ? Math.floor((st.day - st.mayorSince) / 365) : 0, 3], ['cond_loyalCouncil', HK.councillors().filter(c => st.persons[c.id].loyalty >= 70).length, 3], ['cond_staple', HK.law(st, 'staple') ? 1 : 0, 1], ['cond_factionsHigh', HK.FACTION_IDS.filter(f => st.factions[f] >= 60).length, 2], ['cond_projects', HK.PROJECTS.filter(p => st.town.projects[p.id]).length, 2]] },
   { id: 'shipowner', name: { de: 'Reeder der Hanse', en: 'Shipowner of the Hanse' }, conds: st => [
-    ['cond_ships', st.ownShips.length, 4], ['cond_voyages', st.stats.voyages || 0, 20], ['cond_rigging', (HK.hasVenture(st, 'ropewalk') ? 1 : 0) + (HK.hasVenture(st, 'sailmaker') ? 1 : 0), 2], ['cond_expedition', st.stats.expeditionRevenue || 0, 150000]] },
+    ['cond_ships', st.ownShips.length, 4], ['cond_voyages', st.stats.voyages || 0, 100], ['cond_rigging', (HK.hasVenture(st, 'ropewalk') ? 1 : 0) + (HK.hasVenture(st, 'sailmaker') ? 1 : 0), 2], ['cond_expedition', st.stats.expeditionRevenue || 0, 900000]] },
   { id: 'patron', name: { de: 'Stifter von St. Nikolai', en: 'Patron of St Nicholas' }, conds: st => [
-    ['cond_piety', Math.round(st.piety), 90], ['cond_churchProjects', HK.CHURCH_PROJECTS.filter(p => st.church.projects[p.id]).length, 3], ['cond_relic', st.relicDay !== undefined ? 1 : 0, 1], ['cond_hospital', st.hospitalEndowed ? 1 : 0, 1]] },
+    ['cond_piety', Math.round(st.piety), 90], ['cond_churchProjects', HK.CHURCH_PROJECTS.filter(p => st.church.projects[p.id]).length, 3], ['cond_relic', st.relicDay !== undefined ? 1 : 0, 1], ['cond_hospital', st.hospitalEndowed ? 1 : 0, 1], ['cond_donated', Math.round(st.stats.donated || 0), 100000]] },
   { id: 'alderman', name: { de: 'Ältermann der Zünfte', en: 'Alderman of the guilds' }, conds: st => [
-    ['cond_master', st.masterTitle ? 1 : 0, 1], ['cond_ventures', Object.keys(st.ventures).length, 7], ['cond_workshops', st.workshops.filter(w => w.type).length, 3], ['cond_guildRep', Math.round(st.factions.zuenfte), 70]] },
+    ['cond_master', st.masterTitle ? 1 : 0, 1], ['cond_ventures', HK.ventureCount(st), 10], ['cond_ventureLevels', Object.keys(st.ventures).filter(id => !st.ventures[id].owner && st.ventures[id].level >= 3).length, 8], ['cond_workshops', st.workshops.filter(w => w.type).length, 3], ['cond_guildRep', Math.round(st.factions.zuenfte), 75]] },
   { id: 'nightlord', name: { de: 'Herr der Nacht', en: 'Lord of the night' }, conds: st => [
-    ['cond_smuggled', Math.round(st.stats.smuggled), 60000], ['cond_dive', HK.hasVenture(st, 'dive') ? 1 : 0, 1], ['cond_watch', st.stats.watchBribes || 0, 3], ['cond_bailiff', Math.round(st.persons.bailiff.loyalty), 60], ['cond_noTrial', (st.stats.trials || 0) === 0 ? 1 : 0, 1]] },
+    ['cond_smuggled', Math.round(st.stats.smuggled), 80000], ['cond_dive', HK.hasVenture(st, 'dive') ? 1 : 0, 1], ['cond_watch', st.stats.watchBribes || 0, 3], ['cond_bailiff', Math.round(st.persons.bailiff.loyalty), 60], ['cond_noTrial', (st.stats.trials || 0) === 0 ? 1 : 0, 1]] },
 ];
 HK.TITLE = {}; HK.TITLES.forEach(t => HK.TITLE[t.id] = t);
 HK.titleProgress = function (st, t) { return t.conds(st).map(([key, v, target]) => ({ key, v, target, done: v >= target })); };
@@ -50,13 +50,13 @@ HK.chronicle = function (st) {
 /* ---------- Hooks ---------- */
 HK.newGameHooks.push((st, opts) => {
   st.years = HK.YEARS_OPTIONS.includes(+opts.years) ? +opts.years : 20; st.endDay = st.years * 365; st.chronicleShown = false;
-  st.factions = { patrizier: 25, kaufleute: 35, zuenfte: 30, kirche: 30 }; st.titles = {}; st.stats.voyages = 0; st.stats.watchBribes = 0; st.stats.trials = 0; st.stats.expeditionRevenue = 0;
+  st.factions = { patrizier: 25, kaufleute: 35, zuenfte: 30, kirche: 30 }; st.titles = {}; st.stats.voyages = 0; st.stats.watchBribes = 0; st.stats.trials = 0; st.stats.expeditionRevenue = 0; st.stats.donated = 0;
 });
 HK.migrateHooks.push(st => {
   if (!st.years) { st.years = 20; st.endDay = 20 * 365; st.chronicleShown = false; }
   if (!st.factions) st.factions = { patrizier: HK.clamp(st.rep - 5, 0, 100), kaufleute: HK.clamp(st.rep + 5, 0, 100), zuenfte: st.rep, kirche: HK.clamp((st.rep + st.piety) / 2, 0, 100) };
   if (!st.titles) st.titles = {};
-  for (const k of ['voyages', 'watchBribes', 'trials', 'expeditionRevenue']) if (st.stats[k] === undefined) st.stats[k] = 0;
+  for (const k of ['voyages', 'watchBribes', 'trials', 'expeditionRevenue', 'donated']) if (st.stats[k] === undefined) st.stats[k] = 0;
 });
 /* Wirkung von Ereignissen aus der Chronik auf das Ansehen */
 HK.LOG_FACTION_EFFECTS = { smuggleCaught: { patrizier: -3, kaufleute: -2, kirche: -3 }, investigationFine: { patrizier: -5, kaufleute: -3, zuenfte: -2, kirche: -4 }, trial: { patrizier: -12, kaufleute: -8, zuenfte: -5, kirche: -10 }, sabotageFailed: { patrizier: -4, kaufleute: -6, kirche: -3 }, levyIgnored: { patrizier: -6 }, loanRepaid: { kaufleute: 0.5 }, shipReturned: { kaufleute: 0.3 }, projectDone: { patrizier: 3, zuenfte: 2, kaufleute: 2, kirche: 2 }, bishopPleased: { kirche: 6 }, bishopDispleased: { kirche: -5 }, workshopBuilt: { zuenfte: 2 }, thugsCollected: { kaufleute: -2, kirche: -2 }, sabotageOk: { kaufleute: -3 } };

@@ -34,7 +34,7 @@ Reines HTML, CSS und JavaScript ohne Build-Schritt: `index.html` öffnen und spi
 
 Dazu Stadtereignisse (Hungersnot, Pest, Brand, Vitalienbrüder, Sturm, Jahrmarkt, Sonderabgabe), Kirchenfeste mit Nachfragespitzen, drei Konkurrenten, Ränge, Autosave im Browser sowie Export und Import als JSON.
 
-**Ziel:** Bürgermeister werden, 500.000 Mark Reinvermögen anhäufen und reicher sein als alle Konkurrenten. Nach 60 Tagen mit leerer Kasse ist das Spiel verloren.
+**Ziel:** Einen der sechs Titel erringen (siehe Spieltiefe), reicher werden als die Konkurrenten und die Partie nach 10, 20 oder 30 Jahren mit einer guten Chronik beenden. Nach 60 Tagen mit leerer Kasse ist das Spiel verloren.
 
 ## Spieltiefe
 
@@ -45,6 +45,7 @@ Dazu Stadtereignisse (Hungersnot, Pest, Brand, Vitalienbrüder, Sturm, Jahrmarkt
 - **Ereignisketten:** Die Vitalienbrüder (Hehlerware oder Warnung, Kaperfahrt selbst anführen) und das Pestjahr (Spital, Hafensperre, Prozession oder Flucht) mit Entscheidungen und Folgen.
 - **Seefahrt:** Schnigge, Kogge und Holk, bis zu fünf Schiffe, Kapitäne mit Eigenschaften, Konvois, Fernkontore in Lübeck, Brügge und Bergen; Produktionskette Tuch → Feintuch in der Färberei, Meister in Betrieben.
 - **Familie:** Heiratsangebote mit Mitgift und Bündnis, Kinder mit Eigenschaften, Erbe übernimmt nach dem Tod des Kaufmanns – ohne Erben endet die Chronik.
+- **Balancing:** Ein geskripteter Testspieler (`node tools/testspieler.js all 3 20 normal`, Auswertung in `docs/KONZEPT.md`, Abschnitt 7.1) spielt jeden Weg zwanzig Jahre headless durch; Preise, Renditen, Rivalen und Titelbedingungen sind daran abgeglichen. Grob: Händler in Jahr 2, Kaufmann in Jahr 5, Patrizier in Jahr 8, Titel je nach Weg zwischen Jahr 4 und 12.
 
 ## Steuerung
 
@@ -74,6 +75,7 @@ js/contracts.js Auftragsbrett
 js/chains.js    Ereignisketten
 js/sea.js       Kapitäne, Fernkontore
 js/family.js    Heirat, Kinder, Nachfolge
+tools/testspieler.js  Geskripteter Testspieler für Balancing-Läufe (Node, ohne Browser)
 js/ui.js        Seitenleiste, Gebäudemenüs, Dialoge
 js/main.js      Spielschleife, Speichern/Laden
 ```

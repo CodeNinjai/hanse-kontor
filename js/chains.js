@@ -13,7 +13,7 @@ HK.CHAINS = {
       peace:   { end: true },
     },
     enter(st, ch, stage) {
-      if (stage === 'offer') { const g = HK.pick(['furs', 'cloth', 'spices', 'wine']); ch.data.good = g; ch.data.qty = 40; ch.data.price = Math.round(HK.GOOD[g].base * 0.4); }
+      if (stage === 'offer') { const g = HK.pick(['furs', 'cloth', 'spices', 'wine']); ch.data.good = g; ch.data.qty = 30; ch.data.price = Math.round(HK.GOOD[g].base * 0.55); }
       if (stage === 'raid') {
         const warned = ch.data.choice === 'report';
         if (st.militia) { HK.log(st, 'vt_raidRepelled', {}, 'good'); ch.data.repelled = true; }
@@ -23,7 +23,7 @@ HK.CHAINS = {
       if (stage === 'peace') {
         if (ch.data.choice === 'lead') {
           const s = st.ownShips.find(x => x.id === ch.data.shipId); const bonus = (st.militia ? 0.1 : 0) + (st.blessedUntil > st.day ? 0.1 : 0) + (HK.rivalAlly(st) ? 0.1 : 0) + (ch.data.funded ? 0.1 : 0);
-          if (Math.random() < 0.55 + bonus) { const loot = HK.rndi(6000, 12000); HK.book(st, 'expedition', loot); st.rep = HK.clamp(st.rep + 10, 0, 100); HK.fac(st, 'patrizier', 8); HK.fac(st, 'kirche', 3); HK.fac(st, 'kaufleute', 5); st.influence += 8; st.stats.pirateVictory = (st.stats.pirateVictory || 0) + 1; HK.log(st, 'vt_victory', { loot: HK.fmt(loot) }, 'good'); }
+          if (Math.random() < 0.55 + bonus) { const loot = HK.rndi(3000, 6000); HK.book(st, 'expedition', loot); st.rep = HK.clamp(st.rep + 10, 0, 100); HK.fac(st, 'patrizier', 8); HK.fac(st, 'kirche', 3); HK.fac(st, 'kaufleute', 5); st.influence += 8; st.stats.pirateVictory = (st.stats.pirateVictory || 0) + 1; HK.log(st, 'vt_victory', { loot: HK.fmt(loot) }, 'good'); }
           else { if (s) s.hull = Math.max(5, s.hull - 40); st.rep = HK.clamp(st.rep - 3, 0, 100); HK.log(st, 'vt_defeat', {}, 'bad'); }
           if (s) { s.status = 'port'; s.dest = null; s.daysLeft = 0; s.phase = 'out'; }
         } else if (ch.data.choice === 'fund') { const won = Math.random() < 0.6; HK.log(st, won ? 'vt_fleetWon' : 'vt_fleetLost', {}, won ? 'good' : 'info'); if (won) { HK.fac(st, 'patrizier', 3); st.rep = HK.clamp(st.rep + 3, 0, 100); } }
