@@ -350,8 +350,8 @@ Object.assign(HK.Scene, {
     const segs = [], Wd = HK.WALL, t = Wd.t, h = Wd.h, stone = { wall: '#736d63', top: '#7d776c' };
     const piece = (a, b, dir, nOut) => {
       const base = [[a[0] + nOut[0] * t / 2, a[1] + nOut[1] * t / 2], [b[0] + nOut[0] * t / 2, b[1] + nOut[1] * t / 2], [b[0] - nOut[0] * t / 2, b[1] - nOut[1] * t / 2], [a[0] - nOut[0] * t / 2, a[1] - nOut[1] * t / 2]];
-      const k = Math.max(...base.map(q => q[0] + q[1]));
-      segs.push({ k, f: (ctx) => {
+      const k = Math.max(...base.map(q => q[0] + q[1])), box = [Math.min(...base.map(q => q[0])), Math.min(...base.map(q => q[1])), Math.max(...base.map(q => q[0])), Math.max(...base.map(q => q[1]))];
+      segs.push({ k, box, f: (ctx) => {
         this.prism(ctx, base, 0, h, stone, { masonry: true });
         // Wehrgang: Brüstung mit Zinnen an der sichtbaren Längskante, niedrige Brüstung an der anderen
         const visOut = nOut[0] + nOut[1] > 0.02, nIn = [-nOut[0], -nOut[1]], nz = visOut ? nOut : nIn;
@@ -371,9 +371,9 @@ Object.assign(HK.Scene, {
       for (const [r0, r1] of ranges) for (let u = r0; u < r1 - 0.01; u += 2.2) { const u1 = Math.min(u + 2.2, r1); piece([A[0] + dir[0] * u, A[1] + dir[1] * u], [A[0] + dir[0] * u1, A[1] + dir[1] * u1], dir, nOut); }
     }
     // Nordtor: Torhaus mit Durchfahrt und Zeltdach
-    segs.push({ k: 15.5 - 2.4 + 2.6, f: (ctx) => { const gx = 15.05, gy = -2.4 - t / 2 - 0.1, gw = 0.9, gd = t + 0.2; I.box(ctx, gx, gy, 0, gw, gd, h + 0.7, stone, { stroke: 'rgba(0,0,0,0)', noTop: true }); this.masonry(ctx, true, true, gx, gy, gw, gd, 0, h + 0.7); I.poly(ctx, [[15.3, gy + gd + 0.005, 0], [15.7, gy + gd + 0.005, 0], [15.7, gy + gd + 0.005, 0.7], [15.5, gy + gd + 0.005, 0.95], [15.3, gy + gd + 0.005, 0.7]], '#1e1a18'); I.pyramid(ctx, gx - 0.05, gy - 0.05, h + 0.7, gw + 0.1, gd + 0.1, 0.55, '#3a3038'); } });
+    segs.push({ k: 15.5 - 2.4 + 2.6, box: [15.05, -2.4 - t / 2 - 0.1, 15.95, -2.4 + t / 2 + 0.1], f: (ctx) => { const gx = 15.05, gy = -2.4 - t / 2 - 0.1, gw = 0.9, gd = t + 0.2; I.box(ctx, gx, gy, 0, gw, gd, h + 0.7, stone, { stroke: 'rgba(0,0,0,0)', noTop: true }); this.masonry(ctx, true, true, gx, gy, gw, gd, 0, h + 0.7); I.poly(ctx, [[15.3, gy + gd + 0.005, 0], [15.7, gy + gd + 0.005, 0], [15.7, gy + gd + 0.005, 0.7], [15.5, gy + gd + 0.005, 0.95], [15.3, gy + gd + 0.005, 0.7]], '#1e1a18'); I.pyramid(ctx, gx - 0.05, gy - 0.05, h + 0.7, gw + 0.1, gd + 0.1, 0.55, '#3a3038'); } });
     // Türme: Mauerwerk, Schießscharten, Kragsteinkranz, Zinnen, Kegeldach
-    const tower = (cx, cy, r, hh, k) => segs.push({ k, f: (ctx, sv) => {
+    const tower = (cx, cy, r, hh, k) => segs.push({ k, box: [cx - r, cy - r, cx + r, cy + r], f: (ctx, sv) => {
       I.cylinder(ctx, cx, cy, 0, r, hh, '#736d63', { noTop: true });
       for (let z = 0.13; z < hh; z += 0.13) { const P = I.p(cx, cy, z); ctx.strokeStyle = 'rgba(0,0,0,0.26)'; ctx.lineWidth = 0.6; ctx.beginPath(); ctx.ellipse(P[0], P[1], r * I.TW, r * I.TH, 0, 0, Math.PI); ctx.stroke(); const off = ((z / 0.13) | 0) % 2 ? 0.35 : 0; for (let a = 0.15 + off; a < Math.PI; a += 0.7) { const Q = I.p(cx + Math.cos(a) * r, cy + Math.sin(a) * r, z); ctx.beginPath(); ctx.moveTo(Q[0], Q[1]); ctx.lineTo(Q[0], Q[1] + 0.13 * I.ZS); ctx.stroke(); } }
       const base = I.p(cx, cy, 0); ctx.fillStyle = 'rgba(20,20,15,0.25)'; ctx.beginPath(); ctx.ellipse(base[0], base[1], r * I.TW, r * I.TH, 0, 0, Math.PI); ctx.lineTo(base[0] - r * I.TW, base[1] - 0.2 * I.ZS); ctx.ellipse(base[0], base[1] - 0.2 * I.ZS, r * I.TW, r * I.TH, 0, Math.PI, 0, true); ctx.fill();

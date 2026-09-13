@@ -190,9 +190,11 @@ HK.Scene = {
   hit(x, y) {
     const st = HK.state; if (!st) return null;
     if (!this.pickCanvas || this.time - this.pickTime > 0.25) this.renderPick();
-    const px = Math.round(HK.clamp(x, 0, HK.MAP.W - 1)), py = Math.round(HK.clamp(y, 0, HK.MAP.H - 1));
-    const d = this.pickCtx.getImageData(px, py, 1, 1).data; const k = d[0] / 255;
-    if (k > 0.3) { const code = Math.round(d[1] / k) + (Math.round(d[2] / k) << 8); const id = Math.round(code / 3); if (id > 0 && this.pickTable && this.pickTable[id]) return this.pickTable[id]; }
+    // 3×3-Umfeld abtasten: nur reine Kennfarben zählen (Rot voll, Code durch 3 teilbar), Kantenmischungen fallen heraus
+    const px = Math.round(HK.clamp(x, 1, HK.MAP.W - 2)), py = Math.round(HK.clamp(y, 1, HK.MAP.H - 2));
+    const d = this.pickCtx.getImageData(px - 1, py - 1, 3, 3).data, votes = {}; let best = 0, bestN = 0;
+    for (let i = 0; i < 9; i++) { const o = i * 4; if (d[o] < 250) continue; const code = d[o + 1] + (d[o + 2] << 8); if (code % 3) continue; const id = code / 3; if (!id || !this.pickTable || !this.pickTable[id]) continue; const n = (votes[id] || 0) + (i === 4 ? 3 : 1); votes[id] = n; if (n > bestN) { bestN = n; best = id; } }
+    if (best) return this.pickTable[best];
     const wpt = this.toWorld(x, y); if (this.isWater(wpt.x, wpt.y) && wpt.x > -16 && wpt.y < 34 && wpt.x < 50) return { kind: 'building', building: HK.BUILDING.harbour, panel: 'harbour', label: HK.t('harbour') };
     return null;
   },
@@ -208,38 +210,38 @@ HK.Scene = {
   buildItems(ctx, st, season, t) {
     const items = [], sv = this.shadowVec();
     this.solids = HK.BUILDINGS.filter(b => b.kind !== 'water' && b.kind !== 'market' && b.h > 0);
-    for (const b of HK.BUILDINGS) if (b.kind !== 'water' && b.kind !== 'market') items.push({ k: b.x + b.w + b.y + b.d, f: c => this.drawBuilding(c, b, st, season, sv), pick: b.panel ? { kind: 'building', building: b, panel: b.panel, label: HK.name(b) } : null });
+    for (const b of HK.BUILDINGS) if (b.kind !== 'water' && b.kind !== 'market') items.push({ k: b.x + b.w + b.y + b.d, box: [b.x, b.y, b.x + b.w, b.y + b.d], f: c => this.drawBuilding(c, b, st, season, sv), pick: b.panel ? { kind: 'building', building: b, panel: b.panel, label: HK.name(b) } : null });
     const m = HK.BUILDING.market; items.push({ k: 0, f: c => { if (this.picking) I.poly(c, [[m.x, m.y, 0], [m.x + m.w, m.y, 0], [m.x + m.w, m.y + m.d, 0], [m.x, m.y + m.d, 0]], '#000'); }, pick: { kind: 'building', building: m, panel: 'market', label: HK.name(m) } });
-    for (const seg of this.wallSegments()) items.push({ k: seg.k, f: c => seg.f(c, sv) });
-    for (const tr of HK.TREES) items.push({ k: tr[0] + tr[1] + tr[2], f: c => this.drawTree(c, tr[0], tr[1], tr[2], season, sv) });
-    for (const p of HK.PROPS) { if (p.t === 'stalls') continue; items.push({ k: p.x + p.y + 0.3, f: c => this.drawProp(c, p, st, sv) }); }
-    this.marketStalls(HK.BUILDING.market).forEach((sd, i) => items.push({ k: sd.x + 0.55 + sd.y + 0.35, f: c => this.drawStall(c, sd, i, st) }));
-    for (const sk of this.marketSacks(HK.BUILDING.market)) items.push({ k: sk[0] + sk[1], f: c => { const q = I.p(sk[0], sk[1], 0); c.fillStyle = '#b8a070'; c.beginPath(); c.ellipse(q[0], q[1] - 2, 4, 3, 0, 0, 6.28); c.fill(); } });
-    items.push({ k: HK.MOLE.x + HK.MOLE.y1 + 1, f: c => this.drawMole(c, sv) });
-    items.push({ k: HK.ISLET.x + HK.ISLET.y, f: c => this.drawIslet(c, season, sv) });
-    items.push({ k: HK.GUARD_SHIP.x + HK.GUARD_SHIP.y + 0.6, f: c => this.drawShip(c, HK.GUARD_SHIP.x, HK.GUARD_SHIP.y, HK.GUARD_SHIP.heading, 1.15, 'guard', true, false) });
-    items.push({ k: HK.WINDMILL.x + HK.WINDMILL.y + 1, f: c => this.drawWindmill(c, t, sv) });
-    items.push({ k: HK.FARM.x + HK.FARM.w + HK.FARM.y + HK.FARM.d, f: c => this.drawFarm(c, season, sv) });
-    for (const f of HK.HAMLET) items.push({ k: f.x + f.w + f.y + f.d, f: c => this.drawFarm(c, season, sv, f) });
-    for (const p of HK.PIERS) for (let y = p.y0; y < p.y1; y += 0.6) { const seg = { x: p.x, y0: y, y1: Math.min(p.y1, y + 0.6), full: p, first: y === p.y0 }; items.push({ k: p.x + 0.25 + seg.y1, f: c => this.drawPier(c, seg, t) }); }
-    st.ownShips.forEach((sh, i) => { if (sh.status === 'port' && HK.OWN_BERTHS[i]) { const b = HK.OWN_BERTHS[i]; items.push({ k: b.x + b.y + 0.5, f: c => this.drawShip(c, b.x, b.y, HK.BERTH_HEADING + 0.3, HK.SHIP_TYPE[sh.type] ? HK.SHIP_TYPE[sh.type].scale : 0.95, 'own', true, false), pick: { kind: 'building', building: HK.BUILDING.harbour, panel: 'harbour', label: sh.name } }); } });
-    st.rivals.forEach((r, i) => { if (!r.ships) return; const sp = HK.RIVAL_ANCHORAGE[i]; items.push({ k: sp.x + sp.y + 0.5, f: c => this.drawShip(c, sp.x, sp.y, sp.h, 0.9, 'rival_' + r.id, true, false), pick: { kind: 'building', building: HK.BUILDING.harbour, panel: 'rivals', label: HK.rivalName(r.id) } }); });
-    for (const id in this.shipAnim) { const a = this.shipAnim[id]; const sh = st.ships.find(x => String(x.id) === id); items.push({ k: a.x + a.y + 0.6, f: c => this.drawShip(c, a.x, a.y, a.heading, HK.SHIP_SCALE, a.origin, !a.leaving && Math.abs(a.x - a.tx) + Math.abs(a.y - a.ty) < 0.05, HK.UI.selectedVisitor === Number(id) && !a.leaving), pick: sh && !a.leaving ? { kind: 'visitor', id: sh.id, panel: 'harbour', label: sh.name + ' (' + HK.name(HK.ORIGIN[sh.origin]) + ')' } : null }); }
+    for (const seg of this.wallSegments()) items.push({ k: seg.k, box: seg.box, f: c => seg.f(c, sv) });
+    for (const tr of HK.TREES) items.push({ k: tr[0] + tr[1] + tr[2], box: [tr[0] - 0.12, tr[1] - 0.12, tr[0] + 0.12, tr[1] + 0.12], f: c => this.drawTree(c, tr[0], tr[1], tr[2], season, sv) });
+    for (const p of HK.PROPS) { if (p.t === 'stalls') continue; const ps = this.PROP_SIZE[p.t] || [0.5, 0.5]; items.push({ k: p.x + p.y + 0.3, box: [p.x - 0.15, p.y - 0.15, p.x + ps[0], p.y + ps[1]], f: c => this.drawProp(c, p, st, sv) }); }
+    this.marketStalls(HK.BUILDING.market).forEach((sd, i) => items.push({ k: sd.x + 0.55 + sd.y + 0.35, box: [sd.x, sd.y, sd.x + 1.0, sd.y + 0.7], f: c => this.drawStall(c, sd, i, st) }));
+    for (const sk of this.marketSacks(HK.BUILDING.market)) items.push({ k: sk[0] + sk[1], box: [sk[0] - 0.1, sk[1] - 0.1, sk[0] + 0.1, sk[1] + 0.1], f: c => { const q = I.p(sk[0], sk[1], 0); c.fillStyle = '#b8a070'; c.beginPath(); c.ellipse(q[0], q[1] - 2, 4, 3, 0, 0, 6.28); c.fill(); } });
+    items.push({ k: HK.MOLE.x + HK.MOLE.y1 + 1, box: [HK.MOLE.x, HK.MOLE.y0, HK.MOLE.x + HK.MOLE.w, HK.MOLE.y1], f: c => this.drawMole(c, sv) });
+    items.push({ k: HK.ISLET.x + HK.ISLET.y, box: [HK.ISLET.x - 1.5, HK.ISLET.y - 1.5, HK.ISLET.x + 1.5, HK.ISLET.y + 1.5], f: c => this.drawIslet(c, season, sv) });
+    items.push({ k: HK.GUARD_SHIP.x + HK.GUARD_SHIP.y + 0.6, box: [HK.GUARD_SHIP.x - 0.9, HK.GUARD_SHIP.y - 0.9, HK.GUARD_SHIP.x + 0.9, HK.GUARD_SHIP.y + 0.9], f: c => this.drawShip(c, HK.GUARD_SHIP.x, HK.GUARD_SHIP.y, HK.GUARD_SHIP.heading, 1.15, 'guard', true, false) });
+    items.push({ k: HK.WINDMILL.x + HK.WINDMILL.y + 1, box: [HK.WINDMILL.x - 0.45, HK.WINDMILL.y - 0.45, HK.WINDMILL.x + 0.45, HK.WINDMILL.y + 0.45], f: c => this.drawWindmill(c, t, sv) });
+    items.push({ k: HK.FARM.x + HK.FARM.w + HK.FARM.y + HK.FARM.d, box: [HK.FARM.x, HK.FARM.y, HK.FARM.x + HK.FARM.w, HK.FARM.y + HK.FARM.d], f: c => this.drawFarm(c, season, sv) });
+    for (const f of HK.HAMLET) items.push({ k: f.x + f.w + f.y + f.d, box: [f.x, f.y, f.x + f.w, f.y + f.d], f: c => this.drawFarm(c, season, sv, f) });
+    for (const p of HK.PIERS) for (let y = p.y0; y < p.y1; y += 0.6) { const seg = { x: p.x, y0: y, y1: Math.min(p.y1, y + 0.6), full: p, first: y === p.y0 }; items.push({ k: p.x + 0.25 + seg.y1, box: [p.x - 0.3, seg.y0, p.x + 0.3, seg.y1], f: c => this.drawPier(c, seg, t) }); }
+    st.ownShips.forEach((sh, i) => { if (sh.status === 'port' && HK.OWN_BERTHS[i]) { const b = HK.OWN_BERTHS[i]; items.push({ k: b.x + b.y + 0.5, box: [b.x - 0.9, b.y - 0.9, b.x + 0.9, b.y + 0.9], f: c => this.drawShip(c, b.x, b.y, HK.BERTH_HEADING + 0.3, HK.SHIP_TYPE[sh.type] ? HK.SHIP_TYPE[sh.type].scale : 0.95, 'own', true, false), pick: { kind: 'building', building: HK.BUILDING.harbour, panel: 'harbour', label: sh.name } }); } });
+    st.rivals.forEach((r, i) => { if (!r.ships) return; const sp = HK.RIVAL_ANCHORAGE[i]; items.push({ k: sp.x + sp.y + 0.5, box: [sp.x - 0.9, sp.y - 0.9, sp.x + 0.9, sp.y + 0.9], f: c => this.drawShip(c, sp.x, sp.y, sp.h, 0.9, 'rival_' + r.id, true, false), pick: { kind: 'building', building: HK.BUILDING.harbour, panel: 'rivals', label: HK.rivalName(r.id) } }); });
+    for (const id in this.shipAnim) { const a = this.shipAnim[id]; const sh = st.ships.find(x => String(x.id) === id); items.push({ k: a.x + a.y + 0.6, box: [a.x - 1.0, a.y - 1.0, a.x + 1.0, a.y + 1.0], f: c => this.drawShip(c, a.x, a.y, a.heading, HK.SHIP_SCALE, a.origin, !a.leaving && Math.abs(a.x - a.tx) + Math.abs(a.y - a.ty) < 0.05, HK.UI.selectedVisitor === Number(id) && !a.leaving), pick: sh && !a.leaving ? { kind: 'visitor', id: sh.id, panel: 'harbour', label: sh.name + ' (' + HK.name(HK.ORIGIN[sh.origin]) + ')' } : null }); }
     const nBoats = Math.min(4, 2 + st.boats);
-    for (let i = 0; i < nBoats; i++) { const b = HK.BOAT_SPOTS[i]; items.push({ k: b.x + b.y, f: c => this.drawBoat(c, b.x, b.y, i >= 2, t + i) }); }
-    st.caravans.forEach((cv, i) => { const sp = HK.CARAVAN_SPOTS[i]; items.push({ k: sp.x + sp.y + 0.6, f: c => this.drawCaravan(c, sp.x, sp.y, t + i, sv), pick: { kind: 'visitor', id: cv.id, panel: 'gate', label: HK.t('caravanFrom', { origin: HK.name(HK.ORIGIN[cv.origin]) }) } }); });
-    for (const c0 of this.carts) { const wx = c0.a[0] + (c0.b[0] - c0.a[0]) * c0.t, wy = c0.a[1] + (c0.b[1] - c0.a[1]) * c0.t; items.push({ k: this.pointKey(wx, wy), f: c => this.drawCart(c, wx, wy, c0, t) }); }
-    for (const ch of this.chickens) items.push({ k: this.pointKey(ch.x, ch.y), f: c => { const s2 = I.p(ch.x, ch.y, 0); this.drawChicken(c, s2[0], s2[1], t); } });
-    for (const n of HK.STATIC_NPCS) { const pp = HK.PERSON[n.person]; items.push({ k: this.pointKey(n.x, n.y), f: c => { const s2 = I.p(n.x, n.y, 0); this.drawPerson(c, s2[0], s2[1], n.color, 'static', 1, this.hover && this.hover.person === n.person, null, 0, 1, n.person); }, pick: { kind: 'person', person: n.person, label: pp.name + ', ' + (pp.title[HK.LANG] || pp.title.de) } }); }
+    for (let i = 0; i < nBoats; i++) { const b = HK.BOAT_SPOTS[i]; items.push({ k: b.x + b.y, box: [b.x - 0.4, b.y - 0.4, b.x + 0.4, b.y + 0.4], f: c => this.drawBoat(c, b.x, b.y, i >= 2, t + i) }); }
+    st.caravans.forEach((cv, i) => { const sp = HK.CARAVAN_SPOTS[i]; items.push({ k: sp.x + sp.y + 0.6, box: [sp.x - 0.6, sp.y - 0.4, sp.x + 0.6, sp.y + 0.4], f: c => this.drawCaravan(c, sp.x, sp.y, t + i, sv), pick: { kind: 'visitor', id: cv.id, panel: 'gate', label: HK.t('caravanFrom', { origin: HK.name(HK.ORIGIN[cv.origin]) }) } }); });
+    for (const c0 of this.carts) { const wx = c0.a[0] + (c0.b[0] - c0.a[0]) * c0.t, wy = c0.a[1] + (c0.b[1] - c0.a[1]) * c0.t; items.push({ k: this.pointKey(wx, wy), box: [wx - 0.3, wy - 0.3, wx + 0.3, wy + 0.3], f: c => this.drawCart(c, wx, wy, c0, t) }); }
+    for (const ch of this.chickens) items.push({ k: this.pointKey(ch.x, ch.y), box: [ch.x - 0.05, ch.y - 0.05, ch.x + 0.05, ch.y + 0.05], f: c => { const s2 = I.p(ch.x, ch.y, 0); this.drawChicken(c, s2[0], s2[1], t); } });
+    for (const n of HK.STATIC_NPCS) { const pp = HK.PERSON[n.person]; items.push({ k: this.pointKey(n.x, n.y), box: [n.x - 0.05, n.y - 0.05, n.x + 0.05, n.y + 0.05], f: c => { const s2 = I.p(n.x, n.y, 0); this.drawPerson(c, s2[0], s2[1], n.color, 'static', 1, this.hover && this.hover.person === n.person, null, 0, 1, n.person); }, pick: { kind: 'person', person: n.person, label: pp.name + ', ' + (pp.title[HK.LANG] || pp.title.de) } }); }
     // Fehde: der Ritter mit seinen Reitern lauert vor dem Landtor
     if (st && st.chains && st.chains.active.some(c => c.id === 'feud')) {
       const K = [[33.3, 9.5, -1, true], [34.0, 10.3, -1, false], [33.9, 8.7, -1, false], [34.8, 9.6, 1, false]];
-      for (const [wx, wy, dir, mounted] of K) { const sp = I.p(wx, wy, 0); items.push({ k: this.pointKey(wx, wy), f: c => mounted ? this.drawHorseman(c, sp[0], sp[1], dir, '#5a3a22') : this.drawPerson(c, sp[0], sp[1], '#7a3030', 'guard', 1, false, '#d9a98a', this.time * 2, dir, null, null, 0.85) }); }
-      if (!this.picking) { const fp = I.p(34.4, 9.9, 0); items.push({ k: this.pointKey(34.4, 9.9), f: c => { c.fillStyle = 'rgba(255,140,40,' + (0.5 + Math.sin(this.time * 7) * 0.2) + ')'; c.beginPath(); c.ellipse(fp[0], fp[1] - 4, 4, 6, 0, 0, 6.28); c.fill(); c.fillStyle = '#4a3a2a'; c.beginPath(); c.ellipse(fp[0], fp[1], 6, 2.5, 0, 0, 6.28); c.fill(); } }); }
+      for (const [wx, wy, dir, mounted] of K) { const sp = I.p(wx, wy, 0), r = mounted ? 0.4 : 0.05; items.push({ k: this.pointKey(wx, wy), box: [wx - r, wy - r, wx + r, wy + r], f: c => mounted ? this.drawHorseman(c, sp[0], sp[1], dir, '#5a3a22') : this.drawPerson(c, sp[0], sp[1], '#7a3030', 'guard', 1, false, '#d9a98a', this.time * 2, dir, null, null, 0.85) }); }
+      if (!this.picking) { const fp = I.p(34.4, 9.9, 0); items.push({ k: this.pointKey(34.4, 9.9), box: [34.2, 9.7, 34.6, 10.1], f: c => { c.fillStyle = 'rgba(255,140,40,' + (0.5 + Math.sin(this.time * 7) * 0.2) + ')'; c.beginPath(); c.ellipse(fp[0], fp[1] - 4, 4, 6, 0, 0, 6.28); c.fill(); c.fillStyle = '#4a3a2a'; c.beginPath(); c.ellipse(fp[0], fp[1], 6, 2.5, 0, 0, 6.28); c.fill(); } }); }
     }
     // Zunftaufstand: Handwerker mit Fackeln vor dem Rathaus
     if (st && st.unrestUntil > st.day) {
-      for (let i = 0; i < 12; i++) { const wx = 12.35 + ((i * 37) % 13) / 10, wy = 8.55 + ((i * 53) % 11) / 10, sp = I.p(wx, wy, 0); items.push({ k: this.pointKey(wx, wy), f: c => this.drawPerson(c, sp[0], sp[1], ['#7a5a3a', '#5a6a4a', '#8a6a3a', '#6a4a6a'][i % 4], 'torch', 1, false, '#d9a98a', this.time * 2 + i, i % 2 ? 1 : -1, null, null, 0.85) }); }
+      for (let i = 0; i < 12; i++) { const wx = 12.35 + ((i * 37) % 13) / 10, wy = 8.55 + ((i * 53) % 11) / 10, sp = I.p(wx, wy, 0); items.push({ k: this.pointKey(wx, wy), box: [wx - 0.05, wy - 0.05, wx + 0.05, wy + 0.05], f: c => this.drawPerson(c, sp[0], sp[1], ['#7a5a3a', '#5a6a4a', '#8a6a3a', '#6a4a6a'][i % 4], 'torch', 1, false, '#d9a98a', this.time * 2 + i, i % 2 ? 1 : -1, null, null, 0.85) }); }
     }
     if (this.procession) {
       const P = this.procession, segs = P.route.length - 1;
@@ -247,12 +249,35 @@ HK.Scene = {
         let u = P.t - i * 0.055; if (u < 0) continue; u = u % segs; const k = Math.floor(u), f = u - k;
         const A = HK.ROAD_NODES[P.route[k]], B = HK.ROAD_NODES[P.route[k + 1]]; const wx = A[0] + (B[0] - A[0]) * f + (i % 2 ? 0.16 : -0.16), wy = A[1] + (B[1] - A[1]) * f + (i % 2 ? -0.16 : 0.16);
         const sp = I.p(wx, wy, 0), dir = ((B[0] - A[0]) - (B[1] - A[1])) >= 0 ? 1 : -1, col = i === 0 ? '#e0b040' : i % 3 === 1 ? '#8a2a2a' : '#e8e0d0';
-        items.push({ k: this.pointKey(wx, wy), f: c => { this.drawPerson(c, sp[0], sp[1], col, 'monk', 1, false, '#e8c39e', this.time * 5 + i, dir, null, null, 0.85); if (!this.picking && i === 0) { c.strokeStyle = '#e0b040'; c.lineWidth = 2; c.beginPath(); c.moveTo(sp[0], sp[1] - 26); c.lineTo(sp[0], sp[1] - 44); c.moveTo(sp[0] - 4, sp[1] - 40); c.lineTo(sp[0] + 4, sp[1] - 40); c.stroke(); } } });
+        items.push({ k: this.pointKey(wx, wy), box: [wx - 0.05, wy - 0.05, wx + 0.05, wy + 0.05], f: c => { this.drawPerson(c, sp[0], sp[1], col, 'monk', 1, false, '#e8c39e', this.time * 5 + i, dir, null, null, 0.85); if (!this.picking && i === 0) { c.strokeStyle = '#e0b040'; c.lineWidth = 2; c.beginPath(); c.moveTo(sp[0], sp[1] - 26); c.lineTo(sp[0], sp[1] - 44); c.moveTo(sp[0] - 4, sp[1] - 40); c.lineTo(sp[0] + 4, sp[1] - 40); c.stroke(); } } });
       }
     }
-    for (const w of this.walkers) { const a = this.walkerAlpha(w); if (a <= 0.02) continue; const p = this.walkerPos(w); items.push({ k: this.pointKey(p.wx, p.wy), f: c => this.drawPerson(c, p.x, p.y, w.color, w.type, a, this.hover && this.hover.walker === w, w.skin, w.pause > 0 ? 0 : w.phase, p.dir, null, w), pick: a >= 0.4 ? { kind: 'walker', walker: w, label: HK.t('enc_' + w.type + '_label') } : null }); }
-    items.sort((a, b) => a.k - b.k);
-    return items;
+    for (const w of this.walkers) { const a = this.walkerAlpha(w); if (a <= 0.02) continue; const p = this.walkerPos(w); items.push({ k: this.pointKey(p.wx, p.wy), box: [p.wx - 0.05, p.wy - 0.05, p.wx + 0.05, p.wy + 0.05], f: c => this.drawPerson(c, p.x, p.y, w.color, w.type, a, this.hover && this.hover.walker === w, w.skin, w.pause > 0 ? 0 : w.phase, p.dir, null, w), pick: a >= 0.4 ? { kind: 'walker', walker: w, label: HK.t('enc_' + w.type + '_label') } : null }); }
+    return this.depthSort(items);
+  },
+  PROP_SIZE: { ropes: [1.6, 0.3], sails: [0.8, 0.8], frames: [0.9, 0.5], dyecloths: [1.0, 0.4], fishracks: [0.9, 0.5], logs: [1.0, 0.6], nets: [0.5, 0.5], laundry: [1.0, 0.3], boatup: [1.0, 0.5], gallows: [0.5, 0.5], tollbar: [0.9, 0.3], well: [0.3, 0.3], statue: [0.3, 0.3] },
+  /* Tiefensortierung als Malerreihenfolge: Grundrisse, die sich entlang einer Achse nicht überlappen, legen die Reihenfolge fest
+     (der Betrachter steht bei +x,+y); nur bei überlappenden Grundrissen entscheidet der Schlüssel k. */
+  depthSort(items) {
+    const e = 0.02, flat = [], solid = [];
+    for (const it of items) (it.box ? solid : flat).push(it);
+    flat.sort((a, b) => a.k - b.k); solid.sort((a, b) => a.k - b.k);
+    const m = solid.length, behind = new Array(m);
+    for (let i = 0; i < m; i++) behind[i] = [];
+    for (let i = 0; i < m; i++) {
+      const A = solid[i].box;
+      for (let j = i + 1; j < m; j++) {
+        const B = solid[j].box;
+        const sx = A[2] <= B[0] + e ? -1 : B[2] <= A[0] + e ? 1 : 0, sy = A[3] <= B[1] + e ? -1 : B[3] <= A[1] + e ? 1 : 0;
+        if (sx && sy && sx !== sy) continue;
+        const sgn = sx || sy; if (!sgn) continue;
+        if (sgn < 0) behind[j].push(i); else behind[i].push(j);
+      }
+    }
+    const out = [], state = new Uint8Array(m);
+    const visit = i => { if (state[i]) return; state[i] = 1; const bl = behind[i]; for (let q = 0; q < bl.length; q++) if (!state[bl[q]]) visit(bl[q]); state[i] = 2; out.push(solid[i]); };
+    for (let i = 0; i < m; i++) visit(i);
+    return flat.concat(out);
   },
   /* Pick-Kanal: jedes anklickbare Objekt in eigener Kennfarbe */
   renderPick() {
