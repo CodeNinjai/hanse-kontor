@@ -4,6 +4,20 @@ Object.assign(HK.Scene, {
   seed(b) { return ((b.x * 13 + b.y * 7) * 10) | 0; },
   chimney(ctx, x, y, z) { I.box(ctx, x, y, z, 0.14, 0.14, 0.32, { wall: '#5a4a44', top: '#3a2f2c' }); },
   gableFlag(ctx, x, y, z) { I.line(ctx, [x, y, z], [x, y, z + 0.6], '#3a2a1a', 1.2); this.pennant(ctx, x, y, z + 0.6, 0.45, 0.2, ['#e0b040'], true); },
+  /* Verkaufstafel an der Traufseite: ein Brett mit rotem Wachssiegel */
+  saleSign(ctx, b) {
+    const x = b.x + b.w * 0.18, y = b.y + b.d, z = b.h * 0.62;
+    I.line(ctx, [x, y, z + 0.26], [x, y, z + 0.02], '#4a3828', 1.2);
+    I.poly(ctx, [[x - 0.2, y, z], [x + 0.2, y, z], [x + 0.2, y, z - 0.22], [x - 0.2, y, z - 0.22]], '#efe6cf');
+    I.poly(ctx, [[x - 0.2, y, z], [x + 0.2, y, z], [x + 0.2, y, z - 0.04], [x - 0.2, y, z - 0.04]], '#c9b48a');
+    I.poly(ctx, [[x + 0.04, y, z - 0.1], [x + 0.15, y, z - 0.1], [x + 0.15, y, z - 0.2], [x + 0.04, y, z - 0.2]], '#a63a2a');
+  },
+  /* Leerstand: vernagelte Tür */
+  boardedDoor(ctx, b) {
+    const x = b.x + b.w * 0.5, y = b.y + b.d, z = b.h * 0.34;
+    I.poly(ctx, [[x - 0.26, y, z + 0.05], [x + 0.26, y, z - 0.02], [x + 0.26, y, z - 0.1], [x - 0.26, y, z - 0.03]], '#6b5238');
+    I.poly(ctx, [[x - 0.26, y, z - 0.18], [x + 0.26, y, z - 0.25], [x + 0.26, y, z - 0.33], [x - 0.26, y, z - 0.26]], '#6b5238');
+  },
   /* Fahne im Wind (weht nach +x), als Fläche im Raum: Streifen von oben nach unten, optional spitz zulaufend */
   pennant(ctx, x, y, z, len, h, cols, taper) {
     const t = this.time, n = 5, wave = f => Math.sin(t * 5 + x * 2.3 + y - f * 5) * 0.05 * f * len * 3 + f * f * 0.06;
@@ -199,7 +213,13 @@ Object.assign(HK.Scene, {
       for (let u = 0; u <= b.w; u += 0.18) I.line(ctx, [b.x + u, b.y + b.d, 0], [b.x + u, b.y + b.d, 0.22], '#6a4a2a', 1.2); for (let v = 0; v <= b.d; v += 0.18) I.line(ctx, [b.x + b.w, b.y + v, 0], [b.x + b.w, b.y + v, 0.22], '#5a3a1a', 1.2);
       I.line(ctx, [b.x, b.y + b.d, 0.16], [b.x + b.w, b.y + b.d, 0.16], '#6a4a2a', 1); I.line(ctx, [b.x + b.w, b.y, 0.16], [b.x + b.w, b.y + b.d, 0.16], '#5a3a1a', 1);
       I.box(ctx, b.x + b.w - 0.45, b.y + 0.1, 0, 0.35, 0.35, 0.3, { wall: '#7a5a3a' }, { noTop: true }); I.pyramid(ctx, b.x + b.w - 0.45, b.y + 0.1, 0.3, 0.35, 0.35, 0.2, '#5a4a3a');
-      const p = I.p(b.x + 0.3, b.y + b.d - 0.3, 0.3); ctx.fillStyle = '#c9c0ad'; ctx.fillRect(p[0] - 5, p[1] - 6, 10, 6); ctx.fillStyle = '#3a2a1a'; ctx.fillRect(p[0] - 0.7, p[1], 1.4, 6);
+      // Bauschild auf dem leeren Grundstück: hoch genug, um über die Dächer davor zu ragen
+      const sx = b.x + 0.28, sy = b.y + b.d - 0.22, top = 1.95;
+      I.line(ctx, [sx, sy, 0], [sx, sy, top], '#5a4128', 2.2);
+      I.poly(ctx, [[sx - 0.42, sy, top], [sx + 0.42, sy, top], [sx + 0.42, sy, top - 0.46], [sx - 0.42, sy, top - 0.46]], '#d9cdb2');
+      I.poly(ctx, [[sx - 0.42, sy, top], [sx + 0.42, sy, top], [sx + 0.42, sy, top - 0.08], [sx - 0.42, sy, top - 0.08]], '#a8977a');
+      I.line(ctx, [sx - 0.22, sy, top - 0.15], [sx + 0.22, sy, top - 0.15], '#6a5a44', 1.2);
+      I.line(ctx, [sx - 0.22, sy, top - 0.26], [sx + 0.1, sy, top - 0.26], '#6a5a44', 1.2);
       return;
     }
     const cols = { brewery: ['#d9b56b', '#6a3a2a'], smokehouse: ['#8a7a6a', '#3a3a3a'], weaver: ['#d9d0b8', '#4e4a52'], smithy: ['#9a9284', '#4e4a52'], saltworks: ['#e0dcd0', '#5b5560'] };
@@ -491,9 +511,12 @@ Object.assign(HK.Scene, {
       case 'chapel': this.drawChapel(ctx, b, st, season, sv); break;
       case 'market': return;
     }
-    const owned = (b.panel === 'house' && st.houses[b.plot].owner === 'player') || (b.panel === 'workshop' && st.workshops[b.plot].type) || (b.id === 'tavern' && st.tavernOwned) || (b.id === 'bathhouse' && st.bathhouseOwned) || (b.panel === 'venture' && st.ventures && st.ventures[b.id]) || (b.panel === 'storage' && st.storages && st.storages[b.plot] && st.storages[b.plot].owner === 'player') || (b.id === 'dive' && st.ventures && st.ventures.dive);
+    const bh = b.burgher && st.burghers ? st.burghers[b.burgher] : null;
+    const owned = (bh && bh.owner === 'player') || (b.panel === 'house' && st.houses[b.plot].owner === 'player') || (b.panel === 'workshop' && st.workshops[b.plot].type) || (b.id === 'tavern' && st.tavernOwned) || (b.id === 'bathhouse' && st.bathhouseOwned) || (b.panel === 'venture' && st.ventures && st.ventures[b.id]) || (b.panel === 'storage' && st.storages && st.storages[b.plot] && st.storages[b.plot].owner === 'player') || (b.id === 'dive' && st.ventures && st.ventures.dive);
     if (owned) this.gableFlag(ctx, b.x + b.w - 0.06, b.y + b.d - 0.06, b.h);
-    if (b.panel === 'house' && st.houses[b.plot].damaged) { I.poly(ctx, [[b.x, b.y + b.d, 0], [b.x + b.w, b.y + b.d, 0], [b.x + b.w, b.y + b.d, b.h], [b.x, b.y + b.d, b.h]], 'rgba(20,15,10,0.6)'); I.poly(ctx, [[b.x + b.w, b.y, 0], [b.x + b.w, b.y + b.d, 0], [b.x + b.w, b.y + b.d, b.h], [b.x + b.w, b.y, b.h]], 'rgba(20,15,10,0.65)'); }
+    if (bh && HK.burgherForSale(st, bh)) this.saleSign(ctx, b);
+    if (bh && bh.vacantUntil > st.day) this.boardedDoor(ctx, b);
+    if (((bh && bh.damaged) || (b.panel === 'house' && st.houses[b.plot].damaged))) { I.poly(ctx, [[b.x, b.y + b.d, 0], [b.x + b.w, b.y + b.d, 0], [b.x + b.w, b.y + b.d, b.h], [b.x, b.y + b.d, b.h]], 'rgba(20,15,10,0.6)'); I.poly(ctx, [[b.x + b.w, b.y, 0], [b.x + b.w, b.y + b.d, 0], [b.x + b.w, b.y + b.d, b.h], [b.x + b.w, b.y, b.h]], 'rgba(20,15,10,0.65)'); }
   },
 
   /* ---------- Schiffe (3D-Rumpf, gedreht) ---------- */

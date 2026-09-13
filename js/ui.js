@@ -2,7 +2,7 @@
 'use strict';
 
 HK.UI = {
-  tab: 'place', panel: 'kontor', plot: 0, selectedVisitor: null, selectedOwnShip: null, person: null, encounter: null,
+  tab: 'place', panel: 'kontor', plot: 0, burgher: 'f1', selectedVisitor: null, selectedOwnShip: null, person: null, encounter: null,
   inputs: { qty: 10, qtyAll: false, smuggle: false, loan: 1000, bill: 1000, bet: 100, donate: 200, dest: 'luebeck', bring: '' }, modalOpen: false, modalRender: null, unread: 0,
 
   esc(s) { return String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])); },
@@ -54,6 +54,7 @@ HK.UI = {
     const p = this.panel;
     if (p === 'person' && this.person) return HK.personName(HK.state, this.person);
     if (p === 'encounter') return HK.t('enc_' + (this.encounter ? this.encounter.type : 'citizen') + '_label');
+    if (p === 'burgher') { const bh = HK.state.burghers[this.burgher]; return bh ? HK.burgherName(bh) : HK.t('burgherHouse'); }
     if (p === 'house') return HK.name(HK.BUILDINGS.find(b => b.panel === 'house' && b.plot === this.plot));
     if (p === 'workshop') return HK.name(HK.BUILDINGS.find(b => b.panel === 'workshop' && b.plot === this.plot));
     if (p === 'rivals') return HK.t('rivals');
@@ -66,7 +67,7 @@ HK.UI = {
 
   /* Klick in der Szene */
   sceneClick(h) {
-    if (h.kind === 'building') { this.panel = h.panel; if (h.building.plot !== undefined) this.plot = h.building.plot; HK.Scene.selected = h.building.id; if (h.panel !== 'harbour' && h.panel !== 'gate') this.selectedVisitor = null; }
+    if (h.kind === 'building') { this.panel = h.panel; if (h.building.plot !== undefined) this.plot = h.building.plot; if (h.building.burgher) this.burgher = h.building.burgher; HK.Scene.selected = h.building.id; if (h.panel !== 'harbour' && h.panel !== 'gate') this.selectedVisitor = null; }
     else if (h.kind === 'visitor') { this.panel = h.panel; this.selectedVisitor = h.id; HK.Scene.selected = h.panel === 'gate' ? 'gate' : 'harbour'; }
     else if (h.kind === 'person') { this.panel = 'person'; this.person = h.person; HK.Scene.selected = null; }
     else if (h.kind === 'walker') { this.panel = 'encounter'; this.encounter = Object.assign({ type: h.walker.type }, HK.encounter(HK.state, h.walker.type)); HK.Scene.selected = null; }
@@ -371,6 +372,49 @@ HK.UI = {
       if (hs.level < 3) h += `<button class="small" data-action="upgradehouse" ${st.money >= HK.CONST.HOUSE_UPGRADE ? '' : 'disabled'}>${HK.t('upgradeHouse', { cost: HK.fmt(HK.CONST.HOUSE_UPGRADE) })}</button>`;
       h += `<button class="small danger" data-action="sellhouse">${HK.t('sellHouse', { price: HK.fmt(Math.round(hs.price * (0.7 + hs.level * 0.15))) })}</button></div>`;
     }
+    return h;
+  },
+  panel_burgher() {
+    const st = HK.state, id = this.burgher, hs = st.burghers[id];
+    if (!hs) return this.head(HK.t('burgherHouse'), '');
+    const b = HK.BUILDING[id], sale = HK.burgherForSale(st, hs), mine = hs.owner === 'player';
+    let h = this.head(HK.burgherName(hs), HK.t('quarter_' + hs.quarter) + ' · ' + HK.t('burgherHouse'));
+    // Haushalt
+    const vacant = mine && hs.vacantUntil > st.day;
+    h += `<section><h3>${HK.t('household')}</h3>`;
+    if (vacant) h += `<p><span class="demand shortage">${HK.t('burgherVacant')}</span> ${HK.t('burgherVacantHint', { days: hs.vacantUntil - st.day })}</p>`;
+    else h += `<p>${HK.t('burgherFamily', { family: hs.family, trade: HK.burgherTrade(hs), standing: HK.t('standing_' + hs.standing) })}<br><span class="tag">${HK.t('mood')}: ${HK.t('mood_' + HK.burgherMoodLabel(hs))}</span></p>`;
+    h += `</section>`;
+    // Besitz und Angebot
+    h += `<section><h3>${HK.t('ownership')}</h3>`;
+    if (mine) {
+      const rent = HK.burgherRent(st, hs), up = HK.burgherUpkeep(st, hs);
+      h += `<p><span class="tag gold">${HK.t('yours')}</span> ${HK.t('level', { level: hs.level })} · <b>${HK.t('rentPerDay', { rent })}</b> · <small>${HK.t('upkeepPerDay', { cost: up })}</small>${hs.damaged ? ` · <span class="demand shortage">${HK.t('damaged')}</span>` : ''}${hs.raisedUntil > st.day ? ` · <span class="tag">${HK.t('rentRaised')}</span>` : ''}</p><div class="btn-row">`;
+      if (hs.damaged) h += `<button class="small" data-action="repairburgher" ${st.money >= HK.CONST.BURGHER_REPAIR ? '' : 'disabled'}>${HK.t('repairBurgher', { cost: HK.fmt(HK.CONST.BURGHER_REPAIR) })}</button>`;
+      if (hs.level < 3 && !hs.damaged) { const c = 2200 + hs.level * 800; h += `<button class="small" data-action="improveburgher" ${st.money >= c ? '' : 'disabled'}>${HK.t('improveBurgher', { cost: HK.fmt(c) })}</button>`; }
+      if (hs.raisedUntil > st.day) h += `<button class="small" data-action="easeburgher">${HK.t('easeBurgher')}</button>`;
+      else h += `<button class="small" data-action="raiseburgher">${HK.t('raiseBurgher')}</button>`;
+      h += `<button class="small danger" data-action="sellburgher">${HK.t('sellBurgher', { price: HK.fmt(Math.round(HK.burgherPrice(st, hs) * 0.75)) })}</button></div><p class="hint">${HK.t('raiseBurgherHint')}</p>`;
+    } else if (sale) {
+      h += `<p>${HK.t('burgherSaleReason_' + hs.sale.reason, { family: hs.family, trade: HK.burgherTrade(hs) })}</p><p><b>${HK.t('burgherAsking', { price: HK.fmt(hs.sale.price) })}</b> · <small>${HK.t('burgherSaleDays', { days: hs.sale.until - st.day })}</small></p>`;
+      h += `<button data-action="buyburgher" ${st.money >= hs.sale.price ? '' : 'disabled'}>${HK.t('buyBurgher', { price: HK.fmt(hs.sale.price) })}</button>`;
+      h += `<p class="hint">${HK.t('burgherBidHint')}</p>`;
+    } else if (hs.owner !== 'burgher') {
+      h += `<p>${HK.t('ownedByRival', { rival: HK.rivalName(hs.owner) })}</p><p class="hint">${HK.t('burgherNotForSaleHint')}</p>`;
+    } else {
+      h += `<p>${HK.t('burgherNotForSale')}</p><p class="hint">${HK.t('burgherNotForSaleHint')}</p>`;
+    }
+    h += `</section>`;
+    // Übersicht über den eigenen Hausbesitz
+    const owned = HK.burgherOwned(st);
+    if (owned.length) {
+      let rent = 0, up = 0; for (const oid of owned) { rent += HK.burgherRent(st, st.burghers[oid]); up += HK.burgherUpkeep(st, st.burghers[oid]); }
+      h += `<section><h3>${HK.t('burgherPortfolio')}</h3><p>${HK.t('burgherPortfolioLine', { count: owned.length, rent, upkeep: up, net: rent - up })}</p>`;
+      if (HK.playerPatrician(st)) h += `<p><span class="tag gold">${HK.t('patrician')}</span> ${HK.t('patricianHint')}</p>`;
+      else h += `<p class="hint">${HK.t('patricianNeed', { count: HK.CONST.BURGHER_PATRICIAN - owned.length })}</p>`;
+      h += `<table class="plain">${owned.map(oid => { const o = st.burghers[oid]; return `<tr><td><a href="#" data-action="gotoburgher" data-id="${oid}">${HK.burgherName(o)}</a></td><td><small>${HK.t('quarter_' + o.quarter)}</small></td><td class="num">${HK.burgherRent(st, o)} ${HK.t('mark')}</td><td>${o.damaged ? `<span class="demand shortage">${HK.t('damaged')}</span>` : o.vacantUntil > st.day ? `<span class="demand shortage">${HK.t('burgherVacant')}</span>` : ''}</td></tr>`; }).join('')}</table></section>`;
+    }
+    if (b) h += `<p class="hint">${HK.t('burgherLore')}</p>`;
     return h;
   },
   panel_tavern() {
@@ -680,6 +724,13 @@ HK.UI = {
       case 'sellhouse': if (confirm(HK.t('sellHouse', { price: '' }) + '?')) HK.sellHouse(st, this.plot); break;
       case 'upgradehouse': this.result(HK.upgradeHouse(st, this.plot)); break;
       case 'repairhouse': this.result(HK.repairHouse(st, this.plot)); break;
+      case 'buyburgher': this.result(HK.buyBurgher(st, this.burgher)); break;
+      case 'sellburgher': if (confirm(HK.t('sellBurgher', { price: '' }) + '?')) HK.sellBurgher(st, this.burgher); break;
+      case 'repairburgher': this.result(HK.repairBurgher(st, this.burgher)); break;
+      case 'improveburgher': this.result(HK.improveBurgher(st, this.burgher)); break;
+      case 'raiseburgher': this.result(HK.raiseBurgherRent(st, this.burgher)); break;
+      case 'easeburgher': this.result(HK.easeBurgherRent(st, this.burgher)); break;
+      case 'gotoburgher': this.burgher = d.id; HK.Scene.selected = d.id; break;
       case 'buytavern': this.result(HK.buyTavern(st)); break;
       case 'buybath': this.result(HK.buyBathhouse(st)); break;
       case 'rumor': this.result(HK.buyRumor(st)); break;

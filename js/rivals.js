@@ -9,10 +9,11 @@ HK.RIVAL_DEF = {
 };
 HK.rivalName = id => HK.RIVALS.find(x => x.id === id).name;
 HK.attitudeLabel = a => a >= 60 ? 'att_allied' : a >= 25 ? 'att_friendly' : a > -25 ? 'att_neutral' : a > -60 ? 'att_cold' : 'att_hostile';
-HK.rivalHoldingsText = (st, r) => ({ houses: r.holdings.houses.length, ventures: r.holdings.ventures.length, storages: r.holdings.storages.length, ships: r.ships });
+HK.rivalHoldingsText = (st, r) => ({ houses: r.holdings.houses.length + (r.holdings.burghers || []).length, ventures: r.holdings.ventures.length, storages: r.holdings.storages.length, ships: r.ships });
 HK.initRival = function (r) {
   if (r.attitude === undefined) r.attitude = HK.rndi(-10, 10);
-  if (!r.holdings) r.holdings = { houses: [], ventures: [], storages: [] };
+  if (!r.holdings) r.holdings = { houses: [], ventures: [], storages: [], burghers: [] };
+  if (!r.holdings.burghers) r.holdings.burghers = [];
   if (r.ships === undefined) r.ships = 0; if (!r.seat) r.seat = 'none'; if (r.ally === undefined) r.ally = false;
   if (r.lastAct === undefined) r.lastAct = 0; if (r.lastMeet === undefined) r.lastMeet = -99; if (r.brotherhood === undefined) r.brotherhood = false;
 };
@@ -85,7 +86,7 @@ HK.tickHooks.push(st => {
   for (const r of st.rivals) {
     HK.initRival(r); const def = HK.RIVAL_DEF[r.id];
     // Besitz trägt Vermögen; Schiffe fahren
-    r.wealth += r.holdings.houses.length * 5 + r.holdings.ventures.length * 8 + r.holdings.storages.length * 8 + r.ships * 15;
+    r.wealth += (r.holdings.burghers || []).length * 4 + r.holdings.houses.length * 5 + r.holdings.ventures.length * 8 + r.holdings.storages.length * 8 + r.ships * 15;
     // Haltung: Neid auf Vorsprung, Groll verblasst, Bündnis hält nur bei Wohlwollen
     if (worth > r.wealth * 1.3) r.attitude -= 0.03; if (r.ally && r.attitude < 20) { r.ally = false; HK.log(st, 'allianceBroken', { rival: HK.rivalName(r.id) }, 'bad'); }
     r.attitude += (0 - r.attitude) * 0.002; r.attitude = HK.clamp(r.attitude, -100, 100);

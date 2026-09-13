@@ -363,7 +363,7 @@ HK.runForSeat = function (st) {
   if (st.rep < needRep) return { ok: false, msg: 'needRep' };
   if (st.money < cost) return { ok: false, msg: 'notEnoughMoney' };
   HK.book(st, 'politics', -cost);
-  const support = HK.councillors().filter(c => st.persons[c.id].loyalty >= needLoyal).length;
+  const support = HK.councillors().filter(c => st.persons[c.id].loyalty >= needLoyal).length + (HK.seatSupportMod ? HK.seatSupportMod(st) : 0);
   const backing = (st.factions ? Object.values(st.factions).filter(v => v >= (wantMayor ? 50 : 40)).length : 4) + (st.brotherhood && st.brotherhood.members >= 60 ? 1 : 0);
   if (support >= needCount && backing >= (wantMayor ? 3 : 2)) {
     st.seat = wantMayor ? 'mayor' : 'councillor'; st.influence += 15; if (wantMayor) st.mayorSince = st.day;

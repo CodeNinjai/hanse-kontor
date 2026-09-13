@@ -210,7 +210,7 @@ HK.Scene = {
   buildItems(ctx, st, season, t) {
     const items = [], sv = this.shadowVec();
     this.solids = HK.BUILDINGS.filter(b => b.kind !== 'water' && b.kind !== 'market' && b.h > 0);
-    for (const b of HK.BUILDINGS) if (b.kind !== 'water' && b.kind !== 'market') items.push({ k: b.x + b.w + b.y + b.d, box: [b.x, b.y, b.x + b.w, b.y + b.d], f: c => this.drawBuilding(c, b, st, season, sv), pick: b.panel ? { kind: 'building', building: b, panel: b.panel, label: HK.name(b) } : null });
+    for (const b of HK.BUILDINGS) if (b.kind !== 'water' && b.kind !== 'market') items.push({ k: b.x + b.w + b.y + b.d, box: [b.x, b.y, b.x + b.w, b.y + b.d], f: c => this.drawBuilding(c, b, st, season, sv), pick: b.panel ? { kind: 'building', building: b, panel: b.panel, label: HK.buildingLabel ? HK.buildingLabel(st, b) : HK.name(b) } : null });
     const m = HK.BUILDING.market; items.push({ k: 0, f: c => { if (this.picking) I.poly(c, [[m.x, m.y, 0], [m.x + m.w, m.y, 0], [m.x + m.w, m.y + m.d, 0], [m.x, m.y + m.d, 0]], '#000'); }, pick: { kind: 'building', building: m, panel: 'market', label: HK.name(m) } });
     for (const seg of this.wallSegments()) items.push({ k: seg.k, box: seg.box, f: c => seg.f(c, sv) });
     for (const tr of HK.TREES) items.push({ k: tr[0] + tr[1] + tr[2], box: [tr[0] - 0.12, tr[1] - 0.12, tr[0] + 0.12, tr[1] + 0.12], f: c => this.drawTree(c, tr[0], tr[1], tr[2], season, sv) });

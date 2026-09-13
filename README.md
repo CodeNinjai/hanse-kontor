@@ -57,6 +57,7 @@ Dazu Stadtereignisse (Hungersnot, Pest, Brand, Vitalienbrüder, Sturm, Jahrmarkt
 - **Eis im Winter:** Bergen, Stockholm und Riga sind im Winter nicht anzulaufen.
 - **Unterwelt ausgebaut:** Falschgeld beim Geldwechsler, Erpressung von Rivalen mit Spitzelwissen, und der Freikauf zur Ehrbarkeit, der Verdacht und Vergangenheit tilgt, aber Rückfälle doppelt bestraft. Die Gerberei liefert Leder für Lübeck, Danzig und Köln.
 - **Zunftaufstand:** Sinkt das Ansehen bei den Zünften unter 25, ziehen die Handwerker vor das Rathaus: Miliz rufen, vermitteln, den Zug anführen oder die Türen schließen.
+- **Bürgerhäuser:** Die 26 Wohnhäuser der Stadt sind bewohnt, jedes mit Familie, Gewerbe, Stand und Stimmung. Sie stehen nur zum Verkauf, wenn ein Haushalt sich verschuldet, wegzieht oder ausstirbt; die Rivalen greifen mit zu. Wer kauft, bekommt Miete und Pflichten: Unterhalt, Brandschaden, Leerstand, halbe Mieten in Pest und Aufruhr. Sechs Häuser machen zum Patrizier und geben Gewicht im Rat.
 - **Balancing:** Ein geskripteter Testspieler (`node tools/testspieler.js all 3 20 normal`, Auswertung in `docs/KONZEPT.md`, Abschnitt 7.1) spielt jeden Weg zwanzig Jahre headless durch; Preise, Renditen, Rivalen und Titelbedingungen sind daran abgeglichen. Grob: Händler in Jahr 2, Kaufmann in Jahr 5, Patrizier in Jahr 8, Titel je nach Weg zwischen Jahr 4 und 12.
 
 ## Steuerung
@@ -91,6 +92,7 @@ js/offices.js   Ämter der Stadt
 js/faith.js     Bruderschaft, Wallfahrt, Kirchenbau
 js/deals.js     Handelsverträge, Wechselbriefe, Kaperbrief, Netzwerk, Gesetzeswirkungen
 js/staff.js     Faktor, Meister mit Charakter, Falschgeld, Erpressung, Freikauf, Leder
+js/burghers.js  Bürgerhäuser: Haushalte, Verkaufsangebote, Mieten, Unterhalt, Patriziertitel
 tools/testspieler.js  Geskripteter Testspieler für Balancing-Läufe (Node, ohne Browser)
 js/ui.js        Seitenleiste, Gebäudemenüs, Dialoge
 js/main.js      Spielschleife, Speichern/Laden

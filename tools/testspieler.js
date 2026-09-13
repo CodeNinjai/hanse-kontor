@@ -10,7 +10,7 @@ function seeded(seed) { let s = seed >>> 0; return () => { s = (s + 0x6D2B79F5) 
 function load(seed) {
   const M = Object.create(Math); M.random = seeded(seed);
   const ctx = { console, Intl, Math: M, Date, JSON }; vm.createContext(ctx);
-  for (const f of ['data', 'town', 'i18n', 'game', 'paths', 'rivals', 'contracts', 'sea', 'family', 'offices', 'faith', 'deals', 'staff', 'chains']) vm.runInContext(fs.readFileSync(ROOT + '/js/' + f + '.js', 'utf8'), ctx, { filename: f });
+  for (const f of ['data', 'town', 'i18n', 'game', 'paths', 'rivals', 'contracts', 'sea', 'family', 'offices', 'faith', 'deals', 'staff', 'burghers', 'chains']) vm.runInContext(fs.readFileSync(ROOT + '/js/' + f + '.js', 'utf8'), ctx, { filename: f });
   vm.runInContext('globalThis.HK = HK', ctx);
   return ctx.HK;
 }
@@ -175,6 +175,14 @@ function makeBot(HK, st, path) {
     const ship = type => { if (st.ownShips.length < P.ships && (st.ownShips.length < 2 || (acc.expedition || 0) > st.ownShips.length * 4000 * Math.max(1, st.day / 365))) L.push([HK.shipTypePrice(st, type), () => HK.buyShip(st, type)]); };
     const storage = () => { const i = st.storages.findIndex(s => s.owner === 'npc'); if (i >= 0) L.push([HK.STORAGES[i].price, () => HK.buyStorage(st, i)]); };
     const house = () => { const h = st.houses.find(h => h.owner === 'npc'); if (h) L.push([HK.housePrice(st, h), () => HK.buyHouse(st, h.id)]); else { const u = st.houses.find(h => h.owner === 'player' && h.level < 3); if (u) L.push([HK.CONST.HOUSE_UPGRADE, () => HK.upgradeHouse(st, u.id)]); } };
+    // Bürgerhäuser: kaufen, was angeboten wird, und Schäden sofort beheben
+    const burgher = () => {
+      const dmg = HK.burgherOwned(st).find(id => st.burghers[id].damaged);
+      if (dmg) { L.push([HK.CONST.BURGHER_REPAIR, () => HK.repairBurgher(st, dmg)]); return; }
+      const off = Object.keys(st.burghers).find(id => HK.burgherForSale(st, st.burghers[id]));
+      if (off) L.push([st.burghers[off].sale.price, () => HK.buyBurgher(st, off)]);
+    };
+    burgher();
     const craft = () => { if (!st.craftGuild) L.push([HK.CONST.CRAFT_FEE, () => HK.joinCraftGuild(st)]); };
     const project = id => { if (!st.town.projects[id]) L.push([HK.PROJECTS.find(p => p.id === id).cost, () => HK.fundProject(st, id)]); };
     const church = id => { if (!st.church.projects[id]) L.push([HK.CHURCH_PROJECTS.find(p => p.id === id).cost, () => HK.churchProject(st, id)]); };

@@ -193,6 +193,22 @@ Kein Weg geht mehr bankrott, alle sechs Titel sind erreichbar, und die Ränge H�
 
 Nach Bischofsstreit, Hansetag, Fehde, Zunftaufstand, Ämtern, Kirchenweg, Verträgen, Wechseln, Kaperbrief, Netzwerk, Faktor, Falschgeld und Erpressung lief der Testspieler erneut (drei Zufallsstände Normal, zwei Schwer). Ergebnis: Die Kurven liegen weiter im Rahmen der Tabelle oben, kein Weg geht bankrott, jede Partie erlebt etwa eine Ereigniskette pro Jahr (Vitalienbrüder jetzt mit längerer Pause). Zwei Ausreißer wurden nachjustiert: Erpressung brachte dem Herrn der Nacht fast 50.000 Mark im Jahr und ließ die Rivalen verarmen (jetzt 2 % des Vermögens, höchstens 4.000 Mark, einmal im Jahr je Rivale), und Falschgeld war ohne Pause eine sichere Rente (jetzt ein Monat Pause je Prägung, weniger Anrechnung auf den Titel). Der Faktor, Wechselbriefe und Handelsverträge bringen mittlere fünfstellige Beträge im Jahr und verändern die Reihenfolge der Wege nicht.
 
+**Dritter Durchgang: Bürgerhäuser**
+
+Die 26 Wohnhäuser der Stadt sind jetzt bewohnt und einzeln erwerbbar. Gemessen mit dem Testspieler über je drei Seeds und zwanzig Jahre:
+
+| Kennzahl | Wert |
+| --- | --- |
+| Kaufpreise | 2.400 bis 6.100 Mark, nach Viertel und Stand des Haushalts |
+| Mieten | 6 bis 14 Mark am Tag, mit Wohlstand und Ausbaustufe steigend |
+| Unterhalt | 4 bis 6 Mark am Tag je Haus |
+| Rendite bei sorgsamer Pflege | rund 35 Prozent im Jahr |
+| Rendite ohne Reparaturen | rund 12 Prozent im Jahr |
+| Angebote in zehn Jahren | etwa 22, davon nehmen die Rivalen rund zwei Drittel |
+| Vermögen am Ende (alle Wege) | 1,5 bis 3,2 Millionen Mark, vorher 1,1 bis 2,9 |
+
+Der Hausbesitz ist damit die ruhige, aber schwächste Geldquelle: stetig, planbar und deutlich unter dem Fernhandel. Begrenzt wird er nicht durch Geld, sondern durch das Angebot, denn Häuser kommen nur in Not auf den Markt und die Rivalen greifen nach einer Frist selbst zu.
+
 **Noch offen im Balancing**
 
 - Der Herr der Nacht ist in den ersten drei Jahren zwei- bis dreimal so reich wie die anderen Wege. Eine Möglichkeit ist, dass geschmuggelte Ware bei Rivalen und Zünften Ansehen kostet, sobald der Umfang bekannt wird.
@@ -223,6 +239,8 @@ Ein erster Balancing-Durchgang mit einem geskripteten Testspieler ist abgeschlos
 Aus Abschnitt 4 sind inzwischen umgesetzt: der Bischofsstreit (Zehnt, Weigerung des Rats, Interdikt, Vergleich mit Zehntpacht) und der Hansetag (Gesandter, Verhandlung, Privileg des zollfreien Handels mit Lübeck) als Ketten, die Vergabe der Ratsämter durch den Bürgermeister, die Bruderschaft mit Prozession, die Wallfahrt und der Kirchenbau in Etappen, der auf der Karte wächst. Danach folgten die Fehde als vierte Kette, die Gesetzespakete Bierziese, Zunftzwang und Bettelordnung, der Kaperbrief mit eigenen Kaperfahrten, Handelsverträge mit Hansestädten, Wechselbriefe beim Geldwechsler und das Netzwerk der Unterwelt. Zuletzt kamen Personal mit Eigenschaften (Faktor, Meister mit Charakter), Falschgeld, Erpressung und Freikauf, die Lederkette der Gerberei, Eis im Winter und der Zunftaufstand als fünfte Kette dazu. Damit sind alle Bausteine der Abschnitte 3 und 4 umgesetzt; was bleibt, sind Feinschliff und Balancing im Spielen.
 
 Alle sieben Schritte der ursprünglichen Reihenfolge sind umgesetzt (Titel und Chronik, Fraktionsansehen, Rivalen als Akteure, Aufträge, Ereignisketten Vitalienbrüder und Pestjahr, Seefahrt mit Schiffstypen, Kapitänen, Konvois und Fernkontoren samt Feintuch-Kette und Meistern, Familie und Nachfolge). Siehe unten für den Stand der Bausteine aus Abschnitt 4.
+
+Die Wohnhäuser der Stadt sind seither keine Kulisse mehr: alle 26 Bürgerhäuser tragen einen Haushalt mit Familie, Gewerbe, Stand und Stimmung, sind einzeln anklickbar und kommen nur dann auf den Markt, wenn eine Familie sich verschuldet, wegzieht oder ausstirbt. Ein Verkaufsangebot steht sechzig Tage; nach fünfunddreißig Tagen greifen auch die Rivalen zu. Eigene Häuser bringen Miete und kosten Unterhalt, brennen im Feuer, stehen nach dem Auszug verbitterter Mieter leer und zahlen in Pest und Aufruhr weniger. Sechs eigene Häuser machen zum Patrizier und geben Rückhalt im Rat, vier Häuser in einer Hand tun das auch für einen Rivalen. Auf der Karte zeigt eine Verkaufstafel das Angebot, eine goldene Fahne den eigenen Besitz und eine vernagelte Tür den Leerstand.
 
 ## 10. Ursprünglich vorgeschlagene Reihenfolge
 
