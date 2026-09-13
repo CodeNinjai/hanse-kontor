@@ -147,6 +147,37 @@ HK.CHAINS = {
       d.choice = choice; return { ok: true, next: 'siege' };
     },
   },
+  /* Der Zunftaufstand: wenn die Zünfte nichts mehr zu verlieren haben */
+  uprising: {
+    cooldown: 900,
+    stages: {
+      unrest:    { days: 3, next: 'council' },
+      council:   { choices: ['militia', 'mediate', 'lead', 'hide'] },
+      aftermath: { days: 5, next: 'end' },
+      end:       { end: true },
+    },
+    enter(st, ch, stage) {
+      if (stage === 'unrest') { st.unrestUntil = st.day + 9; HK.log(st, 'up_unrest', {}, 'bad'); }
+      if (stage === 'aftermath') {
+        const d = ch.data;
+        if (d.choice === 'militia') { const mine = Object.keys(st.ventures).filter(id => !st.ventures[id].owner && HK.VENTURE[id].craft && st.ventures[id].level > 1); if (mine.length) { const id = HK.pick(mine); st.ventures[id].level--; HK.log(st, 'up_burned', { venture: HK.name(HK.VENTURE[id]) }, 'bad'); } }
+        if (d.choice === 'lead' && st.seat !== 'none') { st.seat = 'none'; if (HK.resetOffices) HK.resetOffices(st); HK.log(st, 'up_seatLost', {}, 'bad'); }
+      }
+      if (stage === 'end') { st.unrestUntil = 0; HK.log(st, 'up_end', {}, 'info'); }
+    },
+    choose(st, ch, choice) {
+      const d = ch.data; if (ch.stage !== 'council') return { ok: false };
+      if (choice === 'militia') { if (!st.militia) return { ok: false, msg: 'needMilitia' }; HK.fac(st, 'patrizier', 8); HK.fac(st, 'zuenfte', -15); st.rep = HK.clamp(st.rep - 3, 0, 100); }
+      if (choice === 'mediate') {
+        if (st.influence < 30) return { ok: false, msg: 'needInfluence30' }; st.influence -= 20;
+        const ok = Math.random() < 0.45 + st.factions.zuenfte / 200 + (st.craftGuild ? 0.15 : 0) + (st.masterTitle ? 0.1 : 0);
+        if (ok) { HK.facAll(st, 4); st.rep = HK.clamp(st.rep + 6, 0, 100); st.influence += 8; st.unrestUntil = st.day + 1; HK.log(st, 'up_mediated', {}, 'good'); } else { HK.fac(st, 'zuenfte', -5); HK.log(st, 'up_mediateFailed', {}, 'bad'); }
+      }
+      if (choice === 'lead') { HK.fac(st, 'zuenfte', 18); HK.fac(st, 'patrizier', -12); HK.fac(st, 'kaufleute', -6); st.persons.craftmaster.loyalty = HK.clamp(st.persons.craftmaster.loyalty + 25, 0, 100); st.rep = HK.clamp(st.rep + 2, 0, 100); }
+      if (choice === 'hide') { HK.fac(st, 'zuenfte', -4); HK.fac(st, 'patrizier', -2); }
+      d.choice = choice; return { ok: true, next: 'aftermath' };
+    },
+  },
   /* Der Hansetag: Einladung, Gesandter, Verhandlung, Privileg oder Blamage */
   hansetag: {
     cooldown: 900,
@@ -220,6 +251,7 @@ HK.tickHooks.push(st => {
     else if (st.day > 200 && !(st.chains.cooldown.bishop > st.day) && Math.random() < 0.0009) HK.startChain(st, 'bishop');
     else if (st.day > 400 && st.rank >= 2 && !(st.chains.cooldown.hansetag > st.day) && Math.random() < 0.001) HK.startChain(st, 'hansetag');
     else if (st.day > 150 && !(st.chains.cooldown.feud > st.day) && Math.random() < 0.001) HK.startChain(st, 'feud');
+    else if (st.day > 300 && st.factions.zuenfte < 25 && !(st.chains.cooldown.uprising > st.day) && Math.random() < 0.003) HK.startChain(st, 'uprising');
   }
   // Interdikt: keine Messen, Frömmigkeit fällt, die Kirche grollt; Zehntpacht zahlt
   if (st.interdictUntil > st.day) { st.piety = HK.clamp(st.piety - 0.25, 0, 100); HK.fac(st, 'kirche', -0.04); }

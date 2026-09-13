@@ -210,7 +210,7 @@ HK.smuggleCheck = function (st, goods, r) {
   const risk = (0.15 + st.suspicion / 300) * (1 - st.persons.customs.loyalty / 160) * (st.town.projects.wall ? 1.15 : 1) * (st.watchUntil > st.day ? 0.4 : 1) * (net('customs') ? 0.6 : 1) * (net('watch') ? 0.7 : 1);
   if (Math.random() < risk) {
     if ((net('customs') || net('watch')) && Math.random() < 0.2) HK.exposeNetwork(st);
-    const fine = Math.round(dutySaved * 3 + 200);
+    const fine = Math.round((dutySaved * 3 + 200) * (st.pardon ? 2 : 1));
     HK.book(st, 'fines', -fine);
     st.suspicion = HK.clamp(st.suspicion + 15, 0, 100); st.rep = HK.clamp(st.rep - 4, 0, 100);
     HK.log(st, 'smuggleCaught', { fine: HK.fmt(fine) }, 'bad');
@@ -611,6 +611,7 @@ HK.sendShip = function (st, id, dest, bringBack) {
   const s = st.ownShips.find(x => x.id === id), o = HK.ORIGIN[dest];
   if (!s || s.status !== 'port' || !o || !o.sea) return { ok: false };
   if (s.hull < 30) return { ok: false, msg: 'shipDamaged' };
+  if (HK.ICE_PORTS && HK.ICE_PORTS.includes(dest) && HK.isWinter(st)) return { ok: false, msg: 'iceBound' };
   const delta = (HK.SHIP_TYPE[s.type] ? HK.SHIP_TYPE[s.type].delta : 0) - (s.captain && s.captain.trait === 'navigator' ? 1 : 0) + (s.captain && s.captain.trait === 'drunkard' && Math.random() < 0.3 ? 2 : 0);
   s.convoy = st.ownShips.some(x => x !== s && x.status === 'away' && x.dest === dest && x.phase === 'out' && x.daysLeft >= o.days * 4 - 1);
   s.status = 'away'; s.dest = dest; s.daysLeft = Math.max(5, o.days * 4 + 3 + delta - (HK.hasVenture(st, 'ropewalk') && HK.hasVenture(st, 'sailmaker') ? 1 : 0)); s.bringBack = bringBack && o.sell[bringBack] ? bringBack : null; s.phase = 'out'; st.stats.voyages = (st.stats.voyages || 0) + 1;
@@ -678,7 +679,8 @@ HK.ventureIncome = function (st, id) {
   const v = HK.VENTURE[id], o = st.ventures[id]; if (!v || !o || o.owner) return 0;
   let inc = v.income * (0.6 + st.town.prosperity / 125) * (1 + 0.35 * (o.level - 1)) * HK.ventureSupply(st, v);
   if (st.apprenticesUntil > st.day) inc *= 1.1;
-  if (o.master) inc *= 1.3;
+  if (o.master) inc *= HK.masterFactor ? HK.masterFactor(st, id) : 1.3;
+  if (v.craft && st.unrestUntil > st.day) inc = 0;
   if (v.effect === 'dive') inc += st.ships.length * 3;
   if (v.effect === 'ships') inc += (st.ships.length + st.ownShips.length) * 1.5;
   if (v.effect === 'inn' || v.effect === 'caravans') inc += st.caravans.length * 5;
@@ -1131,7 +1133,7 @@ HK.tick = function (st) {
   }
   if (st.suspicion >= 85) {
     const fine = Math.round(Math.max(1000, Math.min(Math.max(0, st.money) * 0.25, 5000 + HK.netWorth(st) * 0.06)) * (HK.networkActive && HK.networkActive(st, 'councillor') ? 0.5 : 1));
-    HK.book(st, 'fines', -fine); st.rep = HK.clamp(st.rep - 20, 0, 100); st.suspicion = 30; st.investigation = null;
+    HK.book(st, 'fines', -fine); st.rep = HK.clamp(st.rep - (st.pardon ? 30 : 20), 0, 100); st.suspicion = 30; st.investigation = null;
     if (st.seat !== 'none') { st.seat = 'none'; if (HK.resetOffices) HK.resetOffices(st); }
     HK.log(st, 'trial', { fine: HK.fmt(fine) }, 'bad');
   }

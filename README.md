@@ -53,6 +53,10 @@ Dazu Stadtereignisse (Hungersnot, Pest, Brand, Vitalienbrüder, Sturm, Jahrmarkt
 - **Kaperbrief:** Der Rat stellt Kaperbriefe aus; eigene Schiffe fahren ohne Ladung auf Beutefahrt gegen die Vitalienbrüder.
 - **Handelsverträge und Wechselbriefe:** Verträge mit Hansestädten holen deren Schiffe öfter und zu besseren Konditionen; beim Geldwechsler legst du Geld sicher oder mit Risiko an.
 - **Netzwerk der Unterwelt:** Wer die Spelunke hält, kauft Zöllner, Hafenwache, Vogt und einen Ratsherrn gegen Monatsgeld; jeder Posten senkt das Risiko, und ein aufgeflogener Schmuggel kann das ganze Netzwerk mitreißen.
+- **Personal mit Eigenschaften:** Ein Faktor verkauft täglich knappe Ware am Markt und ist tüchtig, gierig oder treu; Meister der Betriebe sind tüchtig, versoffen oder treu (und dann nicht abzuwerben).
+- **Eis im Winter:** Bergen, Stockholm und Riga sind im Winter nicht anzulaufen.
+- **Unterwelt ausgebaut:** Falschgeld beim Geldwechsler, Erpressung von Rivalen mit Spitzelwissen, und der Freikauf zur Ehrbarkeit, der Verdacht und Vergangenheit tilgt, aber Rückfälle doppelt bestraft. Die Gerberei liefert Leder für Lübeck, Danzig und Köln.
+- **Zunftaufstand:** Sinkt das Ansehen bei den Zünften unter 25, ziehen die Handwerker vor das Rathaus: Miliz rufen, vermitteln, den Zug anführen oder die Türen schließen.
 - **Balancing:** Ein geskripteter Testspieler (`node tools/testspieler.js all 3 20 normal`, Auswertung in `docs/KONZEPT.md`, Abschnitt 7.1) spielt jeden Weg zwanzig Jahre headless durch; Preise, Renditen, Rivalen und Titelbedingungen sind daran abgeglichen. Grob: Händler in Jahr 2, Kaufmann in Jahr 5, Patrizier in Jahr 8, Titel je nach Weg zwischen Jahr 4 und 12.
 
 ## Steuerung
@@ -86,6 +90,7 @@ js/family.js    Heirat, Kinder, Nachfolge
 js/offices.js   Ämter der Stadt
 js/faith.js     Bruderschaft, Wallfahrt, Kirchenbau
 js/deals.js     Handelsverträge, Wechselbriefe, Kaperbrief, Netzwerk, Gesetzeswirkungen
+js/staff.js     Faktor, Meister mit Charakter, Falschgeld, Erpressung, Freikauf, Leder
 tools/testspieler.js  Geskripteter Testspieler für Balancing-Läufe (Node, ohne Browser)
 js/ui.js        Seitenleiste, Gebäudemenüs, Dialoge
 js/main.js      Spielschleife, Speichern/Laden

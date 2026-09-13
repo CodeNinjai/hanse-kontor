@@ -10,7 +10,7 @@ function seeded(seed) { let s = seed >>> 0; return () => { s = (s + 0x6D2B79F5) 
 function load(seed) {
   const M = Object.create(Math); M.random = seeded(seed);
   const ctx = { console, Intl, Math: M, Date, JSON }; vm.createContext(ctx);
-  for (const f of ['data', 'town', 'i18n', 'game', 'paths', 'rivals', 'contracts', 'sea', 'family', 'offices', 'faith', 'deals', 'chains']) vm.runInContext(fs.readFileSync(ROOT + '/js/' + f + '.js', 'utf8'), ctx, { filename: f });
+  for (const f of ['data', 'town', 'i18n', 'game', 'paths', 'rivals', 'contracts', 'sea', 'family', 'offices', 'faith', 'deals', 'staff', 'chains']) vm.runInContext(fs.readFileSync(ROOT + '/js/' + f + '.js', 'utf8'), ctx, { filename: f });
   vm.runInContext('globalThis.HK = HK', ctx);
   return ctx.HK;
 }
@@ -146,8 +146,9 @@ function makeBot(HK, st, path) {
       if (d.chain === 'bishop' && d.stage === 'settlement') choice = (path === 'patron' || path === 'mayor') && free() > 6000 ? 'fund' : (path === 'merchant' && free() > 5000 ? 'farm' : 'stayout');
       if (d.chain === 'hansetag' && d.stage === 'envoy') choice = st.rep >= 60 && free() > 4000 ? 'go' : (st.rivals.some(r => r.ally) ? 'delegate' : 'decline');
       if (d.chain === 'feud' && d.stage === 'council') choice = st.militia ? 'militia' : (free() > 6000 ? 'peace' : 'ignore');
+      if (d.chain === 'uprising' && d.stage === 'council') choice = path === 'alderman' ? 'lead' : (st.influence >= 30 ? 'mediate' : (st.militia && path === 'mayor' ? 'militia' : 'hide'));
       if (d.chain === 'hansetag' && d.stage === 'negotiation') choice = free() > 15000 ? 'bribe' : (st.influence >= 25 ? 'plead' : 'stand');
-      const r = HK.decide(st, d.chain, choice); if (!r.ok) HK.decide(st, d.chain, { offer: 'ignore', council: d.chain === 'bishop' ? 'council' : 'stayout', hospital: 'refuse', procession: 'stay', settlement: 'stayout', envoy: 'decline', negotiation: 'stand' }[d.stage] || (d.chain === 'feud' ? 'ignore' : undefined));
+      const r = HK.decide(st, d.chain, choice); if (!r.ok) HK.decide(st, d.chain, { offer: 'ignore', council: d.chain === 'bishop' ? 'council' : 'stayout', hospital: 'refuse', procession: 'stay', settlement: 'stayout', envoy: 'decline', negotiation: 'stand' }[d.stage] || (d.chain === 'feud' ? 'ignore' : d.chain === 'uprising' ? 'hide' : undefined));
       T.decisions.push(d.chain + ':' + d.stage + ':' + choice);
     }
     if (st.family.offer) HK.answerOffer(st, true);
@@ -178,6 +179,7 @@ function makeBot(HK, st, path) {
     const project = id => { if (!st.town.projects[id]) L.push([HK.PROJECTS.find(p => p.id === id).cost, () => HK.fundProject(st, id)]); };
     const church = id => { if (!st.church.projects[id]) L.push([HK.CHURCH_PROJECTS.find(p => p.id === id).cost, () => HK.churchProject(st, id)]); };
     if (st.stalls < 1) L.push([HK.CONST.STALL_COST, () => HK.buyStall(st)]);
+    if (!st.factor && (path === 'merchant' || path === 'alderman') && st.day > 200) L.push([HK.CONST.FACTOR_COST, () => HK.hireFactor(st)]);
     if (st.warehouse.cap < 700) L.push([HK.CONST.WAREHOUSE_EXPAND_COST, () => HK.expandWarehouse(st)]);
     for (const h of st.houses) if (h.owner === 'player' && h.damaged) L.push([800, () => HK.repairHouse(st, h.id)]);
     switch (path) {
