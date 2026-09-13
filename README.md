@@ -45,6 +45,9 @@ Dazu Stadtereignisse (Hungersnot, Pest, Brand, Vitalienbrüder, Sturm, Jahrmarkt
 - **Ereignisketten:** Die Vitalienbrüder (Hehlerware oder Warnung, Kaperfahrt selbst anführen) und das Pestjahr (Spital, Hafensperre, Prozession oder Flucht) mit Entscheidungen und Folgen.
 - **Seefahrt:** Schnigge, Kogge und Holk, bis zu fünf Schiffe, Kapitäne mit Eigenschaften, Konvois, Fernkontore in Lübeck, Brügge und Bergen; Produktionskette Tuch → Feintuch in der Färberei, Meister in Betrieben.
 - **Familie:** Heiratsangebote mit Mitgift und Bündnis, Kinder mit Eigenschaften, Erbe übernimmt nach dem Tod des Kaufmanns – ohne Erben endet die Chronik.
+- **Bischofsstreit und Hansetag:** Zwei weitere Ketten. Der Bischof verlangt den Zehnt: zahlen, zum Rat stehen oder vermitteln, sonst Interdikt mit geschlossenen Kirchen; danach Vergleich oder Zehntpacht. Der Hansetag lädt nach Lübeck: selbst fahren, einen Verbündeten schicken oder ablehnen, dann verhandeln um das Privileg des zollfreien Handels.
+- **Ämter der Stadt:** Als Bürgermeister besetzt du Zöllner, Hafenmeister, Vogt und Waagemeister mit eigenen Leuten oder mit Kandidaten der Rivalen; ein Amt hält ein Jahr, ein Prozess kostet alle.
+- **Kirchenweg sichtbar:** Bruderschaft mit Mitgliedern, Beiträgen und jährlicher Prozession über den Markt; Wallfahrt mit mehr Besuchern und mehr Gefahr; Kirchenbau in Etappen (Seitenschiff, hoher Turm), der mit Gerüst auf der Karte wächst.
 - **Balancing:** Ein geskripteter Testspieler (`node tools/testspieler.js all 3 20 normal`, Auswertung in `docs/KONZEPT.md`, Abschnitt 7.1) spielt jeden Weg zwanzig Jahre headless durch; Preise, Renditen, Rivalen und Titelbedingungen sind daran abgeglichen. Grob: Händler in Jahr 2, Kaufmann in Jahr 5, Patrizier in Jahr 8, Titel je nach Weg zwischen Jahr 4 und 12.
 
 ## Steuerung
@@ -75,6 +78,8 @@ js/contracts.js Auftragsbrett
 js/chains.js    Ereignisketten
 js/sea.js       Kapitäne, Fernkontore
 js/family.js    Heirat, Kinder, Nachfolge
+js/offices.js   Ämter der Stadt
+js/faith.js     Bruderschaft, Wallfahrt, Kirchenbau
 tools/testspieler.js  Geskripteter Testspieler für Balancing-Läufe (Node, ohne Browser)
 js/ui.js        Seitenleiste, Gebäudemenüs, Dialoge
 js/main.js      Spielschleife, Speichern/Laden

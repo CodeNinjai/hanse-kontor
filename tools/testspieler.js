@@ -10,7 +10,7 @@ function seeded(seed) { let s = seed >>> 0; return () => { s = (s + 0x6D2B79F5) 
 function load(seed) {
   const M = Object.create(Math); M.random = seeded(seed);
   const ctx = { console, Intl, Math: M, Date, JSON }; vm.createContext(ctx);
-  for (const f of ['data', 'town', 'i18n', 'game', 'paths', 'rivals', 'contracts', 'chains', 'sea', 'family']) vm.runInContext(fs.readFileSync(ROOT + '/js/' + f + '.js', 'utf8'), ctx, { filename: f });
+  for (const f of ['data', 'town', 'i18n', 'game', 'paths', 'rivals', 'contracts', 'sea', 'family', 'offices', 'faith', 'chains']) vm.runInContext(fs.readFileSync(ROOT + '/js/' + f + '.js', 'utf8'), ctx, { filename: f });
   vm.runInContext('globalThis.HK = HK', ctx);
   return ctx.HK;
 }
@@ -142,7 +142,11 @@ function makeBot(HK, st, path) {
       if (d.chain === 'vitalien' && d.stage === 'council') choice = st.ownShips.some(s => s.status === 'port') && path === 'shipowner' ? 'lead' : (free() > 4000 && (path === 'mayor' || path === 'merchant') ? 'fund' : 'stayout');
       if (d.chain === 'plague' && d.stage === 'hospital') choice = free() > 2500 ? 'donate' : 'refuse';
       if (d.chain === 'plague' && d.stage === 'procession') choice = path === 'patron' || path === 'mayor' ? 'join' : 'stay';
-      const r = HK.decide(st, d.chain, choice); if (!r.ok) HK.decide(st, d.chain, d.chain === 'vitalien' ? (d.stage === 'offer' ? 'ignore' : 'stayout') : (d.stage === 'hospital' ? 'refuse' : 'stay'));
+      if (d.chain === 'bishop' && d.stage === 'council') choice = path === 'patron' ? 'tithe' : (path === 'mayor' && st.influence >= 40 ? 'mediate' : 'council');
+      if (d.chain === 'bishop' && d.stage === 'settlement') choice = (path === 'patron' || path === 'mayor') && free() > 6000 ? 'fund' : (path === 'merchant' && free() > 5000 ? 'farm' : 'stayout');
+      if (d.chain === 'hansetag' && d.stage === 'envoy') choice = st.rep >= 60 && free() > 4000 ? 'go' : (st.rivals.some(r => r.ally) ? 'delegate' : 'decline');
+      if (d.chain === 'hansetag' && d.stage === 'negotiation') choice = free() > 15000 ? 'bribe' : (st.influence >= 25 ? 'plead' : 'stand');
+      const r = HK.decide(st, d.chain, choice); if (!r.ok) HK.decide(st, d.chain, { offer: 'ignore', council: d.chain === 'bishop' ? 'council' : 'stayout', hospital: 'refuse', procession: 'stay', settlement: 'stayout', envoy: 'decline', negotiation: 'stand' }[d.stage]);
       T.decisions.push(d.chain + ':' + d.stage + ':' + choice);
     }
     if (st.family.offer) HK.answerOffer(st, true);
@@ -190,12 +194,13 @@ function makeBot(HK, st, path) {
         if (st.rank >= 2 && !st.kontors.bruegge) L.push([HK.CONST.KONTOR_PRICE, () => HK.buyKontor(st, 'bruegge')]);
         break;
       case 'patron':
-        house(); church('altar'); v('inn'); if (st.day % 20 === 0 && free() > 6000) L.push([1000, () => HK.donate(st, 1000)]); if (st.relicDay === undefined) L.push([HK.CONST.RELIC_COST, () => HK.donateRelic(st)]); church('bells'); storage(); if (!st.hospitalEndowed) L.push([HK.CONST.HOSPITAL_ENDOW, () => HK.hospitalEndow(st)]); church('chapel'); v('stables'); house(); ship('kogge');
+        house(); church('altar'); v('inn'); if (st.day % 20 === 0 && free() > 6000) L.push([1000, () => HK.donate(st, 1000)]); if (st.relicDay === undefined) L.push([HK.CONST.RELIC_COST, () => HK.donateRelic(st)]); if (!st.brotherhood && st.piety >= 50 && st.rep >= 40) L.push([HK.CONST.BROTHERHOOD_COST, () => HK.foundBrotherhood(st)]); church('bells'); storage(); if (!st.hospitalEndowed) L.push([HK.CONST.HOSPITAL_ENDOW, () => HK.hospitalEndow(st)]); church('chapel'); if (!st.churchBuild.done.aisle && !st.churchBuild.active) L.push([12000, () => HK.startChurchBuild(st, 'aisle')]); if (!st.pilgrimage) L.push([HK.CONST.PILGRIMAGE_COST, () => HK.callPilgrimage(st)]); v('stables'); house(); if (st.churchBuild.done.aisle && !st.churchBuild.done.tower && !st.churchBuild.active) L.push([20000, () => HK.startChurchBuild(st, 'tower')]); ship('kogge');
         if (st.day % 30 === 0 && free() > 8000) L.push([HK.CONST.HOSPITAL_DONATION, () => HK.hospitalDonate(st)]);
         break;
       case 'mayor':
         house(); project('well'); L.push([HK.CONST.TAVERN_PRICE, () => st.tavernOwned ? { ok: false } : HK.buyTavern(st)]); if (!st.schoolEndowed) L.push([HK.CONST.SCHOOL_ENDOW, () => HK.schoolEndow(st)]); if (!st.hospitalEndowed) L.push([HK.CONST.HOSPITAL_ENDOW, () => HK.hospitalEndow(st)]); if (!st.militia) L.push([HK.CONST.MILITIA_COST, () => HK.fundMilitia(st)]); house(); project('harbour'); if (st.town.berths < 5) L.push([HK.CONST.EXTRA_BERTH, () => HK.buyExtraBerth(st)]); storage(); project('wall'); ship('kogge');
         if (!st.taxFarm && st.seat !== 'none' && HK.taxFarmPrice(st) < free() * 0.5) L.push([HK.taxFarmPrice(st), () => HK.buyTaxFarm(st)]);
+        if (st.seat === 'mayor') for (const pid of ['customs', 'bailiff', 'harbourmaster']) if (HK.canAppoint(st, pid) && HK.officeHolder(st, pid) === 'default' && st.influence >= 30) L.push([HK.CONST.OFFICE_COST, () => HK.appointOffice(st, pid, 'own')]);
         break;
       case 'alderman':
         craft(); v('potter'); v('bakery'); v('butcher'); ws('brewery'); v('cooper'); v('apothecary'); v('ropewalk'); ws('smokehouse'); v('sailmaker'); v('dyer'); ws('weaver'); v('timberyard'); v('inn'); v('goldsmith');

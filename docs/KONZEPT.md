@@ -216,7 +216,9 @@ Kein Weg geht mehr bankrott, alle sechs Titel sind erreichbar, und die Ränge H�
 
 Ein erster Balancing-Durchgang mit einem geskripteten Testspieler ist abgeschlossen (Abschnitt 7.1).
 
-Alle sieben Schritte der ursprünglichen Reihenfolge sind umgesetzt (Titel und Chronik, Fraktionsansehen, Rivalen als Akteure, Aufträge, Ereignisketten Vitalienbrüder und Pestjahr, Seefahrt mit Schiffstypen, Kapitänen, Konvois und Fernkontoren samt Feintuch-Kette und Meistern, Familie und Nachfolge). Offen bleiben aus Abschnitt 4: weitere Ketten (Bischofsstreit, Fehde, Hansetag), Ratsämter vergeben, Bruderschaft als Spieleraktion, Wallfahrt und Kirchenbau.
+Aus Abschnitt 4 sind inzwischen umgesetzt: der Bischofsstreit (Zehnt, Weigerung des Rats, Interdikt, Vergleich mit Zehntpacht) und der Hansetag (Gesandter, Verhandlung, Privileg des zollfreien Handels mit Lübeck) als Ketten, die Vergabe der Ratsämter durch den Bürgermeister, die Bruderschaft mit Prozession, die Wallfahrt und der Kirchenbau in Etappen, der auf der Karte wächst. Offen bleiben die Fehde als Kette und die weiteren Ideen aus Abschnitt 3 (Handelsverträge, Wechselbriefe, Gesetzespakete, Kaperbrief, Zunftzwang, Netzwerk der Unterwelt, Personal mit Eigenschaften).
+
+Alle sieben Schritte der ursprünglichen Reihenfolge sind umgesetzt (Titel und Chronik, Fraktionsansehen, Rivalen als Akteure, Aufträge, Ereignisketten Vitalienbrüder und Pestjahr, Seefahrt mit Schiffstypen, Kapitänen, Konvois und Fernkontoren samt Feintuch-Kette und Meistern, Familie und Nachfolge). Siehe unten für den Stand der Bausteine aus Abschnitt 4.
 
 ## 10. Ursprünglich vorgeschlagene Reihenfolge
 

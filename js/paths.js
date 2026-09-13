@@ -50,13 +50,13 @@ HK.chronicle = function (st) {
 /* ---------- Hooks ---------- */
 HK.newGameHooks.push((st, opts) => {
   st.years = HK.YEARS_OPTIONS.includes(+opts.years) ? +opts.years : 20; st.endDay = st.years * 365; st.chronicleShown = false;
-  st.factions = { patrizier: 25, kaufleute: 35, zuenfte: 30, kirche: 30 }; st.titles = {}; st.stats.voyages = 0; st.stats.watchBribes = 0; st.stats.trials = 0; st.stats.expeditionRevenue = 0; st.stats.donated = 0;
+  st.factions = { patrizier: 25, kaufleute: 35, zuenfte: 30, kirche: 30 }; st.titles = {}; st.stats.voyages = 0; st.stats.watchBribes = 0; st.stats.trials = 0; st.stats.expeditionRevenue = 0; st.stats.donated = 0; st.stats.smuggledRecent = 0;
 });
 HK.migrateHooks.push(st => {
   if (!st.years) { st.years = 20; st.endDay = 20 * 365; st.chronicleShown = false; }
   if (!st.factions) st.factions = { patrizier: HK.clamp(st.rep - 5, 0, 100), kaufleute: HK.clamp(st.rep + 5, 0, 100), zuenfte: st.rep, kirche: HK.clamp((st.rep + st.piety) / 2, 0, 100) };
   if (!st.titles) st.titles = {};
-  for (const k of ['voyages', 'watchBribes', 'trials', 'expeditionRevenue', 'donated']) if (st.stats[k] === undefined) st.stats[k] = 0;
+  for (const k of ['voyages', 'watchBribes', 'trials', 'expeditionRevenue', 'donated', 'smuggledRecent']) if (st.stats[k] === undefined) st.stats[k] = 0;
 });
 /* Wirkung von Ereignissen aus der Chronik auf das Ansehen */
 HK.LOG_FACTION_EFFECTS = { smuggleCaught: { patrizier: -3, kaufleute: -2, kirche: -3 }, investigationFine: { patrizier: -5, kaufleute: -3, zuenfte: -2, kirche: -4 }, trial: { patrizier: -12, kaufleute: -8, zuenfte: -5, kirche: -10 }, sabotageFailed: { patrizier: -4, kaufleute: -6, kirche: -3 }, levyIgnored: { patrizier: -6 }, loanRepaid: { kaufleute: 0.5 }, shipReturned: { kaufleute: 0.3 }, projectDone: { patrizier: 3, zuenfte: 2, kaufleute: 2, kirche: 2 }, bishopPleased: { kirche: 6 }, bishopDispleased: { kirche: -5 }, workshopBuilt: { zuenfte: 2 }, thugsCollected: { kaufleute: -2, kirche: -2 }, sabotageOk: { kaufleute: -3 } };
@@ -68,6 +68,8 @@ HK.tickHooks.push(st => {
   for (const f of HK.FACTION_IDS) st.factions[f] += (st.rep - st.factions[f]) * 0.002;
   st.rep = HK.clamp(st.rep + (avg - st.rep) * 0.004, 0, 100);
   if (HK.hasVenture(st, 'dive')) HK.fac(st, 'kirche', -0.02);
+  // Bekannt gewordener Schmuggel: die ehrbaren Kaufleute und Zünfte rücken ab, der Ruf leidet
+  if (st.stats.smuggledRecent > 0) { st.stats.smuggledRecent *= 0.99; if (st.stats.smuggledRecent > 1500) { HK.fac(st, 'kaufleute', -0.04); HK.fac(st, 'zuenfte', -0.02); HK.fac(st, 'patrizier', -0.02); st.rep = HK.clamp(st.rep - 0.03, 0, 100); } }
   if (HK.hasVenture(st, 'tannery')) HK.fac(st, 'patrizier', -0.01);
   if (st.militia) HK.fac(st, 'patrizier', 0.01);
   if (st.seat === 'mayor' && st.acceptBribes) HK.fac(st, 'kaufleute', -0.02);

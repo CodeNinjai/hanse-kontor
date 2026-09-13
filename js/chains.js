@@ -75,6 +75,83 @@ HK.CHAINS = {
       return { ok: false };
     },
   },
+  /* Der Bischofsstreit: Zehnt, Weigerung des Rats, Interdikt, Vergleich */
+  bishop: {
+    cooldown: 900,
+    stages: {
+      demand:     { days: 5, next: 'council' },
+      council:    { choices: ['tithe', 'council', 'mediate'] },
+      interdict:  { days: 24, next: 'settlement' },
+      settlement: { choices: ['fund', 'farm', 'stayout'] },
+      end:        { end: true },
+    },
+    enter(st, ch, stage) {
+      if (stage === 'demand') ch.data.tithe = Math.round(2000 + Math.max(0, HK.netWorth(st)) * 0.01);
+      if (stage === 'interdict') {
+        if (ch.data.mediated) { HK.log(st, 'bs_noInterdict', {}, 'good'); HK.enterStage(st, ch, 'settlement'); return; }
+        st.interdictUntil = st.day + 24; HK.log(st, 'bs_interdict', {}, 'bad');
+      }
+      if (stage === 'end') HK.log(st, 'bs_end', {}, 'info');
+    },
+    choose(st, ch, choice) {
+      const d = ch.data;
+      if (ch.stage === 'council') {
+        if (choice === 'tithe') { if (st.money < d.tithe) return { ok: false, msg: 'notEnoughMoney' }; HK.book(st, 'church', -d.tithe); HK.fac(st, 'kirche', 10); HK.fac(st, 'patrizier', -6); HK.fac(st, 'kaufleute', -3); st.piety = HK.clamp(st.piety + 8, 0, 100); }
+        if (choice === 'council') { HK.fac(st, 'patrizier', 8); HK.fac(st, 'kaufleute', 3); HK.fac(st, 'kirche', -10); st.influence += 8; st.piety = HK.clamp(st.piety - 5, 0, 100); }
+        if (choice === 'mediate') {
+          if (st.influence < 40) return { ok: false, msg: 'needInfluence40' };
+          st.influence -= 20;
+          const ok = Math.random() < 0.4 + st.piety / 300 + (st.seat === 'mayor' ? 0.15 : st.seat === 'councillor' ? 0.05 : 0) + (st.brotherhood ? 0.1 : 0);
+          d.mediated = ok;
+          if (ok) { HK.fac(st, 'kirche', 6); HK.fac(st, 'patrizier', 6); st.rep = HK.clamp(st.rep + 8, 0, 100); st.influence += 10; HK.log(st, 'bs_mediated', {}, 'good'); }
+          else HK.log(st, 'bs_mediateFailed', {}, 'bad');
+        }
+        d.choice = choice; return { ok: true, next: 'interdict' };
+      }
+      if (ch.stage === 'settlement') {
+        if (choice === 'fund') { if (st.money < 4000) return { ok: false, msg: 'notEnoughMoney' }; HK.book(st, 'church', -4000); st.rep = HK.clamp(st.rep + 6, 0, 100); HK.facAll(st, 3); st.influence += 5; }
+        if (choice === 'farm') { if (st.money < 3000) return { ok: false, msg: 'notEnoughMoney' }; HK.book(st, 'politics', -3000); st.titheFarm = { until: st.day + 300 }; HK.fac(st, 'kirche', -4); HK.fac(st, 'zuenfte', -2); }
+        d.settlement = choice; return { ok: true, next: 'end' };
+      }
+      return { ok: false };
+    },
+  },
+  /* Der Hansetag: Einladung, Gesandter, Verhandlung, Privileg oder Blamage */
+  hansetag: {
+    cooldown: 900,
+    stages: {
+      invitation:  { days: 3, next: 'envoy' },
+      envoy:       { choices: ['go', 'delegate', 'decline'] },
+      journey:     { days: 6, next: 'negotiation' },
+      negotiation: { choices: ['bribe', 'plead', 'stand'] },
+      verdict:     { days: 8, next: 'result' },
+      result:      { end: true },
+    },
+    enter(st, ch, stage) {
+      if (stage !== 'result') return;
+      const d = ch.data;
+      if (d.choice === 'decline') { HK.log(st, 'ht_declined', {}, 'info'); return; }
+      let p = 0.3 + st.rep / 250 + (Object.keys(st.kontors || {}).length ? 0.1 : 0) + (st.seat === 'mayor' ? 0.1 : 0);
+      if (d.choice === 'delegate') { const ally = st.rivals.find(r => r.ally); p = 0.25 + (ally ? ally.attitude / 200 : 0); }
+      if (d.neg === 'bribe') p += 0.25; if (d.neg === 'plead') p += 0.2;
+      if (Math.random() < p) { st.hansePrivilege = { since: st.day }; st.rep = HK.clamp(st.rep + 10, 0, 100); HK.facAll(st, 5); st.influence += 15; HK.log(st, 'ht_privilege', {}, 'good'); }
+      else { st.rep = HK.clamp(st.rep - 5, 0, 100); HK.fac(st, 'patrizier', -5); HK.log(st, 'ht_blamage', {}, 'bad'); }
+    },
+    choose(st, ch, choice) {
+      const d = ch.data;
+      if (ch.stage === 'envoy') {
+        if (choice === 'go') { if (st.rep < 60) return { ok: false, msg: 'needRep60' }; if (st.money < 2000) return { ok: false, msg: 'notEnoughMoney' }; HK.book(st, 'politics', -2000); HK.fac(st, 'patrizier', 4); d.choice = 'go'; return { ok: true, next: 'journey' }; }
+        if (choice === 'delegate') { if (!st.rivals.some(r => r.ally)) return { ok: false, msg: 'needAlly' }; d.choice = 'delegate'; return { ok: true, next: 'verdict' }; }
+        HK.fac(st, 'patrizier', -4); HK.fac(st, 'kaufleute', -3); d.choice = 'decline'; return { ok: true, next: 'result' };
+      }
+      if (ch.stage === 'negotiation') {
+        if (choice === 'bribe') { if (st.money < 5000) return { ok: false, msg: 'notEnoughMoney' }; HK.book(st, 'bribes', -5000); st.stats.bribes += 5000; st.suspicion = HK.clamp(st.suspicion + 5, 0, 100); }
+        if (choice === 'plead') { if (st.influence < 25) return { ok: false, msg: 'needInfluence25' }; st.influence -= 25; }
+        d.neg = choice; return { ok: true, next: 'verdict' };
+      }
+      return { ok: false };
+    },
+  },
 };
 
 HK.newGameHooks.push(st => { st.chains = { active: [], cooldown: {}, history: [] }; st.pendingDecision = null; });
@@ -91,7 +168,7 @@ HK.enterStage = function (st, ch, stage) {
   ch.stage = stage; ch.since = st.day;
   if (def.enter) def.enter(st, ch, stage);
   if (sd.choices) { st.pendingDecision = { chain: ch.id, stage }; if (HK.onDecision) HK.onDecision(ch); }
-  if (sd.end) { st.chains.active = st.chains.active.filter(c => c !== ch); st.chains.history.push({ id: ch.id, day: st.day, choice: ch.data.choice }); st.chains.cooldown[ch.id] = st.day + 400; }
+  if (sd.end) { st.chains.active = st.chains.active.filter(c => c !== ch); st.chains.history.push({ id: ch.id, day: st.day, choice: ch.data.choice }); st.chains.cooldown[ch.id] = st.day + (def.cooldown || 400); }
 };
 HK.decide = function (st, chainId, choice) {
   const ch = st.chains.active.find(c => c.id === chainId); if (!ch) return { ok: false };
@@ -109,5 +186,16 @@ HK.tickHooks.push(st => {
   if (!st.chains.active.length && st.day > 60) {
     if (!(st.chains.cooldown.vitalien > st.day) && Math.random() < 0.0018) HK.startChain(st, 'vitalien');
     else if (!(st.chains.cooldown.plague > st.day) && st.town.events.some(e => e.type === 'plague') && st.log.some(e => e.day >= st.day - 1 && e.key === 'ev_plague')) HK.startChain(st, 'plague');
+    else if (st.day > 200 && !(st.chains.cooldown.bishop > st.day) && Math.random() < 0.0009) HK.startChain(st, 'bishop');
+    else if (st.day > 400 && st.rank >= 2 && !(st.chains.cooldown.hansetag > st.day) && Math.random() < 0.001) HK.startChain(st, 'hansetag');
   }
+  // Interdikt: keine Messen, Frömmigkeit fällt, die Kirche grollt; Zehntpacht zahlt
+  if (st.interdictUntil > st.day) { st.piety = HK.clamp(st.piety - 0.25, 0, 100); HK.fac(st, 'kirche', -0.04); }
+  if (st.titheFarm) { if (st.titheFarm.until > st.day) HK.book(st, 'taxFarm', 25); else { st.titheFarm = null; HK.log(st, 'titheFarmEnded', {}, 'info'); } }
 });
+
+/* Während des Interdikts sind Kirchenhandlungen gesperrt */
+for (const name of ['donate', 'supplyChurch', 'sermon', 'churchProject', 'indulgence', 'blessShips', 'donateRelic', 'foundBrotherhood', 'callPilgrimage', 'startChurchBuild']) {
+  const orig = HK[name]; if (!orig) continue;
+  HK[name] = function (st, ...args) { if (st.interdictUntil > st.day) return { ok: false, msg: 'interdictActive' }; return orig(st, ...args); };
+}

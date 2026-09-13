@@ -156,6 +156,9 @@ HK.Scene = {
     for (const c of this.carts) { const len = Math.hypot(c.b[0] - c.a[0], c.b[1] - c.a[1]); c.t += c.dir * c.v * dt / len; if (c.t > 1) { c.t = 1; c.dir = -1; } if (c.t < 0) { c.t = 0; c.dir = 1; } }
     for (const ch of this.chickens) { ch.t += dt; if (ch.t > 2) { ch.t = 0; ch.a = Math.random() * 6.28; } ch.x = ch.cx + Math.cos(ch.a) * 0.3 * Math.sin(ch.t * 1.5); ch.y = ch.cy + Math.sin(ch.a) * 0.3 * Math.sin(ch.t * 1.5); }
     for (const g of this.gulls) g.a += g.s * dt;
+    // Prozession der Bruderschaft: am Festtag zieht ein Zug von der Kirche über den Markt und zurück
+    if (st && st.processionDay === st.day) { if (!this.procession) this.procession = { t: 0, n: Math.min(24, 8 + Math.floor((st.brotherhood ? st.brotherhood.members : 0) / 8)), route: ['NN', 'S1', 'S3', 'MK', 'M3', 'M2', 'NN'] }; this.procession.t += dt * 0.09; }
+    else this.procession = null;
     if (st) {
       st.ships.forEach((s, i) => {
         const b = HK.BERTHS[i]; let a = this.shipAnim[s.id];
@@ -225,6 +228,15 @@ HK.Scene = {
     for (const c0 of this.carts) { const wx = c0.a[0] + (c0.b[0] - c0.a[0]) * c0.t, wy = c0.a[1] + (c0.b[1] - c0.a[1]) * c0.t; items.push({ k: this.pointKey(wx, wy), f: c => this.drawCart(c, wx, wy, c0, t) }); }
     for (const ch of this.chickens) items.push({ k: this.pointKey(ch.x, ch.y), f: c => { const s2 = I.p(ch.x, ch.y, 0); this.drawChicken(c, s2[0], s2[1], t); } });
     for (const n of HK.STATIC_NPCS) { const pp = HK.PERSON[n.person]; items.push({ k: this.pointKey(n.x, n.y), f: c => { const s2 = I.p(n.x, n.y, 0); this.drawPerson(c, s2[0], s2[1], n.color, 'static', 1, this.hover && this.hover.person === n.person, null, 0, 1, n.person); }, pick: { kind: 'person', person: n.person, label: pp.name + ', ' + (pp.title[HK.LANG] || pp.title.de) } }); }
+    if (this.procession) {
+      const P = this.procession, segs = P.route.length - 1;
+      for (let i = 0; i < P.n; i++) {
+        let u = P.t - i * 0.055; if (u < 0) continue; u = u % segs; const k = Math.floor(u), f = u - k;
+        const A = HK.ROAD_NODES[P.route[k]], B = HK.ROAD_NODES[P.route[k + 1]]; const wx = A[0] + (B[0] - A[0]) * f + (i % 2 ? 0.16 : -0.16), wy = A[1] + (B[1] - A[1]) * f + (i % 2 ? -0.16 : 0.16);
+        const sp = I.p(wx, wy, 0), dir = ((B[0] - A[0]) - (B[1] - A[1])) >= 0 ? 1 : -1, col = i === 0 ? '#e0b040' : i % 3 === 1 ? '#8a2a2a' : '#e8e0d0';
+        items.push({ k: this.pointKey(wx, wy), f: c => { this.drawPerson(c, sp[0], sp[1], col, 'monk', 1, false, '#e8c39e', this.time * 5 + i, dir, null, null, 0.85); if (!this.picking && i === 0) { c.strokeStyle = '#e0b040'; c.lineWidth = 2; c.beginPath(); c.moveTo(sp[0], sp[1] - 26); c.lineTo(sp[0], sp[1] - 44); c.moveTo(sp[0] - 4, sp[1] - 40); c.lineTo(sp[0] + 4, sp[1] - 40); c.stroke(); } } });
+      }
+    }
     for (const w of this.walkers) { const a = this.walkerAlpha(w); if (a <= 0.02) continue; const p = this.walkerPos(w); items.push({ k: this.pointKey(p.wx, p.wy), f: c => this.drawPerson(c, p.x, p.y, w.color, w.type, a, this.hover && this.hover.walker === w, w.skin, w.pause > 0 ? 0 : w.phase, p.dir, null, w), pick: a >= 0.4 ? { kind: 'walker', walker: w, label: HK.t('enc_' + w.type + '_label') } : null }); }
     items.sort((a, b) => a.k - b.k);
     return items;
