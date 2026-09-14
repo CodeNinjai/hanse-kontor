@@ -128,49 +128,65 @@ HK.Scene = {
     if (HK.state && HK.state.pilgrimage) for (let i = 0; i < 3; i++) types.push({ id: 'pilgrim', colors: ['#6a6058', '#5a4a3a', '#7a6a5a', '#4a4a4a'] });
     const t = HK.pick(types), keys = Object.keys(HK.ROAD_NODES);
     const from = HK.pick(keys), to = HK.pick(HK.ROAD_ADJ[from]);
-    return { type: t.id, color: HK.pick(t.colors), from, to, t: anywhere ? Math.random() : 0, speed: HK.rnd(0.25, 0.5) * (t.id === 'child' ? 1.5 : t.id === 'beggar' ? 0.6 : 1), off: HK.rnd(-0.22, 0.22), pause: 0, nightOwl: Math.random() < 0.2 || t.id === 'guard', skin: HK.pick(['#e8c39e', '#d9a98a', '#c9946c']), hat: Math.random() < 0.5, basket: Math.random() < 0.3, phase: Math.random() * 6.28 };
+    const off = this.pickOff(from, to);
+    return { type: t.id, color: HK.pick(t.colors), from, to, t: anywhere ? Math.random() : 0, speed: HK.rnd(0.25, 0.5) * (t.id === 'child' ? 1.5 : t.id === 'beggar' ? 0.6 : 1), off, pause: 0, nightOwl: Math.random() < 0.2 || t.id === 'guard', skin: HK.pick(['#e8c39e', '#d9a98a', '#c9946c']), hat: Math.random() < 0.5, basket: Math.random() < 0.3, phase: Math.random() * 6.28 };
   },
   /* Hindernisraster: Requisiten und Gebäude werden einmal in ein Gitter gestempelt, und zu jeder
      besetzten Zelle wird die nächste freie Zelle gemerkt. Damit landet nie ein Passant in einer Kiste. */
   GRID: { x0: -10, y0: -18, cell: 0.2, w: 290, h: 230 },
   buildGrid() {
     const G = this.GRID, n = G.w * G.h, blocked = new Uint8Array(n);
+    // Nur Zellen sperren, deren Mittelpunkt im Hindernis liegt; Aufrunden würde jedes Hindernis um eine Zelle aufblähen
     const stamp = (b) => {
-      const i0 = Math.max(0, Math.floor((b[0] - G.x0) / G.cell)), i1 = Math.min(G.w - 1, Math.ceil((b[2] - G.x0) / G.cell));
-      const j0 = Math.max(0, Math.floor((b[1] - G.y0) / G.cell)), j1 = Math.min(G.h - 1, Math.ceil((b[3] - G.y0) / G.cell));
+      const i0 = Math.max(0, Math.ceil((b[0] - G.x0) / G.cell - 0.5)), i1 = Math.min(G.w - 1, Math.floor((b[2] - G.x0) / G.cell - 0.5));
+      const j0 = Math.max(0, Math.ceil((b[1] - G.y0) / G.cell - 0.5)), j1 = Math.min(G.h - 1, Math.floor((b[3] - G.y0) / G.cell - 0.5));
       for (let j = j0; j <= j1; j++) for (let i = i0; i <= i1; i++) blocked[j * G.w + i] = 1;
     };
-    for (const p of HK.PROPS) { if (p.t === 'stalls') continue; const b = this.propBox(p); stamp([b[0] - 0.08, b[1] - 0.08, b[2] + 0.08, b[3] + 0.08]); }
-    for (const b of HK.BUILDINGS) if (b.kind !== 'water' && b.kind !== 'market') stamp([b.x - 0.06, b.y - 0.06, b.x + b.w + 0.06, b.y + b.d + 0.06]);
+    for (const p of HK.PROPS) { if (p.t === 'stalls') continue; const b = this.propBox(p); stamp([b[0] - 0.12, b[1] - 0.12, b[2] + 0.12, b[3] + 0.12]); }
+    for (const b of HK.BUILDINGS) if (b.kind !== 'water' && b.kind !== 'market' && b.kind !== 'gate') stamp([b.x - 0.03, b.y - 0.03, b.x + b.w + 0.03, b.y + b.d + 0.03]);
+    for (const r of (HK.NOWALK || [])) stamp(r);
     // Wasser sperren, Stegplanken bleiben begehbar
     for (let j = 0; j < G.h; j++) for (let i = 0; i < G.w; i++) { const k = j * G.w + i; if (blocked[k]) continue;
       const wx = G.x0 + (i + 0.5) * G.cell, wy = G.y0 + (j + 0.5) * G.cell;
       if (this.isWater(wx, wy) && !this.deckZ(wx, wy)) blocked[k] = 1; }
-    // Zu jeder besetzten Zelle die nächste freie suchen, im Ring nach außen
-    const dx = new Int8Array(n), dy = new Int8Array(n);
-    for (let j = 0; j < G.h; j++) for (let i = 0; i < G.w; i++) {
-      const k = j * G.w + i; if (!blocked[k]) continue;
-      let best = null, bestD = 1e9;
-      for (let r = 1; r <= 12 && !best; r++) {
-        for (let q = -r; q <= r; q++) for (const [ii, jj] of [[i + q, j - r], [i + q, j + r], [i - r, j + q], [i + r, j + q]]) {
-          if (ii < 0 || jj < 0 || ii >= G.w || jj >= G.h || blocked[jj * G.w + ii]) continue;
-          const d = (ii - i) * (ii - i) + (jj - j) * (jj - j);
-          if (d < bestD) { bestD = d; best = [ii - i, jj - j]; }
-        }
-        if (bestD < 1e9) break;
-      }
-      if (best) { dx[k] = Math.max(-127, Math.min(127, best[0])); dy[k] = Math.max(-127, Math.min(127, best[1])); }
-    }
-    return (this._grid = { blocked, dx, dy });
+    return (this._grid = { blocked });
   },
-  /* Punkt auf die nächste freie Stelle setzen, falls er in einem Hindernis liegt */
-  avoid(x, y) {
+  blockedAt(x, y) {
     const G = this.GRID, g = this._grid || this.buildGrid();
     const i = Math.floor((x - G.x0) / G.cell), j = Math.floor((y - G.y0) / G.cell);
-    if (i < 0 || j < 0 || i >= G.w || j >= G.h) return [x, y];
-    const k = j * G.w + i;
-    if (!g.blocked[k]) return [x, y];
-    return [G.x0 + (i + g.dx[k] + 0.5) * G.cell, G.y0 + (j + g.dy[k] + 0.5) * G.cell];
+    if (i < 0 || j < 0 || i >= G.w || j >= G.h) return false;
+    return !!g.blocked[j * G.w + i];
+  },
+  /* Für jede Wegstrecke einmal prüfen, welche seitlichen Versätze durchgehend frei sind.
+     Passanten wählen einen davon und behalten ihn: ihre Bahn bleibt eine Gerade, nichts springt. */
+  OFFSETS: [0, 0.13, -0.13, 0.22, -0.22],
+  edgeFree(a, b) {
+    const cache = this._edgeFree || (this._edgeFree = {});
+    const key = a < b ? a + '|' + b : b + '|' + a;
+    let v = cache[key]; if (v) return v;
+    const A = HK.ROAD_NODES[a], B = HK.ROAD_NODES[b];
+    const dx = B[0] - A[0], dy = B[1] - A[1], len = Math.hypot(dx, dy) || 1;
+    const steps = Math.max(8, Math.ceil(len / 0.15));
+    v = [];
+    for (const off of this.OFFSETS) {
+      let ok = true;
+      for (let q = 0; q <= steps && ok; q++) { const t = q / steps; if (this.blockedAt(A[0] + dx * t - dy / len * off, A[1] + dy * t + dx / len * off)) ok = false; }
+      if (ok) v.push(off);
+    }
+    return (cache[key] = v);
+  },
+  /* Ist eine Strecke auf ganzer Breite verbaut, nimmt der Passant den am wenigsten verstellten Streifen */
+  pickOff(a, b) {
+    const v = this.edgeFree(a, b); if (v.length) return HK.pick(v);
+    const A = HK.ROAD_NODES[a], B = HK.ROAD_NODES[b];
+    const dx = B[0] - A[0], dy = B[1] - A[1], len = Math.hypot(dx, dy) || 1, steps = 24;
+    let best = 0, bestN = 1e9;
+    for (const off of this.OFFSETS) {
+      let n = 0;
+      for (let q = 0; q <= steps; q++) { const t = q / steps; if (this.blockedAt(A[0] + dx * t - dy / len * off, A[1] + dy * t + dx / len * off)) n++; }
+      if (n < bestN) { bestN = n; best = off; }
+    }
+    return best;
   },
   /* Höhe der Stegplanken: wer darauf geht, läuft nicht unter dem Steg */
   deckZ(x, y) {
@@ -180,8 +196,10 @@ HK.Scene = {
   walkerWorld(w) {
     const A = HK.ROAD_NODES[w.from], B = HK.ROAD_NODES[w.to];
     const dx = B[0] - A[0], dy = B[1] - A[1], len = Math.hypot(dx, dy) || 1;
-    const p = this.avoid(A[0] + dx * w.t - dy / len * w.off, A[1] + dy * w.t + dx / len * w.off);
-    return { wx: p[0], wy: p[1], wz: this.deckZ(p[0], p[1]), len, dir: (dx - dy) >= 0 ? 1 : -1 };
+    let wx = A[0] + dx * w.t - dy / len * w.off, wy = A[1] + dy * w.t + dx / len * w.off;
+    // Am Knoten vom zuletzt gelaufenen Punkt aus einblenden, damit der Seitenversatz nicht springt
+    if (w.bx !== undefined && w.t < 0.18) { const k = w.t / 0.18; wx = w.bx + (wx - w.bx) * k; wy = w.by + (wy - w.by) * k; }
+    return { wx, wy, wz: this.deckZ(wx, wy), len, dir: (dx - dy) >= 0 ? 1 : -1 };
   },
   walkerPos(w) { const q = this.walkerWorld(w); const s = I.p(q.wx, q.wy, q.wz); return { x: s[0], y: s[1], wx: q.wx, wy: q.wy, wz: q.wz, len: q.len, dir: q.dir }; },
   walkerAlpha(w) {
@@ -200,7 +218,7 @@ HK.Scene = {
       if (w.pause > 0) { w.pause -= dt; continue; }
       const q = this.walkerWorld(w);
       w.t += w.speed * dt / q.len; w.phase += dt * 9;
-      if (w.t >= 1) { const prev = w.from; w.from = w.to; w.t = 0; const opts = HK.ROAD_ADJ[w.from].filter(n => n !== prev); w.to = HK.pick(opts.length ? opts : HK.ROAD_ADJ[w.from]); if (Math.random() < 0.15) w.pause = HK.rnd(1, 4); }
+      if (w.t >= 1) { const prev = w.from; w.bx = q.wx; w.by = q.wy; w.from = w.to; w.t = 0; const opts = HK.ROAD_ADJ[w.from].filter(n => n !== prev); w.to = HK.pick(opts.length ? opts : HK.ROAD_ADJ[w.from]); w.off = this.pickOff(w.from, w.to); if (Math.random() < 0.15) w.pause = HK.rnd(1, 4); }
     }
     for (const c of this.carts) { const len = Math.hypot(c.b[0] - c.a[0], c.b[1] - c.a[1]); c.t += c.dir * c.v * dt / len; if (c.t > 1) { c.t = 1; c.dir = -1; } if (c.t < 0) { c.t = 0; c.dir = 1; } }
     for (const ch of this.chickens) { ch.t += dt; if (ch.t > 2) { ch.t = 0; ch.a = Math.random() * 6.28; } ch.x = ch.cx + Math.cos(ch.a) * 0.3 * Math.sin(ch.t * 1.5); ch.y = ch.cy + Math.sin(ch.a) * 0.3 * Math.sin(ch.t * 1.5); }

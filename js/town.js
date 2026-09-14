@@ -10,7 +10,7 @@ HK.MAP = { W: 1600, H: 1000 };     // gesamte Karte in Szenenpixeln; die Kamera 
    quay markiert gemauerte Kaikanten (Kante von diesem Punkt zum nächsten), sonst natürliches Ufer. */
 HK.LAND = [
   [7.6, -30], [7.0, -20], [8.2, -16], [7.4, -12], [7.0, -9], [7.9, -6.5], [7.1, -4.2], [7.8, -2.6], [6.6, -0.6], [7.2, 1.6],
-  [6.4, 3.2], [7.0, 5.0, 'quay'], [7.0, 16.0], [6.4, 17.4], [7.6, 19.5], [9.0, 19.35, 'quay'], [25.0, 19.35],
+  [6.4, 3.2], [7.0, 5.0, 'quay'], [7.0, 16.0], [6.4, 17.4], [7.6, 19.5], [9.0, 20.45, 'quay'], [25.0, 20.45],
   [26.4, 19.9], [28.6, 19.1], [30.2, 20.1], [31.8, 18.9], [33.4, 19.8], [35.5, 19.2], [38.0, 20.4], [41.0, 20.0], [45.0, 21.2], [60, 21], [60, -30],
 ];
 /* Stadtmauer als Polylinie (Mittellinie); die Stadt liegt rechts der Laufrichtung. Tore als Lücken. */
@@ -18,7 +18,7 @@ HK.WALL = { pts: [[7.2, 1.3], [11.5, 1.3], [11.5, -2.4], [23.6, -2.4], [28.3, 0.
   gates: [{ seg: 2, at: 15.5, w: 0.8 }, { seg: 4, at: 10.0, w: 1.4 }],
   towers: [[7.2, 1.3, 0.5, 2.0], [11.5, 1.3, 0.5, 2.0], [11.5, -2.4, 0.62, 2.3], [23.6, -2.4, 0.62, 2.3], [28.3, 0.6, 0.62, 2.3], [28.3, 11.8, 0.62, 2.3], [31.9, 15.4, 0.62, 2.3], [31.9, 18.9, 0.62, 2.3], [15.0, -2.4, 0.42, 1.9], [16.0, -2.4, 0.42, 1.9], [28.3, 6.0, 0.5, 2.0], [19.5, -2.4, 0.45, 2.0]] };
 /* Stadtboden: Mauerlinie und dann am Ufer zurück */
-HK.TOWN = [[7.2, 1.3], [11.5, 1.3], [11.5, -2.4], [23.6, -2.4], [28.3, 0.6], [28.3, 11.8], [31.9, 15.4], [31.9, 18.9], [30.2, 20.1], [28.6, 19.1], [26.4, 19.9], [25.0, 19.35], [9.0, 19.35], [7.6, 19.5], [6.4, 17.4], [7.0, 16.0], [7.0, 5.0], [6.4, 3.2], [7.2, 1.6]];
+HK.TOWN = [[7.2, 1.3], [11.5, 1.3], [11.5, -2.4], [23.6, -2.4], [28.3, 0.6], [28.3, 11.8], [31.9, 15.4], [31.9, 18.9], [30.2, 20.1], [28.6, 19.1], [26.4, 19.9], [25.0, 20.45], [9.0, 20.45], [7.6, 19.5], [6.4, 17.4], [7.0, 16.0], [7.0, 5.0], [6.4, 3.2], [7.2, 1.6]];
 /* Sandflächen (Fischerdorf, Strand), Dorf im Umland */
 HK.SAND = [[[7.0, -4.6], [10.9, -4.6], [11.1, 1.2], [7.2, 1.6], [6.6, -0.6], [7.8, -2.6]], [[33.0, 19.9], [38.2, 20.5], [41.2, 20.1], [41.0, 18.9], [36.0, 18.4], [33.6, 18.9]]];
 
@@ -80,7 +80,7 @@ HK.BUILDINGS = [
   { id: 'storage2',  kind: 'longhouse', x: 7.4, y: 16.75, w: 2.4, d: 1.3, h: 1.4, brick: true, hoist: true, panel: 'storage', plot: 1, name: { de: 'Lagerhalle am Kai', en: 'Quayside warehouse' } },
   { id: 'fishmarket', kind: 'openhall', x: 10.3, y: 16.9, w: 1.6, d: 1.1, h: 0.8, panel: 'fishmarket', name: { de: 'Fischmarkt', en: 'Fish market' } },
   { id: 'dive',      kind: 'eave',   x: 12.3, y: 16.8, w: 1.4, d: 1.2, h: 1.0, wall: '#b9a07a', roof: '#4a3a30', shabby: true, sign: 'mug', panel: 'dive', name: { de: 'Spelunke „Zum Nassen Hund“', en: 'The Wet Dog dive' } },
-  { id: 'ropewalk',  kind: 'longhouse', x: 14.0, y: 17.15, w: 3.2, d: 0.7, h: 0.6, wall: '#c9b48a', roof: '#7a6a4a', low: true, panel: 'venture', name: { de: 'Seilerei', en: 'Ropewalk' } },
+  { id: 'ropewalk',  kind: 'longhouse', x: 11.95, y: 17.15, w: 3.2, d: 0.7, h: 0.6, wall: '#c9b48a', roof: '#7a6a4a', low: true, panel: 'venture', name: { de: 'Seilerei', en: 'Ropewalk' } },
   { id: 'cooper',    kind: 'eave',   x: 17.5, y: 16.8, w: 1.3, d: 1.2, h: 1.0, wall: '#d9c7a0', roof: '#6b4a3a', sign: 'barrel', panel: 'venture', name: { de: 'Böttcherei', en: 'Cooperage' } },
   { id: 'smokery',   kind: 'eave',   x: 19.1, y: 16.85, w: 1.4, d: 1.15, h: 1.0, wall: '#8a7a6a', roof: '#3a3a3a', bigChimney: true, sign: 'fish', panel: 'venture', name: { de: 'Fischräucherei', en: 'Fish smokery' } },
   { id: 'storage3',  kind: 'longhouse', x: 20.9, y: 16.75, w: 2.4, d: 1.3, h: 1.4, brick: true, hoist: true, panel: 'storage', plot: 2, name: { de: 'Speicher am Bollwerk', en: 'Bulwark warehouse' } },
@@ -98,7 +98,7 @@ HK.BUILDINGS = [
   { id: 'school',    kind: 'school', x: 24.7, y: 14.5, w: 1.5, d: 1.2, h: 1.3, stone: true, wall: '#cfc6b4', roof: '#4e4a52', sign: 'book', panel: 'school', name: { de: 'Lateinschule', en: 'Latin school' } },
   // Neustadt hinter der alten Nordmauer
   { id: 'stables',   kind: 'stable', x: 12.2, y: -1.9, w: 2.0, d: 1.2, h: 0.8, panel: 'venture', name: { de: 'Marstall', en: 'Stables' } },
-  { id: 'granary',   kind: 'longhouse', x: 14.6, y: -1.95, w: 1.9, d: 1.25, h: 1.6, brick: true, hoist: true, panel: 'storage', plot: 3, name: { de: 'Kornspeicher', en: 'Granary' } },
+  { id: 'granary',   kind: 'longhouse', x: 13.3, y: -1.95, w: 1.9, d: 1.25, h: 1.6, brick: true, hoist: true, panel: 'storage', plot: 3, name: { de: 'Kornspeicher', en: 'Granary' } },
   { id: 'weighhouse', kind: 'eave',  x: 16.9, y: -1.9, w: 1.5, d: 1.2, h: 1.3, stone: true, wall: '#cfc6b4', roof: '#4e4a52', sign: 'scale', panel: 'weighhouse', name: { de: 'Stadtwaage', en: 'Weigh house' } },
   { id: 'f20',       kind: 'gable',  x: 18.7, y: -1.9, w: 1.1, d: 1.2, h: 1.1, wall: '#e2d4b4', roof: '#8a3a2a', name: { de: 'Bürgerhaus', en: 'Townhouse' } },
   { id: 'inn',       kind: 'eave',   x: 20.1, y: -1.9, w: 1.8, d: 1.2, h: 1.2, wall: '#c9b48a', roof: '#6b4a3a', sign: 'tavern', panel: 'venture', name: { de: 'Herberge „Zum Wegweiser“', en: 'The Signpost inn' } },
@@ -130,7 +130,7 @@ HK.STREETS = [
 ];
 HK.ROAD_NODES = {
   Q1: [7.2, 2.2], Q2: [7.2, 5.5], Q3: [7.2, 10], Q4: [7.2, 14], Q5: [7.2, 16.2], Q6: [7.2, 18.3],
-  H1: [9.5, 2.2], H2: [9.5, 5.5], H23: [9.5, 8.5], H3: [9.5, 10], H4: [9.5, 14], H5: [9.5, 16.2], H6: [9.5, 18.3],
+  H1: [9.5, 2.2], H2: [9.5, 5.5], H23: [9.5, 8.5], H3: [9.5, 10], H4: [9.5, 14], H5: [10.05, 16.2], H6: [10.05, 18.3],
   M1: [15.5, 2.2], M2: [15.5, 5.5], M23: [15.5, 8.5], M3: [15.5, 10], M4: [15.5, 14], M5: [15.5, 16.2], M6: [15.5, 18.3],
   O1: [21, 2.2], O2: [21, 5.5], O3: [21, 10], O4: [21, 14], O5: [21, 16.2], O6: [21, 18.3],
   C0: [24, 2.2], C1: [24, 5.5], C2: [24, 10], C3: [24, 14], C4: [24, 16.2], C5: [24, 18.3],
@@ -138,9 +138,9 @@ HK.ROAD_NODES = {
   B1: [29.9, 14.5], B2: [29.9, 16.2], B3: [29.9, 18.3], B4: [31.0, 16.2],
   N0: [12.0, 0.4], N1: [15.5, 0.4], N2: [19.5, 0.4], N3: [24, 0.4], N4: [27.3, 0.4],
   S1: [12.6, 7.1], S2: [14.0, 7.1], S3: [12.9, 9.5], MK: [13, 10], NN: [12.6, 5.5],
-  PA: [11.6, 21.4], PB: [18.6, 21.4], SP1: [11.6, 18.3], SP2: [18.6, 18.3], G: [29.2, 10], OUT: [31.6, 10], OUT2: [34.5, 9.0], OUT3: [38.5, 9.8],
+  PA: [11.6, 22.5], PB: [18.6, 22.5], SP1: [11.6, 18.3], SP2: [18.6, 18.3], G: [29.2, 10], OUT: [31.6, 10], OUT2: [34.5, 9.0], OUT3: [38.5, 9.8],
   NG: [15.5, -2.4], NG2: [15.6, -5.2], V1: [16.6, -8.0], V2: [16.0, -11.0], V3: [14.2, -7.6], V4: [18.6, -7.2],
-  FV1: [8.2, 0.6], FV2: [8.2, -1.0], FV3: [8.2, -2.4], FV4: [9.6, -1.0],
+  FV1: [9.5, 0.6], FV2: [9.5, -1.0], FV3: [9.5, -2.4], FV4: [10.9, -1.0],
 };
 HK.ROAD_EDGES = [
   ['Q1', 'Q2'], ['Q2', 'Q3'], ['Q3', 'Q4'], ['Q4', 'Q5'], ['Q5', 'Q6'], ['H1', 'H2'], ['H2', 'H23'], ['H23', 'H3'], ['H3', 'H4'], ['H4', 'H5'], ['H5', 'H6'],
@@ -148,7 +148,7 @@ HK.ROAD_EDGES = [
   ['C0', 'C1'], ['C1', 'C2'], ['C2', 'C3'], ['C3', 'C4'], ['C4', 'C5'], ['E1', 'E2'], ['E2', 'E3'], ['E3', 'E4'], ['E4', 'E5'], ['E5', 'E6'],
   ['Q1', 'H1'], ['H1', 'M1'], ['M1', 'O1'], ['O1', 'C0'], ['C0', 'E1'], ['Q2', 'H2'], ['M2', 'O2'], ['O2', 'C1'], ['C1', 'E2'],
   ['Q3', 'H3'], ['H3', 'MK'], ['MK', 'M3'], ['M3', 'O3'], ['O3', 'C2'], ['C2', 'E3'], ['E3', 'G'], ['G', 'OUT'], ['OUT', 'OUT2'], ['OUT2', 'OUT3'],
-  ['Q4', 'H4'], ['H4', 'M4'], ['M4', 'O4'], ['O4', 'C3'], ['C3', 'E4'], ['E4', 'B1'], ['Q5', 'H5'], ['H5', 'M5'], ['M5', 'O5'], ['O5', 'C4'], ['C4', 'E5'], ['E5', 'B2'], ['B2', 'B4'],
+  ['H4', 'M4'], ['M4', 'O4'], ['O4', 'C3'], ['C3', 'E4'], ['E4', 'B1'], ['Q5', 'H5'], ['H5', 'M5'], ['M5', 'O5'], ['O5', 'C4'], ['C4', 'E5'], ['E5', 'B2'], ['B2', 'B4'],
   ['Q6', 'H6'], ['H6', 'SP1'], ['SP1', 'M6'], ['M6', 'SP2'], ['SP2', 'O6'], ['O6', 'C5'], ['C5', 'E6'], ['E6', 'B3'], ['B1', 'B2'], ['B2', 'B3'],
   ['S1', 'S2'], ['S2', 'M23'], ['S1', 'S3'], ['S2', 'S3'], ['S3', 'MK'], ['H2', 'NN'], ['NN', 'M2'], ['NN', 'S1'], ['PA', 'SP1'], ['PB', 'SP2'],
   ['N0', 'N1'], ['N1', 'N2'], ['N2', 'N3'], ['N3', 'N4'], ['N1', 'M1'], ['N3', 'C0'], ['N4', 'E1'], ['N1', 'NG'], ['NG', 'NG2'], ['NG2', 'V1'], ['V1', 'V2'], ['V1', 'V3'], ['V1', 'V4'],
@@ -158,20 +158,22 @@ HK.ROAD_ADJ = {}; Object.keys(HK.ROAD_NODES).forEach(k => HK.ROAD_ADJ[k] = []);
 HK.ROAD_EDGES.forEach(([a, b]) => { HK.ROAD_ADJ[a].push(b); HK.ROAD_ADJ[b].push(a); });
 
 /* Stege (von der Kaikante nach +y ins Wasser), Liegeplätze, Reede, Boote, Karawanen */
-HK.PIERS = [{ x: 11.6, y0: 19.35, y1: 22.6 }, { x: 18.6, y0: 19.35, y1: 22.6 }];
-HK.BERTHS = [{ x: 10.2, y: 21.25 }, { x: 13.0, y: 21.25 }, { x: 17.2, y: 21.25 }, { x: 20.0, y: 21.25 }, { x: 23.2, y: 21.25 }];
+HK.PIERS = [{ x: 11.6, y0: 20.45, y1: 23.7 }, { x: 18.6, y0: 20.45, y1: 23.7 }];
+HK.BERTHS = [{ x: 10.2, y: 22.35 }, { x: 13.0, y: 22.35 }, { x: 17.2, y: 22.35 }, { x: 20.0, y: 22.35 }, { x: 23.2, y: 22.35 }];
 HK.SHIP_SCALE = 1.4;
 HK.BERTH_HEADING = Math.PI / 2;
-HK.OWN_BERTHS = [{ x: 14.6, y: 23.8 }, { x: 16.6, y: 24.6 }, { x: 12.2, y: 24.4 }, { x: 18.6, y: 25.6 }, { x: 10.4, y: 25.6 }];
-HK.RIVAL_ANCHORAGE = [{ x: 20.8, y: 23.6, h: 2.1 }, { x: 23.4, y: 24.4, h: 1.9 }, { x: 9.6, y: 23.2, h: 2.3 }];
+HK.OWN_BERTHS = [{ x: 14.6, y: 24.9 }, { x: 16.6, y: 25.7 }, { x: 12.2, y: 25.5 }, { x: 18.6, y: 26.7 }, { x: 10.4, y: 26.7 }];
+HK.RIVAL_ANCHORAGE = [{ x: 20.8, y: 24.7, h: 2.1 }, { x: 23.4, y: 25.5, h: 1.9 }, { x: 9.6, y: 24.3, h: 2.3 }];
 HK.ISLET = { x: -3.6, y: 5.6 };
-HK.BOAT_SPOTS = [{ x: 6.2, y: -1.2 }, { x: 5.5, y: -0.4 }, { x: 15.6, y: 21.2 }, { x: 25.2, y: 20.8 }];
-HK.GUARD_SHIP = { x: 15.6, y: 24.6, heading: 0.35 };
+HK.BOAT_SPOTS = [{ x: 6.2, y: -1.2 }, { x: 5.5, y: -0.4 }, { x: 15.6, y: 22.3 }, { x: 25.2, y: 21.9 }];
+HK.GUARD_SHIP = { x: 15.6, y: 25.7, heading: 0.35 };
 HK.CARAVAN_SPOTS = [{ x: 30.4, y: 10.9 }, { x: 32.0, y: 10.9 }];
-HK.ARRIVE_POINT = { x: 4, y: 29 };
-HK.LEAVE_POINT = { x: -3, y: 24 };
-HK.MOLE = { x: 25.6, y0: 19.7, y1: 21.6, w: 0.7 };
-HK.LIGHTHOUSE = { x: 25.95, y: 21.95, r: 0.45, h: 2.2 };
+HK.ARRIVE_POINT = { x: 4, y: 30.1 };
+HK.LEAVE_POINT = { x: -3, y: 25.1 };
+HK.MOLE = { x: 25.6, y0: 20.8, y1: 22.7, w: 0.7 };
+HK.LIGHTHOUSE = { x: 25.95, y: 23.05, r: 0.45, h: 2.2 };
+/* Sperrflächen für Passanten: die Krone der Kaimauer ist gemauerte Kante, kein Gehweg */
+HK.NOWALK = [[8.8, 19.75, 11.2, 20.5], [12.0, 19.75, 18.2, 20.5], [19.0, 19.75, 25.2, 20.5]];
 HK.WINDMILL = { x: 33.8, y: 12.4 };
 HK.FIELDS = [[29.6, 3.6, 2.4, 2.2], [30.4, 6.4, 2.2, 2.0], [33.4, 14.4, 1.8, 2.0], [35.6, 12.0, 2.0, 1.8], [12.2, -8.6, 2.0, 1.4], [18.4, -9.6, 2.2, 1.6], [19.0, -6.2, 1.8, 1.4], [11.6, -6.4, 1.6, 1.2]];
 HK.FARM = { x: 34.6, y: 16.9, w: 1.4, d: 1.0, h: 0.9 };
@@ -210,6 +212,6 @@ HK.TREES = [
   [27.6, -1.6, 0.55], [30.4, -3.0, 0.55], [25.2, -3.8, 0.5], [21.4, -4.4, 0.5], [12.4, -4.6, 0.45], [10.4, -3.0, 0.45], [19.8, -3.8, 0.4], [11.0, -10.2, 0.6], [12.6, -12.4, 0.55], [20.8, -11.4, 0.6], [22.6, -8.6, 0.55], [24.4, -6.4, 0.5], [9.6, -7.4, 0.45], [17.8, -13.2, 0.55], [14.4, -13.8, 0.5], [7.6, 0.5, 0.3], [9.2, -14.6, 0.5], [28.2, -8.2, 0.6], [26.6, -11.0, 0.55], [30.8, -6.4, 0.5],
 ];
 HK.PROPS = [
-  { t: 'crates', x: 8.9, y: 5.0 }, { t: 'barrels', x: 9.0, y: 9.4 }, { t: 'crates', x: 7.6, y: 9.7 }, { t: 'barrels', x: 7.7, y: 10.4 }, { t: 'crane', x: 7.85, y: 12.2, face: 'west' }, { t: 'barrels', x: 17.9, y: 7.7 }, { t: 'well', x: 12.05, y: 9.05 }, { t: 'statue', x: 13.5, y: 8.2 }, { t: 'pillory', x: 14.4, y: 9.2 }, { t: 'crates', x: 5.0, y: 5.6 }, { t: 'nets', x: 8.6, y: 0.9 }, { t: 'nets', x: 9.9, y: -0.4 }, { t: 'laundry', x: 18.9, y: 9.35 }, { t: 'crates', x: 22.1, y: 9.6 }, { t: 'barrels', x: 16.0, y: 4.7 }, { t: 'kiln', x: 26.1, y: 13.05 }, { t: 'frames', x: 27.55, y: 14.65 }, { t: 'dyecloths', x: 27.55, y: 13.0 }, { t: 'gallows', x: 30.6, y: 7.6 }, { t: 'tollbar', x: 29.6, y: 10.0 }, { t: 'well', x: 15.9, y: -6.6 }, { t: 'crates', x: 14.9, y: -0.35 }, { t: 'barrels', x: 17.2, y: -0.35 }, { t: 'logs', x: 29.9, y: 13.7 }, { t: 'logs', x: 28.75, y: 15.55 }, { t: 'shrine', x: 16.2, y: -4.3 }, { t: 'boatup', x: 34.4, y: 19.05 }, { t: 'nets', x: 36.4, y: 18.75 }, { t: 'boatup', x: 9.5, y: -2.7 }, { t: 'fishracks', x: 10.2, y: -1.8 }, { t: 'well', x: 26.9, y: 7.9 }, { t: 'stalls', x: 0.0, y: 0.0 },
-  { t: 'cross', x: 8.95, y: 18.62 }, { t: 'crates', x: 9.25, y: 18.34 }, { t: 'barrels', x: 10.1, y: 18.5 }, { t: 'nets', x: 10.85, y: 18.26 }, { t: 'crane', x: 13.0, y: 18.4, berth: 1 }, { t: 'crates', x: 15.3, y: 18.34 }, { t: 'barrels', x: 16.0, y: 18.5 }, { t: 'crane', x: 17.2, y: 18.4, berth: 2 }, { t: 'crates', x: 19.2, y: 18.34 }, { t: 'barrels', x: 20.0, y: 18.5 }, { t: 'nets', x: 20.8, y: 18.26 }, { t: 'crates', x: 21.3, y: 18.34 }, { t: 'ropes', x: 22.0, y: 18.6 }, { t: 'sails', x: 24.0, y: 18.6 },
+  { t: 'crates', x: 8.55, y: 4.65 }, { t: 'barrels', x: 8.69, y: 10.56 }, { t: 'barrels', x: 7.84, y: 10.54 }, { t: 'barrels', x: 17.9, y: 7.7 }, { t: 'well', x: 12.05, y: 9.05 }, { t: 'statue', x: 14.18, y: 8.38 }, { t: 'pillory', x: 14.4, y: 9.2 }, { t: 'crates', x: 5.0, y: 5.6 }, { t: 'nets', x: 10.4, y: 0.6 }, { t: 'nets', x: 10.1, y: -0.4 }, { t: 'laundry', x: 18.9, y: 9.35 }, { t: 'crates', x: 22.1, y: 9.6 }, { t: 'barrels', x: 16.0, y: 4.7 }, { t: 'kiln', x: 26.1, y: 13.05 }, { t: 'frames', x: 27.95, y: 14.65 }, { t: 'dyecloths', x: 27.98, y: 12.75 }, { t: 'gallows', x: 30.6, y: 7.6 }, { t: 'tollbar', x: 29.6, y: 10.0 }, { t: 'well', x: 15.3, y: -6.6 }, { t: 'crates', x: 14.51, y: -0.45 }, { t: 'barrels', x: 17.2, y: -0.35 }, { t: 'logs', x: 30.25, y: 13.5 }, { t: 'logs', x: 30.6, y: 15.0 }, { t: 'shrine', x: 16.2, y: -4.3 }, { t: 'boatup', x: 34.4, y: 19.05 }, { t: 'nets', x: 36.4, y: 18.75 }, { t: 'boatup', x: 9.5, y: -3.0 }, { t: 'fishracks', x: 10.2, y: -1.8 }, { t: 'well', x: 26.9, y: 7.9 }, { t: 'stalls', x: 0.0, y: 0.0 },
+  { t: 'cross', x: 8.95, y: 18.9 }, { t: 'crates', x: 9.25, y: 18.85 }, { t: 'barrels', x: 10.1, y: 18.95 }, { t: 'nets', x: 10.85, y: 18.7 }, { t: 'crane', x: 13.0, y: 19.3, berth: 1 }, { t: 'crates', x: 15.3, y: 18.85 }, { t: 'barrels', x: 16.0, y: 18.95 }, { t: 'crane', x: 17.2, y: 19.3, berth: 2 }, { t: 'crates', x: 19.2, y: 18.85 }, { t: 'barrels', x: 20.0, y: 18.95 }, { t: 'nets', x: 20.8, y: 18.7 }, { t: 'crates', x: 21.3, y: 19.1 }, { t: 'ropes', x: 22.0, y: 19.0 }, { t: 'sails', x: 24.0, y: 19.0 },
 ];
