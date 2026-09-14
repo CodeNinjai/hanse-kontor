@@ -437,19 +437,39 @@ Object.assign(HK.Scene, {
     ctx.fillStyle = '#3a2a1a'; ctx.beginPath(); ctx.arc(hub[0], hub[1], 2.5, 0, 6.28); ctx.fill();
   },
   drawFarm(ctx, season, sv, farm) { const f = farm || HK.FARM; this.drawHouse(ctx, { x: f.x, y: f.y, w: f.w, d: f.d, h: f.h || 0.85, wall: farm ? '#cdbf98' : '#d8c9a6', roof: '#9a8352', thatchLine: true }, HK.state, season, sv, false); for (let u = 0; u < 1.6; u += 0.18) I.line(ctx, [f.x - 0.4 + u, f.y + f.d + 0.5, 0], [f.x - 0.4 + u, f.y + f.d + 0.5, 0.2], '#6a4a2a', 1); I.line(ctx, [f.x - 0.4, f.y + f.d + 0.5, 0.15], [f.x + 1.2, f.y + f.d + 0.5, 0.15], '#6a4a2a', 1); for (const [sx, sy] of [[f.x + 0.2, f.y + f.d + 0.25], [f.x + 0.6, f.y + f.d + 0.3], [f.x + 1.0, f.y + f.d + 0.2]]) { const p = I.p(sx, sy, 0); ctx.fillStyle = '#f0ece0'; ctx.beginPath(); ctx.ellipse(p[0], p[1] - 2, 3.5, 2.5, 0, 0, 6.28); ctx.fill(); ctx.fillStyle = '#3a3030'; ctx.fillRect(p[0] + 2.5, p[1] - 3.5, 2, 2); } },
+  /* Breiter Steg: Bohlendeck auf Pfählen, Fahrrinne in der Mitte frei */
   drawPier(ctx, p, t) {
-    const w = 0.5, x0 = p.x - w / 2, last = p.y1 >= p.full.y1 - 0.01;
-    for (let y = p.y0 + 0.3; y < p.y1; y += 0.35) { I.line(ctx, [x0 + 0.05, y, -0.3], [x0 + 0.05, y, 0.2], '#4a3320', 2); I.line(ctx, [x0 + w - 0.05, y, -0.3], [x0 + w - 0.05, y, 0.2], '#3a2a1a', 2); }
-    I.poly(ctx, [[x0, p.y0 - (p.first ? 0.1 : 0), 0.2], [x0 + w, p.y0 - (p.first ? 0.1 : 0), 0.2], [x0 + w, p.y1, 0.2], [x0, p.y1, 0.2]], this.pat.planks);
-    for (let y = p.y0; y < p.y1; y += 0.12) I.line(ctx, [x0, y, 0.2], [x0 + w, y, 0.2], 'rgba(0,0,0,0.25)', 0.6);
-    I.line(ctx, [x0, p.y0, 0.2], [x0, p.y1, 0.2], 'rgba(0,0,0,0.45)', 0.8); I.line(ctx, [x0 + w, p.y0, 0.2], [x0 + w, p.y1, 0.2], 'rgba(0,0,0,0.45)', 0.8);
-    I.poly(ctx, [[x0 + w, p.y0, 0.2], [x0 + w, p.y1, 0.2], [x0 + w, p.y1, 0.05], [x0 + w, p.y0, 0.05]], '#5f4630');
-    if (last) {
-      I.poly(ctx, [[x0, p.y1, 0.2], [x0 + w, p.y1, 0.2], [x0 + w, p.y1, 0.05], [x0, p.y1, 0.05]], '#6a4f36');
-      I.box(ctx, x0 + 0.05, p.y1 - 0.15, 0.2, 0.1, 0.1, 0.18, { wall: '#2e2826', top: '#5a504a' }); I.box(ctx, x0 + w - 0.15, p.y1 - 0.15, 0.2, 0.1, 0.1, 0.18, { wall: '#2e2826', top: '#5a504a' });
-      I.line(ctx, [p.x, p.y1 - 0.3, 0.2], [p.x, p.y1 - 0.3, 1.0], '#2a2420', 1.3); const lp = I.p(p.x, p.y1 - 0.3, 1.0); this.lamps.push([lp[0], lp[1]]); ctx.fillStyle = '#3a3430'; ctx.fillRect(lp[0] - 3, lp[1] - 3, 6, 4);
+    const h = (p.w || 0.6) / 2, x0 = p.x - h, x1 = p.x + h;
+    for (let y = p.y0 + 0.3; y < p.y1; y += 0.45) for (const px of [x0 + 0.12, p.x, x1 - 0.12])
+      I.line(ctx, [px, y, -0.35], [px, y, 0.2], px === p.x ? '#3f2e1c' : '#4a3320', 2);
+    I.poly(ctx, [[x0, p.y0 - 0.1, 0.2], [x1, p.y0 - 0.1, 0.2], [x1, p.y1, 0.2], [x0, p.y1, 0.2]], this.pat.planks);
+    for (let y = p.y0; y < p.y1; y += 0.14) I.line(ctx, [x0, y, 0.2], [x1, y, 0.2], 'rgba(0,0,0,0.22)', 0.6);
+    I.line(ctx, [x0, p.y0, 0.2], [x0, p.y1, 0.2], 'rgba(0,0,0,0.4)', 0.9);
+    I.line(ctx, [x1, p.y0, 0.2], [x1, p.y1, 0.2], 'rgba(0,0,0,0.4)', 0.9);
+    I.poly(ctx, [[x1, p.y0, 0.2], [x1, p.y1, 0.2], [x1, p.y1, 0.02], [x1, p.y0, 0.02]], '#5f4630');
+    I.poly(ctx, [[x0, p.y1, 0.2], [x1, p.y1, 0.2], [x1, p.y1, 0.02], [x0, p.y1, 0.02]], '#6a4f36');
+  },
+  /* Poller und Laterne am Kopf des Stegs */
+  drawPierEnd(ctx, p, t) {
+    const h = (p.w || 0.6) / 2;
+    for (const px of [p.x - h + 0.1, p.x + h - 0.22]) I.box(ctx, px, p.y1 - 0.22, 0.2, 0.12, 0.12, 0.2, { wall: '#2e2826', top: '#5a504a' });
+    I.line(ctx, [p.x, p.y1 - 0.3, 0.2], [p.x, p.y1 - 0.3, 1.1], '#2a2420', 1.4);
+    if (!this.picking) { const lp = I.p(p.x, p.y1 - 0.3, 1.1); this.lamps.push([lp[0], lp[1]]); ctx.fillStyle = '#3a3430'; ctx.fillRect(lp[0] - 3, lp[1] - 3, 6, 4); }
+  },
+  /* Stapel auf dem Steg: Kisten, Fässer oder Säcke, je nach Ware */
+  drawStack(ctx, sl, sv) {
+    const n = sl.items.length; if (!n) return;
+    const z0 = HK.Scene.DECK_Z;
+    if (!this.picking) { const sp = I.p(sl.x + 0.1, sl.y + 0.12, z0); ctx.fillStyle = '#15261e24'; ctx.beginPath(); ctx.ellipse(sp[0], sp[1], 11, 5, 0, 0, 6.28); ctx.fill(); }
+    for (let k = 0; k < n; k++) {
+      const it = sl.items[k], z = z0 + k * 0.26, ox = (k % 2) * 0.04 - 0.02;
+      if (it.kind === 'barrel') { this.barrel3(ctx, sl.x - 0.11 + ox, sl.y - 0.11, z); }
+      else if (it.kind === 'sack') {
+        const q = I.p(sl.x + ox, sl.y, z + 0.13);
+        ctx.fillStyle = '#b8a877'; ctx.beginPath(); ctx.ellipse(q[0], q[1], 7.5, 5.5, 0, 0, 6.28); ctx.fill();
+        ctx.fillStyle = 'rgba(80,62,34,0.28)'; ctx.beginPath(); ctx.ellipse(q[0] + 2, q[1] + 1.5, 5.5, 4, 0, 0, 6.28); ctx.fill();
+      } else I.box(ctx, sl.x - 0.15 + ox, sl.y - 0.15, z, 0.3, 0.3, 0.26, { wall: '#9a7a4a', top: '#b08a50' });
     }
-    if (p.y0 <= p.full.y0 + 1.3 && p.y1 > p.full.y0 + 1.3) { this.barrel3(ctx, x0 + 0.12, p.full.y0 + 1.25, 0.2); I.box(ctx, x0 + 0.28, p.full.y0 + 1.0, 0.2, 0.18, 0.18, 0.18, { wall: '#9a7a4a', top: '#b08a50' }); }
   },
   drawTree(ctx, x, y, r, season, sv) {
     const s = I.p(x, y, 0), R = r * 46, th = r * 30;
@@ -490,10 +510,8 @@ Object.assign(HK.Scene, {
       case 'shrine': { I.box(ctx, p.x - 0.12, p.y - 0.12, 0, 0.24, 0.24, 0.9, { wall: '#8f887a', top: '#a9a292' }); I.box(ctx, p.x - 0.16, p.y - 0.16, 0.9, 0.32, 0.32, 0.25, { wall: '#7d766a' }, { noTop: true }); I.pyramid(ctx, p.x - 0.2, p.y - 0.2, 1.15, 0.4, 0.4, 0.22, '#3a3038'); const q = I.p(p.x + 0.16, p.y + 0.06, 1.02); ctx.fillStyle = '#c9a24a'; ctx.fillRect(q[0] - 1, q[1] - 2, 2, 3); if (!this.picking) { ctx.fillStyle = 'rgba(255,180,80,0.8)'; ctx.fillRect(q[0] - 0.6, q[1] + 2, 1.2, 1.2); } break; }
       case 'cross': { I.line(ctx, [p.x, p.y, 0], [p.x, p.y, 0.9], '#5a5048', 2.4); I.line(ctx, [p.x - 0.15, p.y, 0.7], [p.x + 0.15, p.y, 0.7], '#5a5048', 2.4); break; }
       case 'laundry': { const a = I.p(p.x, p.y, 0.6), b = I.p(p.x + 1.1, p.y, 0.6); I.line(ctx, [p.x, p.y, 0], [p.x, p.y, 0.65], '#4a3320', 1.2); I.line(ctx, [p.x + 1.1, p.y, 0], [p.x + 1.1, p.y, 0.65], '#4a3320', 1.2); ctx.strokeStyle = '#333'; ctx.lineWidth = 0.7; ctx.beginPath(); ctx.moveTo(a[0], a[1]); ctx.quadraticCurveTo((a[0] + b[0]) / 2, (a[1] + b[1]) / 2 + 3, b[0], b[1]); ctx.stroke(); ['#e8e0c8', '#7a3a3a', '#3a5a7a', '#e8e0c8'].forEach((c, i) => { const t = 0.18 + i * 0.2, lx = a[0] + (b[0] - a[0]) * t, ly = a[1] + (b[1] - a[1]) * t + 2, sw = Math.sin(this.time * 3 + i) * 1.5; ctx.fillStyle = c; ctx.beginPath(); ctx.moveTo(lx, ly); ctx.lineTo(lx + 5, ly + 2); ctx.lineTo(lx + 5 + sw, ly + 9); ctx.lineTo(lx + sw, ly + 7); ctx.fill(); }); break; }
-      case 'crane': this.drawTreadCrane(ctx, p); break;
     }
   },
-  /* Tretradkran am Kai: schmaler Bock aus schrägen Beinen, überdachtes Laufrad, Ausleger über das Wasser */
   /* Liegt am zugeordneten Liegeplatz ein festgemachtes Schiff? Nur dann hebt der Kran. */
   craneBusy(p) {
     const st = HK.state; if (!st || p.berth == null) return false;
@@ -501,69 +519,54 @@ Object.assign(HK.Scene, {
     const a = this.shipAnim && this.shipAnim[s.id];
     return !!a && !a.leaving && Math.abs(a.x - a.tx) + Math.abs(a.y - a.ty) < 0.05;
   },
-  drawTreadCrane(ctx, p) {
-    const x = p.x, y = p.y, face = p.face || 'south';
-    const t = this.time, pk = this.picking, west = face === 'west';
-    const busy = this.craneBusy(p);
+  /* Tretradkran auf dem Steg: schräger Bock, überdachtes Laufrad, schwenkbarer Ausleger über Schiff und Stapelplatz */
+  drawTreadCrane(ctx, d) {
+    const x = d.cx, y = d.cy, t = this.time, pk = this.picking, z0 = HK.Scene.DECK_Z;
+    const cs = HK.Scene.craneState(d), busy = d.working;
+    const P = (px, py, pz) => I.p(px, py, pz + z0);
+    const L = (a, b, col, w) => { const p0 = P(a[0], a[1], a[2]), p1 = P(b[0], b[1], b[2]); ctx.strokeStyle = col; ctx.lineWidth = w; ctx.beginPath(); ctx.moveTo(p0[0], p0[1]); ctx.lineTo(p1[0], p1[1]); ctx.stroke(); };
+    const Q = (pts, fill, stroke, sw) => I.poly(ctx, pts.map(v => [v[0], v[1], v[2] + z0]), fill, stroke, sw);
     const baseH = 0.12, apex = 1.95, wheelR = 0.5, half = 0.46;
-    // Bohlengrund
-    I.box(ctx, x - 0.5, y - 0.42, 0, 1.0, 0.84, baseH, { wall: '#6e5944', top: '#a3875f' });
-    for (let u = -0.44; u < 0.5; u += 0.15) I.line(ctx, [x + u, y - 0.4, baseH + 0.005], [x + u, y + 0.4, baseH + 0.005], 'rgba(50,34,18,0.28)', 0.6);
-    // Zwei Böcke aus schrägen Beinen, nach oben zusammenlaufend
+    I.box(ctx, x - 0.5, y - 0.42, z0, 1.0, 0.84, baseH, { wall: '#6e5944', top: '#a3875f' });
+    for (let u = -0.44; u < 0.5; u += 0.15) L([x + u, y - 0.4, baseH + 0.005], [x + u, y + 0.4, baseH + 0.005], 'rgba(50,34,18,0.28)', 0.6);
     const legs = [];
     for (const sd of [-1, 1]) {
       const py = y + sd * 0.3;
-      for (const ex of [-half, half]) { I.line(ctx, [x + ex, py, baseH], [x + ex * 0.16, py, apex], '#5d4f3f', 3); I.line(ctx, [x + ex - 0.01, py, baseH], [x + ex * 0.16 - 0.01, py, apex], 'rgba(228,204,164,0.28)', 1); }
-      I.line(ctx, [x - half * 0.55, py, apex * 0.52], [x + half * 0.55, py, apex * 0.52], '#6b5b48', 1.8);
+      for (const ex of [-half, half]) { L([x + ex, py, baseH], [x + ex * 0.16, py, apex], '#5d4f3f', 3); L([x + ex - 0.01, py, baseH], [x + ex * 0.16 - 0.01, py, apex], 'rgba(228,204,164,0.28)', 1); }
+      L([x - half * 0.55, py, apex * 0.52], [x + half * 0.55, py, apex * 0.52], '#6b5b48', 1.8);
       legs.push(py);
     }
-    // Querhölzer zwischen den Böcken
-    for (const ex of [-half * 0.16, half * 0.16]) I.line(ctx, [x + ex, legs[0], apex], [x + ex, legs[1], apex], '#5d4f3f', 2.4);
-    I.line(ctx, [x, legs[0], apex * 0.52], [x, legs[1], apex * 0.52], '#6b5b48', 1.6);
-    // Laufrad in der x-z-Ebene: schmale Felge, Speichen, Trittsprossen
+    for (const ex of [-half * 0.16, half * 0.16]) L([x + ex, legs[0], apex], [x + ex, legs[1], apex], '#5d4f3f', 2.4);
+    L([x, legs[0], apex * 0.52], [x, legs[1], apex * 0.52], '#6b5b48', 1.6);
     const wz = apex * 0.54, spin = busy ? t * 0.32 : 0;
-    const ring = (r, col, lw, dy) => { ctx.strokeStyle = col; ctx.lineWidth = lw; ctx.beginPath(); for (let k = 0; k <= 26; k++) { const a = k / 26 * 6.2832, q = I.p(x + Math.cos(a) * r, y + dy, wz + Math.sin(a) * r); k ? ctx.lineTo(q[0], q[1]) : ctx.moveTo(q[0], q[1]); } ctx.stroke(); };
+    const ring = (r, col, lw, dy) => { ctx.strokeStyle = col; ctx.lineWidth = lw; ctx.beginPath(); for (let k = 0; k <= 26; k++) { const a = k / 26 * 6.2832, q = P(x + Math.cos(a) * r, y + dy, wz + Math.sin(a) * r); k ? ctx.lineTo(q[0], q[1]) : ctx.moveTo(q[0], q[1]); } ctx.stroke(); };
     for (const dy of [-0.13, 0.13]) {
       ring(wheelR, '#6e5944', 2.4, dy);
-      for (let k = 0; k < 8; k++) { const a = spin + k / 8 * 6.2832; I.line(ctx, [x, y + dy, wz], [x + Math.cos(a) * wheelR * 0.94, y + dy, wz + Math.sin(a) * wheelR * 0.94], '#84704f', 1.1); }
+      for (let k = 0; k < 8; k++) { const a = spin + k / 8 * 6.2832; L([x, y + dy, wz], [x + Math.cos(a) * wheelR * 0.94, y + dy, wz + Math.sin(a) * wheelR * 0.94], '#84704f', 1.1); }
     }
-    for (let k = 0; k < 12; k++) { const a = spin + k / 12 * 6.2832, cx = x + Math.cos(a) * wheelR * 0.9, cz = wz + Math.sin(a) * wheelR * 0.9; I.line(ctx, [cx, y - 0.13, cz], [cx, y + 0.13, cz], k % 2 ? '#9a8763' : '#6e5944', 1.3); }
-    I.line(ctx, [x, y - 0.18, wz], [x, y + 0.18, wz], '#4a3d2c', 2.6);
-    // Schindeldach über dem Rad, damit der Bock nicht als Kasten steht
+    for (let k = 0; k < 12; k++) { const a = spin + k / 12 * 6.2832, cx = x + Math.cos(a) * wheelR * 0.9, cz = wz + Math.sin(a) * wheelR * 0.9; L([cx, y - 0.13, cz], [cx, y + 0.13, cz], k % 2 ? '#9a8763' : '#6e5944', 1.3); }
+    L([x, y - 0.18, wz], [x, y + 0.18, wz], '#4a3d2c', 2.6);
     { const rz = apex + 0.04, rw = 0.42, rd = 0.46;
-      I.poly(ctx, [[x - rw, y - rd, rz], [x, y - rd, rz + 0.3], [x, y + rd, rz + 0.3], [x - rw, y + rd, rz]], '#6a4a34');
-      I.poly(ctx, [[x + rw, y - rd, rz], [x, y - rd, rz + 0.3], [x, y + rd, rz + 0.3], [x + rw, y + rd, rz]], '#8a6446');
-      I.poly(ctx, [[x - rw, y + rd, rz], [x, y + rd, rz + 0.3], [x + rw, y + rd, rz]], '#7a5a40', 'rgba(40,26,12,0.5)', 0.7);
-      for (let u = 0.06; u < rw; u += 0.1) I.line(ctx, [x - u, y + rd, rz + 0.3 * (1 - u / rw)], [x - u, y - rd, rz + 0.3 * (1 - u / rw)], 'rgba(40,26,12,0.22)', 0.6); }
-    // Ausleger: im Leerlauf über dem Wasser, beim Umschlag schwenkt er zwischen Schiffsseite und Kai
-    const R = 1.75, bz = apex - 0.62;
-    let th = 0, lift = 1, load = false;
-    if (busy) {
-      const u = (t % 15) / 15;
-      if (u < 0.22) { lift = u / 0.22; load = true; }                        // aus dem Rumpf heben
-      else if (u < 0.44) { th = (u - 0.22) / 0.22; load = true; }            // an Land schwenken
-      else if (u < 0.58) { th = 1; lift = 1 - (u - 0.44) / 0.14; load = true; } // auf dem Kai absetzen
-      else if (u < 0.70) { th = 1; lift = 0; }                               // abhaken
-      else if (u < 0.88) { th = 1; lift = (u - 0.70) / 0.18; }               // leeren Haken hochziehen
-      else th = 1 - (u - 0.88) / 0.12;                                       // zurück über das Schiff
-    }
-    const sl = th * 1.35, bx = west ? x - R * Math.cos(sl) : x + R * Math.sin(sl), by = west ? y - R * Math.sin(sl) : y + R * Math.cos(sl);
-    const ax = west ? x - 0.14 : x, ay = west ? y : y + 0.14;
-    I.line(ctx, [ax, ay, apex - 0.12], [bx, by, bz], '#5d4f3f', 3.2);
-    I.line(ctx, [ax - 0.01, ay, apex - 0.12], [bx - 0.01, by, bz], 'rgba(228,204,164,0.26)', 1.1);
-    I.line(ctx, [ax, ay, apex - 1.0], [(ax + bx) / 2, (ay + by) / 2, bz + 0.3], '#6b5b48', 1.5);
-    if (!pk) { const tp = I.p(bx, by, bz); ctx.strokeStyle = '#4a3d2c'; ctx.lineWidth = 1.2; ctx.beginPath(); ctx.arc(tp[0], tp[1], 2.6, 0, 6.28); ctx.stroke(); }
-    // Last am Seil, nur beim Umschlag; sonst hängt der Haken frei
-    const lz = busy ? 0.14 + lift * (bz - 0.56) : bz - 0.52;
-    I.line(ctx, [bx, by, bz], [bx, by, busy ? lz + 0.22 : lz], 'rgba(58,42,22,0.9)', 1.1);
-    if (!pk && !load) { const hp = I.p(bx, by, busy ? lz + 0.16 : bz - 0.58); ctx.strokeStyle = '#4a3d2c'; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.arc(hp[0], hp[1], 2.4, 0.6, 5.4); ctx.stroke(); }
-    if (load) { const w = 0.2, q = [[bx - w, by - w], [bx + w, by - w], [bx + w, by + w], [bx - w, by + w]];
-      I.poly(ctx, q.map(v => [v[0], v[1], lz + 0.22]), '#b09a70', 'rgba(40,26,12,0.6)', 0.7);
-      I.poly(ctx, [[q[3][0], q[3][1], lz + 0.22], [q[2][0], q[2][1], lz + 0.22], [q[2][0], q[2][1], lz - 0.12], [q[3][0], q[3][1], lz - 0.12]], '#8b714d');
-      I.poly(ctx, [[q[1][0], q[1][1], lz + 0.22], [q[2][0], q[2][1], lz + 0.22], [q[2][0], q[2][1], lz - 0.12], [q[1][0], q[1][1], lz - 0.12]], '#6b583c');
-      I.line(ctx, [q[3][0], q[3][1], lz + 0.22], [q[2][0], q[2][1], lz - 0.12], 'rgba(216,190,146,0.5)', 1); }
-    // Kranmeister, solange gearbeitet wird
-    if (!pk && busy) { const mp = I.p(west ? x + 0.05 : x - 0.6, west ? y + 0.6 : y - 0.05, 0); this.drawPerson(ctx, mp[0], mp[1], '#5a4a32', 'static', 1, false, '#e8c39e', t * 2, 1, null, null, 0.85); }
+      Q([[x - rw, y - rd, rz], [x, y - rd, rz + 0.3], [x, y + rd, rz + 0.3], [x - rw, y + rd, rz]], '#6a4a34');
+      Q([[x + rw, y - rd, rz], [x, y - rd, rz + 0.3], [x, y + rd, rz + 0.3], [x + rw, y + rd, rz]], '#8a6446');
+      Q([[x - rw, y + rd, rz], [x, y + rd, rz + 0.3], [x + rw, y + rd, rz]], '#7a5a40', 'rgba(40,26,12,0.5)', 0.7);
+      for (let u = 0.06; u < rw; u += 0.1) L([x - u, y + rd, rz + 0.3 * (1 - u / rw)], [x - u, y - rd, rz + 0.3 * (1 - u / rw)], 'rgba(40,26,12,0.22)', 0.6); }
+    // Ausleger: er zeigt beim Heben zum Schiff und schwenkt die Last auf den Stapelplatz
+    const R = d.R, bz = apex - 0.62, bx = x + Math.sin(cs.th) * R, by = y + Math.cos(cs.th) * R;
+    const ax = x + Math.sin(cs.th) * 0.14, ay = y + Math.cos(cs.th) * 0.14;
+    L([ax, ay, apex - 0.12], [bx, by, bz], '#5d4f3f', 3.2);
+    L([ax - 0.01, ay, apex - 0.12], [bx - 0.01, by, bz], 'rgba(228,204,164,0.26)', 1.1);
+    L([ax, ay, apex - 1.0], [(ax + bx) / 2, (ay + by) / 2, bz + 0.3], '#6b5b48', 1.5);
+    if (!pk) { const tp = P(bx, by, bz); ctx.strokeStyle = '#4a3d2c'; ctx.lineWidth = 1.2; ctx.beginPath(); ctx.arc(tp[0], tp[1], 2.6, 0, 6.28); ctx.stroke(); }
+    const lz = 0.14 + cs.lift * (bz - 0.56);
+    L([bx, by, bz], [bx, by, lz + 0.22], 'rgba(58,42,22,0.9)', 1.1);
+    if (!pk && !cs.load) { const hp = P(bx, by, lz + 0.16); ctx.strokeStyle = '#4a3d2c'; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.arc(hp[0], hp[1], 2.4, 0.6, 5.4); ctx.stroke(); }
+    if (cs.load) { const w = 0.2, q = [[bx - w, by - w], [bx + w, by - w], [bx + w, by + w], [bx - w, by + w]];
+      Q(q.map(v => [v[0], v[1], lz + 0.22]), '#b09a70', 'rgba(40,26,12,0.6)', 0.7);
+      Q([[q[3][0], q[3][1], lz + 0.22], [q[2][0], q[2][1], lz + 0.22], [q[2][0], q[2][1], lz - 0.12], [q[3][0], q[3][1], lz - 0.12]], '#8b714d');
+      Q([[q[1][0], q[1][1], lz + 0.22], [q[2][0], q[2][1], lz + 0.22], [q[2][0], q[2][1], lz - 0.12], [q[1][0], q[1][1], lz - 0.12]], '#6b583c');
+      L([q[3][0], q[3][1], lz + 0.22], [q[2][0], q[2][1], lz - 0.12], 'rgba(216,190,146,0.5)', 1); }
+    if (!pk && busy) { const mp = P(x - 0.6, y - 0.05, 0); this.drawPerson(ctx, mp[0], mp[1], '#5a4a32', 'static', 1, false, '#e8c39e', t * 2, 1, null, null, 0.85); }
   },
   drawBuilding(ctx, b, st, season, sv) {
     switch (b.kind) {
@@ -812,6 +815,10 @@ Object.assign(HK.Scene, {
     if (type === 'torch') { const f = 0.7 + Math.sin((phase || 0) * 3 + x) * 0.3; ctx.strokeStyle = '#5a4020'; ctx.lineWidth = 1.4; ctx.beginPath(); ctx.moveTo(5 * (dir || 1), -6); ctx.lineTo(7 * (dir || 1), -20); ctx.stroke(); ctx.fillStyle = 'rgba(255,150,40,' + (0.25 * f) + ')'; ctx.beginPath(); ctx.arc(7 * (dir || 1), -22, 6, 0, 6.28); ctx.fill(); ctx.fillStyle = '#ffd060'; ctx.beginPath(); ctx.ellipse(7 * (dir || 1), -22, 2, 3.2 * f, 0, 0, 6.28); ctx.fill(); ctx.fillStyle = '#ff8020'; ctx.beginPath(); ctx.ellipse(7 * (dir || 1), -21, 1.2, 2, 0, 0, 6.28); ctx.fill(); }
     if (type === 'knight') { ctx.fillStyle = '#b03030'; ctx.beginPath(); ctx.ellipse(-4 * (dir || 1), -8, 3, 4, 0, 0, 6.28); ctx.fill(); ctx.strokeStyle = '#e8d8b0'; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(-4 * (dir || 1), -11); ctx.lineTo(-4 * (dir || 1), -5); ctx.stroke(); ctx.strokeStyle = '#6a5a4a'; ctx.lineWidth = 1.4; ctx.beginPath(); ctx.moveTo(5 * (dir || 1), 0); ctx.lineTo(5 * (dir || 1), -34); ctx.stroke(); ctx.fillStyle = '#e0b040'; ctx.beginPath(); ctx.moveTo(5 * (dir || 1), -34); ctx.lineTo(5 * (dir || 1) + 9 * (dir || 1), -31); ctx.lineTo(5 * (dir || 1), -28); ctx.fill(); }
     if (w && w.basket) { ctx.fillStyle = '#b8a070'; ctx.beginPath(); ctx.ellipse(5 * (dir || 1), -6, 3, 2.5, 0, 0, 6.28); ctx.fill(); }
+    if (w && w.load) { const k = w.load.kind;
+      if (k === 'sack') { ctx.fillStyle = '#b8a877'; ctx.beginPath(); ctx.ellipse(1, -19, 5.5, 3.6, 0, 0, 6.28); ctx.fill(); ctx.fillStyle = 'rgba(80,62,34,0.25)'; ctx.beginPath(); ctx.ellipse(2.5, -18, 3.4, 2.4, 0, 0, 6.28); ctx.fill(); }
+      else if (k === 'barrel') { ctx.fillStyle = '#8b6a3c'; ctx.beginPath(); ctx.ellipse(1, -19, 4.6, 4.2, 0, 0, 6.28); ctx.fill(); ctx.strokeStyle = '#4a3320'; ctx.lineWidth = 0.8; ctx.beginPath(); ctx.moveTo(-3.4, -19); ctx.lineTo(5.4, -19); ctx.stroke(); }
+      else { ctx.fillStyle = '#9a7a4a'; ctx.fillRect(-3, -22.5, 8.5, 6); ctx.fillStyle = '#b08a50'; ctx.fillRect(-3, -22.5, 8.5, 1.6); ctx.strokeStyle = 'rgba(60,40,18,0.5)'; ctx.lineWidth = 0.7; ctx.strokeRect(-3, -22.5, 8.5, 6); } }
     ctx.strokeStyle = color; ctx.lineWidth = 1.6; ctx.beginPath(); ctx.moveTo(-3, -12); ctx.lineTo(-4 - step * 0.4, -6); ctx.moveTo(3, -12); ctx.lineTo(4 + step * 0.4, -6); ctx.stroke();
     ctx.fillStyle = skin || '#e8c39e'; ctx.beginPath(); ctx.arc(0, -16, 3.2, 0, 6.28); ctx.fill();
     if (type === 'monk') { ctx.fillStyle = color; ctx.beginPath(); ctx.arc(0, -16.5, 3.8, Math.PI * 1.05, Math.PI * 1.95); ctx.fill(); }

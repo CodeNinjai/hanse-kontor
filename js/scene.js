@@ -3,7 +3,7 @@
 const I = HK.Iso;
 
 HK.Scene = {
-  canvas: null, ctx: null, RS: 2, PICK_SCALE: 1, walkers: [], carts: [], chickens: [], gulls: [], smoke: [], shipAnim: {}, hover: null, selected: null,
+  canvas: null, ctx: null, RS: 2, PICK_SCALE: 1, walkers: [], porters: [], carts: [], chickens: [], gulls: [], smoke: [], shipAnim: {}, hover: null, selected: null,
   clock: 0.35, time: 0, pat: {}, windows: [], lamps: [], weather: 'clear', weatherDay: -1, lastSeason: null, ground: null, grain: null,
 
   init(canvas) {
@@ -188,6 +188,11 @@ HK.Scene = {
     for (const p of HK.PROPS) { if (p.t === 'stalls') continue; const b = this.propBox(p); stamp([b[0] - 0.12, b[1] - 0.12, b[2] + 0.12, b[3] + 0.12]); }
     for (const b of HK.BUILDINGS) if (b.kind !== 'water' && b.kind !== 'market' && b.kind !== 'gate') stamp([b.x - 0.03, b.y - 0.03, b.x + b.w + 0.03, b.y + b.d + 0.03]);
     for (const r of (HK.NOWALK || [])) stamp(r);
+    // Kran und Stapelplätze auf den Stegen sind für Passanten tabu; die Fahrrinne daneben bleibt frei
+    for (const d of this.docks()) {
+      stamp([d.cx - 0.72, d.cy - 0.6, d.cx + 0.72, d.cy + 0.6]);
+      for (const sl of d.slots) stamp([sl.x - 0.26, sl.y - 0.26, sl.x + 0.26, sl.y + 0.26]);
+    }
     // Wasser sperren, Stegplanken bleiben begehbar
     for (let j = 0; j < G.h; j++) for (let i = 0; i < G.w; i++) { const k = j * G.w + i; if (blocked[k]) continue;
       const wx = G.x0 + (i + 0.5) * G.cell, wy = G.y0 + (j + 0.5) * G.cell;
@@ -233,8 +238,137 @@ HK.Scene = {
   },
   /* Höhe der Stegplanken: wer darauf geht, läuft nicht unter dem Steg */
   deckZ(x, y) {
-    for (const p of HK.PIERS) if (x > p.x - 0.3 && x < p.x + 0.3 && y > p.y0 - 0.1 && y < p.y1 + 0.05) return 0.2;
+    for (const p of HK.PIERS) { const h = (p.w || 0.6) / 2; if (x > p.x - h && x < p.x + h && y > p.y0 - 0.1 && y < p.y1 + 0.05) return 0.2; }
     return 0;
+  },
+
+  /* ---------- Hafenumschlag: Kran auf dem Steg, Stapelplätze, Träger ---------- */
+  CRANE_CYCLE: 13, DECK_Z: 0.2, STACK_MAX: 3,
+  /* Ein Kran je Steg, auf der Seeseite; er bedient den Liegeplatz an seiner Außenseite */
+  docks() {
+    if (this._docks) return this._docks;
+    return (this._docks = HK.PIERS.map((p, i) => {
+      const cx = p.crane, cy = p.y0 + 1.05, R = 1.6;
+      const slots = [0.24, 0.45, 0.66].map(th => ({ th, x: cx + Math.sin(th) * R, y: cy + Math.cos(th) * R, items: [] }));
+      const b = HK.BERTHS[i * 2], sx = b.x, sy = cy + 0.9;
+      return { pier: p, i, cx, cy, R, slots, berth: i * 2, shipTh: Math.atan2(sx - cx, sy - cy), u: 0, working: false, dropped: -1 };
+    }));
+  },
+  dockFree(d) { return d.slots.some(s => s.items.length < this.STACK_MAX); },
+  dockSlotFor(d) { return d.slots.find(s => s.items.length < this.STACK_MAX) || d.slots[0]; },
+  dockItems(d) { let n = 0; for (const s of d.slots) n += s.items.length; return n; },
+  /* Welche Ware der Kran gerade löscht: aus der Ladung des Schiffes am Liegeplatz */
+  dockGood(d) {
+    const st = HK.state; if (!st) return 'crate';
+    const sh = st.ships.find(v => v.berth === d.berth);
+    const keys = sh ? Object.keys(sh.cargo) : [];
+    return keys.length ? HK.pick(keys) : 'salt';
+  },
+  goodKind: { grain: 'sack', salt: 'sack', wool: 'sack', spices: 'sack', beer: 'barrel', wine: 'barrel', fish: 'barrel', smokedfish: 'barrel', wax: 'barrel' },
+  /* Kranlauf: heben, an Land schwenken, absetzen, leeren Haken zurück. Beim Absetzen wächst der Stapel. */
+  updateDocks(dt) {
+    for (const d of this.docks()) {
+      const busy = this.craneBusy({ berth: d.berth }) && this.dockFree(d);
+      d.working = busy || d.u > 0.001;
+      if (!d.working) continue;
+      const prev = d.u;
+      d.u += dt / this.CRANE_CYCLE;
+      if (d.u >= 1) { d.u = busy ? d.u - 1 : 0; d.dropped = -1; }
+      if (prev < 0.58 && d.u >= 0.58 && d.dropped < 0) {
+        const slot = this.dockSlotFor(d), g = this.dockGood(d);
+        if (slot.items.length < this.STACK_MAX) slot.items.push({ good: g, kind: this.goodKind[g] || 'crate' });
+        d.dropped = 1;
+      }
+      if (d.u < 0.5) d.dropped = -1;
+    }
+  },
+  /* Kürzester Weg im Wegenetz, einmal berechnet und gemerkt */
+  route(a, b) {
+    const cache = this._routes || (this._routes = {}), key = a + '>' + b;
+    if (cache[key]) return cache[key];
+    const prev = { [a]: null }, q = [a];
+    while (q.length) {
+      const n = q.shift(); if (n === b) break;
+      for (const m of HK.ROAD_ADJ[n]) if (!(m in prev)) { prev[m] = n; q.push(m); }
+    }
+    if (!(b in prev)) return (cache[key] = [a]);
+    const out = []; for (let n = b; n !== null; n = prev[n]) out.unshift(n);
+    return (cache[key] = out);
+  },
+  PORTER_MAX: 3, PORTER_HOME: ['H6', 'O6'], PORTER_DOCK: ['PA', 'PB'],
+  /* Träger holen die gestapelte Ware vom Steg ins Lager am Kai */
+  spawnPorter(d) {
+    const home = this.PORTER_HOME[d.i], path = this.route(home, this.PORTER_DOCK[d.i]);
+    if (path.length < 2) return;
+    this.porters.push({
+      type: 'porter', dock: d, state: 'go', path, pi: 1, from: path[0], to: path[1], t: 0,
+      off: this.pickOff(path[0], path[1]), speed: HK.rnd(0.42, 0.55), phase: Math.random() * 6.28,
+      color: HK.pick(['#6a5236', '#7a6448', '#5c4a34', '#6e5a3e']), skin: HK.pick(['#e8c39e', '#d9a98a', '#c9946c']),
+      load: null, wait: 0, slot: null, a: null, b: null, ft: 0, hat: Math.random() < 0.4,
+    });
+  },
+  porterPos(w) {
+    if (w.a) {
+      const wx = w.a[0] + (w.b[0] - w.a[0]) * w.ft, wy = w.a[1] + (w.b[1] - w.a[1]) * w.ft;
+      return { wx, wy, wz: this.deckZ(wx, wy), dir: ((w.b[0] - w.a[0]) - (w.b[1] - w.a[1])) >= 0 ? 1 : -1 };
+    }
+    return this.walkerWorld(w);
+  },
+  updatePorters(dt) {
+    const docks = this.docks();
+    for (const d of docks) {
+      const want = Math.min(this.PORTER_MAX, Math.floor(this.dockItems(d) / 2));   // erst wenn sich etwas stapelt, kommt ein Träger
+      const have = this.porters.filter(w => w.dock === d).length;
+      if (have < want && Math.random() < dt * 0.5) this.spawnPorter(d);
+    }
+    for (let k = this.porters.length - 1; k >= 0; k--) {
+      const w = this.porters[k];
+      if (w.wait > 0) { w.wait -= dt; if (w.wait <= 0) this.porterNext(w); continue; }
+      if (w.a) { const len = Math.hypot(w.b[0] - w.a[0], w.b[1] - w.a[1]) || 0.1; w.ft += w.speed * dt / len; w.phase += dt * 9; if (w.ft >= 1) { w.ft = 1; this.porterNext(w); } continue; }
+      const q = this.walkerWorld(w); w.t += w.speed * dt / q.len; w.phase += dt * 9;
+      if (w.t >= 1) {
+        w.bx = q.wx; w.by = q.wy; w.t = 0; w.pi++;
+        if (w.pi >= w.path.length) { this.porterNext(w); continue; }
+        w.from = w.path[w.pi - 1]; w.to = w.path[w.pi]; w.off = this.pickOff(w.from, w.to);
+      }
+    }
+  },
+  /* Zustandswechsel: am Steg zum Stapel, aufnehmen, zurück zum Weg, ins Lager, dort ablegen */
+  porterNext(w) {
+    const d = w.dock, node = HK.ROAD_NODES[this.PORTER_DOCK[d.i]];
+    if (w.state === 'go') {
+      const slot = [...d.slots].reverse().find(s => s.items.length);
+      if (!slot) { this.porters.splice(this.porters.indexOf(w), 1); return; }
+      w.slot = slot; w.state = 'fetch'; w.a = [node[0], node[1]]; w.b = [slot.x + 0.35, slot.y + 0.1]; w.ft = 0;
+    } else if (w.state === 'fetch') {
+      w.state = 'lift'; w.wait = 0.7;
+    } else if (w.state === 'lift') {
+      const slot = w.slot;
+      if (slot && slot.items.length) w.load = slot.items.pop();
+      w.state = 'back'; w.a = [w.b[0], w.b[1]]; w.b = [node[0], node[1]]; w.ft = 0;
+    } else if (w.state === 'back') {
+      const path = this.route(this.PORTER_DOCK[d.i], this.PORTER_HOME[d.i]);
+      w.a = null; w.b = null; w.state = 'carry'; w.path = path; w.pi = 1; w.t = 0;
+      w.from = path[0]; w.to = path[1]; w.off = this.pickOff(w.from, w.to); w.bx = node[0]; w.by = node[1];
+    } else if (w.state === 'carry') {
+      w.load = null; w.state = 'drop'; w.wait = 0.8;
+    } else {
+      if (this.dockItems(d)) {
+        const path = this.route(this.PORTER_HOME[d.i], this.PORTER_DOCK[d.i]);
+        w.state = 'go'; w.path = path; w.pi = 1; w.t = 0; w.from = path[0]; w.to = path[1]; w.off = this.pickOff(w.from, w.to); w.bx = undefined;
+      } else this.porters.splice(this.porters.indexOf(w), 1);
+    }
+  },
+  /* Wo hängt die Last gerade? Gibt Winkel, Höhe und ob eine Kiste am Haken ist. */
+  craneState(d) {
+    const u = d.u, sl = this.dockSlotFor(d).th, sh = d.shipTh;
+    if (!d.working) return { th: sl, lift: 1, load: false };   // im Leerlauf hängt der Haken über dem Steg, nicht über dem Wasser
+    if (u < 0.2) return { th: sh, lift: u / 0.2, load: true };
+    if (u < 0.44) return { th: sh + (sl - sh) * (u - 0.2) / 0.24, lift: 1, load: true };
+    if (u < 0.58) return { th: sl, lift: 1 - (u - 0.44) / 0.14, load: true };
+    if (u < 0.7) return { th: sl, lift: 0, load: false };
+    if (u < 0.86) return { th: sl, lift: (u - 0.7) / 0.16, load: false };
+    return { th: sl + (sh - sl) * (u - 0.86) / 0.14, lift: 1, load: false };
   },
   walkerWorld(w) {
     const A = HK.ROAD_NODES[w.from], B = HK.ROAD_NODES[w.to];
@@ -266,6 +400,7 @@ HK.Scene = {
     for (const c of this.carts) { const len = Math.hypot(c.b[0] - c.a[0], c.b[1] - c.a[1]); c.t += c.dir * c.v * dt / len; if (c.t > 1) { c.t = 1; c.dir = -1; } if (c.t < 0) { c.t = 0; c.dir = 1; } }
     for (const ch of this.chickens) { ch.t += dt; if (ch.t > 2) { ch.t = 0; ch.a = Math.random() * 6.28; } ch.x = ch.cx + Math.cos(ch.a) * 0.3 * Math.sin(ch.t * 1.5); ch.y = ch.cy + Math.sin(ch.a) * 0.3 * Math.sin(ch.t * 1.5); }
     for (const g of this.gulls) g.a += g.s * dt;
+    this.updateDocks(dt); this.updatePorters(dt);
     // Wallfahrt: Pilger mischen sich nach und nach unter die Passanten
     if (st && st.pilgrimage && Math.random() < dt * 0.5 && this.walkers.filter(w => w.type === 'pilgrim').length < 14) { const i = this.walkers.findIndex(w => w.type === 'citizen'); if (i >= 0) { const old = this.walkers[i], nw = this.makeWalker(false); Object.assign(nw, { from: old.from, to: old.to, t: old.t, type: 'pilgrim', color: HK.pick(['#6a6058', '#5a4a3a', '#7a6a5a', '#4a4a4a']), hat: false, basket: false }); this.walkers[i] = nw; } }
     // Prozession der Bruderschaft: am Festtag zieht ein Zug von der Kirche über den Markt und zurück
@@ -291,7 +426,8 @@ HK.Scene = {
       for (const s of this.smoke) { s.y -= 9 * dt; s.x += s.vx * dt; }
     }
   },
-  snapShips() { this.shipAnim = {}; if (!HK.state) return; HK.state.ships.forEach((s, i) => { const b = HK.BERTHS[s.berth != null ? s.berth : i] || HK.BERTHS[i]; this.shipAnim[s.id] = { x: b.x, y: b.y, tx: b.x, ty: b.y, heading: HK.BERTH_HEADING, leaving: false, name: s.name, origin: s.origin }; }); },
+  snapShips() { this.shipAnim = {}; this.porters.length = 0; if (this._docks) for (const d of this._docks) { d.u = 0; d.working = false; for (const s of d.slots) s.items.length = 0; }
+    if (!HK.state) return; HK.state.ships.forEach((s, i) => { const b = HK.BERTHS[s.berth != null ? s.berth : i] || HK.BERTHS[i]; this.shipAnim[s.id] = { x: b.x, y: b.y, tx: b.x, ty: b.y, heading: HK.BERTH_HEADING, leaving: false, name: s.name, origin: s.origin }; }); },
   isWater(wx, wy) { return !I.inHull(HK.LAND, wx, wy); },
   inTown(wx, wy) { return I.inHull(HK.TOWN, wx, wy); },
 
@@ -333,7 +469,13 @@ HK.Scene = {
     items.push({ k: HK.WINDMILL.x + HK.WINDMILL.y + 1, box: [HK.WINDMILL.x - 0.45, HK.WINDMILL.y - 0.45, HK.WINDMILL.x + 0.45, HK.WINDMILL.y + 0.45], f: c => this.drawWindmill(c, t, sv) });
     items.push({ k: HK.FARM.x + HK.FARM.w + HK.FARM.y + HK.FARM.d, box: [HK.FARM.x, HK.FARM.y, HK.FARM.x + HK.FARM.w, HK.FARM.y + HK.FARM.d], f: c => this.drawFarm(c, season, sv) });
     for (const f of HK.HAMLET) items.push({ k: f.x + f.w + f.y + f.d, box: [f.x, f.y, f.x + f.w, f.y + f.d], f: c => this.drawFarm(c, season, sv, f) });
-    for (const p of HK.PIERS) for (let y = p.y0; y < p.y1; y += 0.6) { const seg = { x: p.x, y0: y, y1: Math.min(p.y1, y + 0.6), full: p, first: y === p.y0 }; items.push({ k: p.x + 0.25 + seg.y1, box: [p.x - 0.3, seg.y0, p.x + 0.3, seg.y1], f: c => this.drawPier(c, seg, t) }); }
+    for (const d of this.docks()) {
+      const h = (d.pier.w || 0.6) / 2;
+      items.push({ k: d.cx + d.cy + 1.7, box: [d.cx - 0.68, d.cy - 0.56, d.cx + 0.68, d.cy + 0.56], f: c => this.drawTreadCrane(c, d) });
+      for (const sl of d.slots) if (sl.items.length) items.push({ k: sl.x + sl.y + 0.2, box: [sl.x - 0.2, sl.y - 0.2, sl.x + 0.2, sl.y + 0.2], f: c => this.drawStack(c, sl, sv) });
+      items.push({ k: d.pier.x + h + d.pier.y1, box: [d.pier.x - h, d.pier.y1 - 0.3, d.pier.x + h, d.pier.y1], f: c => this.drawPierEnd(c, d.pier, t) });
+    }
+    for (const w of this.porters) { const p = this.porterPos(w); const sp = I.p(p.wx, p.wy, p.wz); items.push({ k: this.pointKey(p.wx, p.wy), box: [p.wx - 0.05, p.wy - 0.05, p.wx + 0.05, p.wy + 0.05], f: c => this.drawPerson(c, sp[0], sp[1], w.color, 'porter', this.walkerAlpha(w), false, w.skin, w.wait > 0 ? 0 : w.phase, p.dir, null, w) }); }
     st.ownShips.forEach((sh, i) => { if (sh.status === 'port' && HK.OWN_BERTHS[i]) { const b = HK.OWN_BERTHS[i]; items.push({ k: b.x + b.y + 0.5, box: [b.x - 0.9, b.y - 0.9, b.x + 0.9, b.y + 0.9], f: c => this.drawShip(c, b.x, b.y, HK.BERTH_HEADING + 0.3, HK.SHIP_TYPE[sh.type] ? HK.SHIP_TYPE[sh.type].scale : 0.95, 'own', true, false), pick: { kind: 'building', building: HK.BUILDING.harbour, panel: 'harbour', label: sh.name } }); } });
     st.rivals.forEach((r, i) => { if (!r.ships) return; const sp = HK.RIVAL_ANCHORAGE[i]; items.push({ k: sp.x + sp.y + 0.5, box: [sp.x - 0.9, sp.y - 0.9, sp.x + 0.9, sp.y + 0.9], f: c => this.drawShip(c, sp.x, sp.y, sp.h, 0.9, 'rival_' + r.id, true, false), pick: { kind: 'building', building: HK.BUILDING.harbour, panel: 'rivals', label: HK.rivalName(r.id) } }); });
     for (const id in this.shipAnim) { const a = this.shipAnim[id]; const sh = st.ships.find(x => String(x.id) === id); items.push({ k: a.x + a.y + 0.6, box: [a.x - 1.0, a.y - 1.0, a.x + 1.0, a.y + 1.0], f: c => this.drawShip(c, a.x, a.y, a.heading, HK.SHIP_SCALE, a.origin, !a.leaving && Math.abs(a.x - a.tx) + Math.abs(a.y - a.ty) < 0.05, HK.UI.selectedVisitor === Number(id) && !a.leaving), pick: sh && !a.leaving ? { kind: 'visitor', id: sh.id, panel: 'harbour', label: sh.name + ' (' + HK.name(HK.ORIGIN[sh.origin]) + ')' } : null }); }
@@ -463,6 +605,7 @@ HK.Scene = {
     this.drawWater(ctx, P, t);
     ctx.drawImage(this.ground, 0, 0, HK.MAP.W, HK.MAP.H);
     this.drawCoast(ctx, P, t);
+    for (const d of this.docks()) this.drawPier(ctx, d.pier, t);
     // Nachts läuft alles zusätzlich als schwarze Silhouette in die Emissionsebene, Fenster leuchten dort farbig; so verdecken vordere Gebäude die Lichter dahinter
     const dctx = this.nightK > 0 ? this.teeCtx() : ctx;
     for (const it of this.buildItems(dctx, st, season, t)) it.f(dctx);
