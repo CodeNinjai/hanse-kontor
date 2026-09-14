@@ -212,7 +212,7 @@ HK.Scene = {
     else this.procession = null;
     if (st) {
       st.ships.forEach((s, i) => {
-        const b = HK.BERTHS[i]; let a = this.shipAnim[s.id];
+        const b = HK.BERTHS[s.berth != null ? s.berth : i] || HK.BERTHS[i]; let a = this.shipAnim[s.id];
         if (!a) a = this.shipAnim[s.id] = { x: HK.ARRIVE_POINT.x, y: HK.ARRIVE_POINT.y, tx: b.x, ty: b.y, heading: 0, leaving: false, name: s.name, origin: s.origin };
         a.tx = b.x; a.ty = b.y;
         const dx = a.tx - a.x, dy = a.ty - a.y, dist = Math.hypot(dx, dy);
@@ -230,7 +230,7 @@ HK.Scene = {
       for (const s of this.smoke) { s.y -= 9 * dt; s.x += s.vx * dt; }
     }
   },
-  snapShips() { this.shipAnim = {}; if (!HK.state) return; HK.state.ships.forEach((s, i) => { const b = HK.BERTHS[i]; this.shipAnim[s.id] = { x: b.x, y: b.y, tx: b.x, ty: b.y, heading: HK.BERTH_HEADING, leaving: false, name: s.name, origin: s.origin }; }); },
+  snapShips() { this.shipAnim = {}; if (!HK.state) return; HK.state.ships.forEach((s, i) => { const b = HK.BERTHS[s.berth != null ? s.berth : i] || HK.BERTHS[i]; this.shipAnim[s.id] = { x: b.x, y: b.y, tx: b.x, ty: b.y, heading: HK.BERTH_HEADING, leaving: false, name: s.name, origin: s.origin }; }); },
   isWater(wx, wy) { return !I.inHull(HK.LAND, wx, wy); },
   inTown(wx, wy) { return I.inHull(HK.TOWN, wx, wy); },
 
@@ -268,7 +268,7 @@ HK.Scene = {
     for (const sk of this.marketSacks(HK.BUILDING.market)) items.push({ k: sk[0] + sk[1], box: [sk[0] - 0.1, sk[1] - 0.1, sk[0] + 0.1, sk[1] + 0.1], f: c => { const q = I.p(sk[0], sk[1], 0); c.fillStyle = '#b8a070'; c.beginPath(); c.ellipse(q[0], q[1] - 2, 4, 3, 0, 0, 6.28); c.fill(); } });
     items.push({ k: HK.MOLE.x + HK.MOLE.y1 + 1, box: [HK.MOLE.x, HK.MOLE.y0, HK.MOLE.x + HK.MOLE.w, HK.MOLE.y1], f: c => this.drawMole(c, sv) });
     items.push({ k: HK.ISLET.x + HK.ISLET.y, box: [HK.ISLET.x - 1.5, HK.ISLET.y - 1.5, HK.ISLET.x + 1.5, HK.ISLET.y + 1.5], f: c => this.drawIslet(c, season, sv) });
-    items.push({ k: HK.GUARD_SHIP.x + HK.GUARD_SHIP.y + 0.6, box: [HK.GUARD_SHIP.x - 0.9, HK.GUARD_SHIP.y - 0.9, HK.GUARD_SHIP.x + 0.9, HK.GUARD_SHIP.y + 0.9], f: c => this.drawShip(c, HK.GUARD_SHIP.x, HK.GUARD_SHIP.y, HK.GUARD_SHIP.heading, 1.15, 'guard', true, false) });
+    items.push({ k: HK.GUARD_SHIP.x + HK.GUARD_SHIP.y + 0.6, box: [HK.GUARD_SHIP.x - 0.9, HK.GUARD_SHIP.y - 0.9, HK.GUARD_SHIP.x + 0.9, HK.GUARD_SHIP.y + 0.9], f: c => this.drawShip(c, HK.GUARD_SHIP.x, HK.GUARD_SHIP.y, HK.GUARD_SHIP.heading, 1.15, 'guard', true, false), pick: { kind: 'building', building: HK.BUILDING.arsenal, panel: 'arsenal', label: HK.t('watchShip') } });
     items.push({ k: HK.WINDMILL.x + HK.WINDMILL.y + 1, box: [HK.WINDMILL.x - 0.45, HK.WINDMILL.y - 0.45, HK.WINDMILL.x + 0.45, HK.WINDMILL.y + 0.45], f: c => this.drawWindmill(c, t, sv) });
     items.push({ k: HK.FARM.x + HK.FARM.w + HK.FARM.y + HK.FARM.d, box: [HK.FARM.x, HK.FARM.y, HK.FARM.x + HK.FARM.w, HK.FARM.y + HK.FARM.d], f: c => this.drawFarm(c, season, sv) });
     for (const f of HK.HAMLET) items.push({ k: f.x + f.w + f.y + f.d, box: [f.x, f.y, f.x + f.w, f.y + f.d], f: c => this.drawFarm(c, season, sv, f) });
@@ -277,7 +277,7 @@ HK.Scene = {
     st.rivals.forEach((r, i) => { if (!r.ships) return; const sp = HK.RIVAL_ANCHORAGE[i]; items.push({ k: sp.x + sp.y + 0.5, box: [sp.x - 0.9, sp.y - 0.9, sp.x + 0.9, sp.y + 0.9], f: c => this.drawShip(c, sp.x, sp.y, sp.h, 0.9, 'rival_' + r.id, true, false), pick: { kind: 'building', building: HK.BUILDING.harbour, panel: 'rivals', label: HK.rivalName(r.id) } }); });
     for (const id in this.shipAnim) { const a = this.shipAnim[id]; const sh = st.ships.find(x => String(x.id) === id); items.push({ k: a.x + a.y + 0.6, box: [a.x - 1.0, a.y - 1.0, a.x + 1.0, a.y + 1.0], f: c => this.drawShip(c, a.x, a.y, a.heading, HK.SHIP_SCALE, a.origin, !a.leaving && Math.abs(a.x - a.tx) + Math.abs(a.y - a.ty) < 0.05, HK.UI.selectedVisitor === Number(id) && !a.leaving), pick: sh && !a.leaving ? { kind: 'visitor', id: sh.id, panel: 'harbour', label: sh.name + ' (' + HK.name(HK.ORIGIN[sh.origin]) + ')' } : null }); }
     const nBoats = Math.min(4, 2 + st.boats);
-    for (let i = 0; i < nBoats; i++) { const b = HK.BOAT_SPOTS[i]; items.push({ k: b.x + b.y, box: [b.x - 0.4, b.y - 0.4, b.x + 0.4, b.y + 0.4], f: c => this.drawBoat(c, b.x, b.y, i >= 2, t + i) }); }
+    for (let i = 0; i < nBoats; i++) { const b = HK.BOAT_SPOTS[i]; items.push({ k: b.x + b.y, box: [b.x - 0.4, b.y - 0.4, b.x + 0.4, b.y + 0.4], f: c => this.drawBoat(c, b.x, b.y, i >= 2, t + i), pick: { kind: 'building', building: HK.BUILDING.fishermen, panel: 'fishermen', label: HK.t('fishingBoat') } }); }
     st.caravans.forEach((cv, i) => { const sp = HK.CARAVAN_SPOTS[i]; items.push({ k: sp.x + sp.y + 0.6, box: [sp.x - 0.6, sp.y - 0.4, sp.x + 0.6, sp.y + 0.4], f: c => this.drawCaravan(c, sp.x, sp.y, t + i, sv), pick: { kind: 'visitor', id: cv.id, panel: 'gate', label: HK.t('caravanFrom', { origin: HK.name(HK.ORIGIN[cv.origin]) }) } }); });
     for (const c0 of this.carts) { const wx = c0.a[0] + (c0.b[0] - c0.a[0]) * c0.t, wy = c0.a[1] + (c0.b[1] - c0.a[1]) * c0.t; items.push({ k: this.pointKey(wx, wy), box: [wx - 0.3, wy - 0.3, wx + 0.3, wy + 0.3], f: c => this.drawCart(c, wx, wy, c0, t) }); }
     for (const ch of this.chickens) items.push({ k: this.pointKey(ch.x, ch.y), box: [ch.x - 0.05, ch.y - 0.05, ch.x + 0.05, ch.y + 0.05], f: c => { const s2 = I.p(ch.x, ch.y, 0); this.drawChicken(c, s2[0], s2[1], t); } });

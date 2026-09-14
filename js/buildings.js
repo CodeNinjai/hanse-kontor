@@ -490,14 +490,21 @@ Object.assign(HK.Scene, {
       case 'shrine': { I.box(ctx, p.x - 0.12, p.y - 0.12, 0, 0.24, 0.24, 0.9, { wall: '#8f887a', top: '#a9a292' }); I.box(ctx, p.x - 0.16, p.y - 0.16, 0.9, 0.32, 0.32, 0.25, { wall: '#7d766a' }, { noTop: true }); I.pyramid(ctx, p.x - 0.2, p.y - 0.2, 1.15, 0.4, 0.4, 0.22, '#3a3038'); const q = I.p(p.x + 0.16, p.y + 0.06, 1.02); ctx.fillStyle = '#c9a24a'; ctx.fillRect(q[0] - 1, q[1] - 2, 2, 3); if (!this.picking) { ctx.fillStyle = 'rgba(255,180,80,0.8)'; ctx.fillRect(q[0] - 0.6, q[1] + 2, 1.2, 1.2); } break; }
       case 'cross': { I.line(ctx, [p.x, p.y, 0], [p.x, p.y, 0.9], '#5a5048', 2.4); I.line(ctx, [p.x - 0.15, p.y, 0.7], [p.x + 0.15, p.y, 0.7], '#5a5048', 2.4); break; }
       case 'laundry': { const a = I.p(p.x, p.y, 0.6), b = I.p(p.x + 1.1, p.y, 0.6); I.line(ctx, [p.x, p.y, 0], [p.x, p.y, 0.65], '#4a3320', 1.2); I.line(ctx, [p.x + 1.1, p.y, 0], [p.x + 1.1, p.y, 0.65], '#4a3320', 1.2); ctx.strokeStyle = '#333'; ctx.lineWidth = 0.7; ctx.beginPath(); ctx.moveTo(a[0], a[1]); ctx.quadraticCurveTo((a[0] + b[0]) / 2, (a[1] + b[1]) / 2 + 3, b[0], b[1]); ctx.stroke(); ['#e8e0c8', '#7a3a3a', '#3a5a7a', '#e8e0c8'].forEach((c, i) => { const t = 0.18 + i * 0.2, lx = a[0] + (b[0] - a[0]) * t, ly = a[1] + (b[1] - a[1]) * t + 2, sw = Math.sin(this.time * 3 + i) * 1.5; ctx.fillStyle = c; ctx.beginPath(); ctx.moveTo(lx, ly); ctx.lineTo(lx + 5, ly + 2); ctx.lineTo(lx + 5 + sw, ly + 9); ctx.lineTo(lx + sw, ly + 7); ctx.fill(); }); break; }
-      case 'crane': this.drawTreadCrane(ctx, p.x, p.y, p.face || 'south'); break;
+      case 'crane': this.drawTreadCrane(ctx, p); break;
     }
   },
   /* Tretradkran am Kai: schmaler Bock aus schrägen Beinen, überdachtes Laufrad, Ausleger über das Wasser */
-  drawTreadCrane(ctx, x, y, face) {
+  /* Liegt am zugeordneten Liegeplatz ein festgemachtes Schiff? Nur dann hebt der Kran. */
+  craneBusy(p) {
+    const st = HK.state; if (!st || p.berth == null) return false;
+    const s = st.ships.find(v => v.berth === p.berth); if (!s) return false;
+    const a = this.shipAnim && this.shipAnim[s.id];
+    return !!a && !a.leaving && Math.abs(a.x - a.tx) + Math.abs(a.y - a.ty) < 0.05;
+  },
+  drawTreadCrane(ctx, p) {
+    const x = p.x, y = p.y, face = p.face || 'south';
     const t = this.time, pk = this.picking, west = face === 'west';
-    // Er arbeitet nur, wenn ein Schiff am Liegeplatz daneben liegt
-    const busy = Object.keys(this.shipAnim || {}).some(id => { const a = this.shipAnim[id]; return !a.leaving && (west ? (Math.abs(a.y - y) < 3.4 && a.x < x) : (Math.abs(a.x - x) < 3.4 && a.y > y)); });
+    const busy = this.craneBusy(p);
     const baseH = 0.12, apex = 1.95, wheelR = 0.5, half = 0.46;
     // Bohlengrund
     I.box(ctx, x - 0.5, y - 0.42, 0, 1.0, 0.84, baseH, { wall: '#6e5944', top: '#a3875f' });
@@ -528,22 +535,33 @@ Object.assign(HK.Scene, {
       I.poly(ctx, [[x + rw, y - rd, rz], [x, y - rd, rz + 0.3], [x, y + rd, rz + 0.3], [x + rw, y + rd, rz]], '#8a6446');
       I.poly(ctx, [[x - rw, y + rd, rz], [x, y + rd, rz + 0.3], [x + rw, y + rd, rz]], '#7a5a40', 'rgba(40,26,12,0.5)', 0.7);
       for (let u = 0.06; u < rw; u += 0.1) I.line(ctx, [x - u, y + rd, rz + 0.3 * (1 - u / rw)], [x - u, y - rd, rz + 0.3 * (1 - u / rw)], 'rgba(40,26,12,0.22)', 0.6); }
-    // Ausleger über das Wasser mit Strebe und Seilrolle
-    const bx = west ? x - 1.8 : x - 0.18, by = west ? y - 0.18 : y + 1.8, bz = apex - 0.62;
+    // Ausleger: im Leerlauf über dem Wasser, beim Umschlag schwenkt er zwischen Schiffsseite und Kai
+    const R = 1.75, bz = apex - 0.62;
+    let th = 0, lift = 1, load = false;
+    if (busy) {
+      const u = (t % 15) / 15;
+      if (u < 0.22) { lift = u / 0.22; load = true; }                        // aus dem Rumpf heben
+      else if (u < 0.44) { th = (u - 0.22) / 0.22; load = true; }            // an Land schwenken
+      else if (u < 0.58) { th = 1; lift = 1 - (u - 0.44) / 0.14; load = true; } // auf dem Kai absetzen
+      else if (u < 0.70) { th = 1; lift = 0; }                               // abhaken
+      else if (u < 0.88) { th = 1; lift = (u - 0.70) / 0.18; }               // leeren Haken hochziehen
+      else th = 1 - (u - 0.88) / 0.12;                                       // zurück über das Schiff
+    }
+    const sl = th * 1.35, bx = west ? x - R * Math.cos(sl) : x + R * Math.sin(sl), by = west ? y - R * Math.sin(sl) : y + R * Math.cos(sl);
     const ax = west ? x - 0.14 : x, ay = west ? y : y + 0.14;
     I.line(ctx, [ax, ay, apex - 0.12], [bx, by, bz], '#5d4f3f', 3.2);
     I.line(ctx, [ax - 0.01, ay, apex - 0.12], [bx - 0.01, by, bz], 'rgba(228,204,164,0.26)', 1.1);
-    I.line(ctx, [west ? x - 0.16 : x, west ? y : y + 0.16, apex - 1.0], [(ax + bx) / 2, (ay + by) / 2, bz + 0.3], '#6b5b48', 1.5);
+    I.line(ctx, [ax, ay, apex - 1.0], [(ax + bx) / 2, (ay + by) / 2, bz + 0.3], '#6b5b48', 1.5);
     if (!pk) { const tp = I.p(bx, by, bz); ctx.strokeStyle = '#4a3d2c'; ctx.lineWidth = 1.2; ctx.beginPath(); ctx.arc(tp[0], tp[1], 2.6, 0, 6.28); ctx.stroke(); }
-    // Last am Seil, nur bei Arbeit; sonst hängt der Haken frei
-    const sw = Math.sin(t * 0.6) * 0.07, lz = 0.7 + Math.sin(t * 0.33) * 0.5, ly = by + (west ? 0 : sw), lx = bx + (west ? sw : 0);
-    I.line(ctx, [bx, by, bz], [bx, by, busy ? lz + 0.2 : bz - 0.52], 'rgba(58,42,22,0.9)', 1.1);
-    if (!pk && !busy) { const hp = I.p(bx, by, bz - 0.58); ctx.strokeStyle = '#4a3d2c'; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.arc(hp[0], hp[1], 2.4, 0.6, 5.4); ctx.stroke(); }
-    if (busy) { const w = 0.25, q = [[lx - w, ly - w], [lx + w, ly - w], [lx + w, ly + w], [lx - w, ly + w]];
-      I.poly(ctx, q.map(v => [v[0], v[1], lz + 0.2]), '#b09a70', 'rgba(40,26,12,0.6)', 0.7);
-      I.poly(ctx, [[q[3][0], q[3][1], lz + 0.2], [q[2][0], q[2][1], lz + 0.2], [q[2][0], q[2][1], lz - 0.14], [q[3][0], q[3][1], lz - 0.14]], '#8b714d');
-      I.poly(ctx, [[q[1][0], q[1][1], lz + 0.2], [q[2][0], q[2][1], lz + 0.2], [q[2][0], q[2][1], lz - 0.14], [q[1][0], q[1][1], lz - 0.14]], '#6b583c');
-      I.line(ctx, [q[3][0], q[3][1], lz + 0.2], [q[2][0], q[2][1], lz - 0.14], 'rgba(216,190,146,0.5)', 1); }
+    // Last am Seil, nur beim Umschlag; sonst hängt der Haken frei
+    const lz = busy ? 0.14 + lift * (bz - 0.56) : bz - 0.52;
+    I.line(ctx, [bx, by, bz], [bx, by, busy ? lz + 0.22 : lz], 'rgba(58,42,22,0.9)', 1.1);
+    if (!pk && !load) { const hp = I.p(bx, by, busy ? lz + 0.16 : bz - 0.58); ctx.strokeStyle = '#4a3d2c'; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.arc(hp[0], hp[1], 2.4, 0.6, 5.4); ctx.stroke(); }
+    if (load) { const w = 0.2, q = [[bx - w, by - w], [bx + w, by - w], [bx + w, by + w], [bx - w, by + w]];
+      I.poly(ctx, q.map(v => [v[0], v[1], lz + 0.22]), '#b09a70', 'rgba(40,26,12,0.6)', 0.7);
+      I.poly(ctx, [[q[3][0], q[3][1], lz + 0.22], [q[2][0], q[2][1], lz + 0.22], [q[2][0], q[2][1], lz - 0.12], [q[3][0], q[3][1], lz - 0.12]], '#8b714d');
+      I.poly(ctx, [[q[1][0], q[1][1], lz + 0.22], [q[2][0], q[2][1], lz + 0.22], [q[2][0], q[2][1], lz - 0.12], [q[1][0], q[1][1], lz - 0.12]], '#6b583c');
+      I.line(ctx, [q[3][0], q[3][1], lz + 0.22], [q[2][0], q[2][1], lz - 0.12], 'rgba(216,190,146,0.5)', 1); }
     // Kranmeister, solange gearbeitet wird
     if (!pk && busy) { const mp = I.p(west ? x + 0.05 : x - 0.6, west ? y + 0.6 : y - 0.05, 0); this.drawPerson(ctx, mp[0], mp[1], '#5a4a32', 'static', 1, false, '#e8c39e', t * 2, 1, null, null, 0.85); }
   },

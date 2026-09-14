@@ -149,9 +149,17 @@ HK.makeVisitor = function (st, originId) {
   const avail = HK.SHIP_NAMES.filter(n => !st.ships.some(s => s.name === n));
   return { id: st.nextId++, origin: originId, name: o.sea ? HK.pick(avail.length ? avail : HK.SHIP_NAMES) : HK.name(o), captain: HK.pick(HK.CAPTAIN_NAMES), cargo, wants, daysLeft: HK.rndi(3, 6), sea: o.sea };
 };
+/* Fester Liegeplatz: das Schiff behaelt ihn, bis es ausläuft */
+HK.freeBerth = function (st) {
+  for (let i = 0; i < Math.min(st.town.berths, HK.BERTHS.length); i++) if (!st.ships.some(s => s.berth === i)) return i;
+  return -1;
+};
 HK.dockShip = function (st, originId) {
   if (st.ships.length >= st.town.berths) return false;
+  const berth = HK.freeBerth(st);
+  if (berth < 0) return false;
   const v = HK.makeVisitor(st, originId);
+  v.berth = berth;
   st.ships.push(v);
   HK.log(st, 'shipArrived', { ship: v.name, origin: HK.name(HK.ORIGIN[originId]) }, 'arrival');
   return true;
@@ -887,6 +895,7 @@ HK.migrate = function (st) {
   while (st.storages.length < HK.STORAGES.length) st.storages.push({ owner: 'npc', mode: 'own' });
   if (st.blessedUntil === undefined) st.blessedUntil = 0; if (st.weighFarm === undefined) st.weighFarm = null;
   for (const k of ['apprenticesUntil', 'watchUntil', 'scriptUntil', 'harbourBookUntil', 'fishSold']) if (st[k] === undefined) st[k] = 0;
+  st.ships.forEach((s, i) => { if (s.berth === undefined) s.berth = i; });
   for (const f of HK.migrateHooks) f(st);
   return st;
 };
