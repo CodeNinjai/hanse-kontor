@@ -130,22 +130,47 @@ HK.Scene = {
     const from = HK.pick(keys), to = HK.pick(HK.ROAD_ADJ[from]);
     return { type: t.id, color: HK.pick(t.colors), from, to, t: anywhere ? Math.random() : 0, speed: HK.rnd(0.25, 0.5) * (t.id === 'child' ? 1.5 : t.id === 'beggar' ? 0.6 : 1), off: HK.rnd(-0.22, 0.22), pause: 0, nightOwl: Math.random() < 0.2 || t.id === 'guard', skin: HK.pick(['#e8c39e', '#d9a98a', '#c9946c']), hat: Math.random() < 0.5, basket: Math.random() < 0.3, phase: Math.random() * 6.28 };
   },
-  /* Hindernisse, um die Passanten herumgehen: Requisiten und Karren stehen fest auf der Karte */
-  obstacles() {
-    if (this._obst) return this._obst;
-    const o = [];
-    for (const p of HK.PROPS) { const sz = this.PROP_SIZE[p.t] || [0.5, 0.5]; o.push([p.x - sz[0] / 2 - 0.16, p.y - sz[1] / 2 - 0.16, p.x + sz[0] / 2 + 0.16, p.y + sz[1] / 2 + 0.16]); }
-    for (const b of HK.BUILDINGS) if (b.kind !== 'water' && b.kind !== 'market') o.push([b.x - 0.1, b.y - 0.1, b.x + b.w + 0.1, b.y + b.d + 0.1]);
-    return (this._obst = o);
-  },
-  /* Punkt aus jedem Hindernis heraus auf die kürzeste Seite schieben, zwei Durchgänge gegen Überschneidungen */
-  avoid(x, y) {
-    for (let pass = 0; pass < 2; pass++) for (const b of this.obstacles()) {
-      if (x <= b[0] || x >= b[2] || y <= b[1] || y >= b[3]) continue;
-      const dl = x - b[0], dr = b[2] - x, du = y - b[1], dd = b[3] - y, m = Math.min(dl, dr, du, dd);
-      if (m === dl) x = b[0]; else if (m === dr) x = b[2]; else if (m === du) y = b[1]; else y = b[3];
+  /* Hindernisraster: Requisiten und Gebäude werden einmal in ein Gitter gestempelt, und zu jeder
+     besetzten Zelle wird die nächste freie Zelle gemerkt. Damit landet nie ein Passant in einer Kiste. */
+  GRID: { x0: -10, y0: -18, cell: 0.2, w: 290, h: 230 },
+  buildGrid() {
+    const G = this.GRID, n = G.w * G.h, blocked = new Uint8Array(n);
+    const stamp = (b) => {
+      const i0 = Math.max(0, Math.floor((b[0] - G.x0) / G.cell)), i1 = Math.min(G.w - 1, Math.ceil((b[2] - G.x0) / G.cell));
+      const j0 = Math.max(0, Math.floor((b[1] - G.y0) / G.cell)), j1 = Math.min(G.h - 1, Math.ceil((b[3] - G.y0) / G.cell));
+      for (let j = j0; j <= j1; j++) for (let i = i0; i <= i1; i++) blocked[j * G.w + i] = 1;
+    };
+    for (const p of HK.PROPS) { if (p.t === 'stalls') continue; const b = this.propBox(p); stamp([b[0] - 0.08, b[1] - 0.08, b[2] + 0.08, b[3] + 0.08]); }
+    for (const b of HK.BUILDINGS) if (b.kind !== 'water' && b.kind !== 'market') stamp([b.x - 0.06, b.y - 0.06, b.x + b.w + 0.06, b.y + b.d + 0.06]);
+    // Wasser sperren, Stegplanken bleiben begehbar
+    for (let j = 0; j < G.h; j++) for (let i = 0; i < G.w; i++) { const k = j * G.w + i; if (blocked[k]) continue;
+      const wx = G.x0 + (i + 0.5) * G.cell, wy = G.y0 + (j + 0.5) * G.cell;
+      if (this.isWater(wx, wy) && !this.deckZ(wx, wy)) blocked[k] = 1; }
+    // Zu jeder besetzten Zelle die nächste freie suchen, im Ring nach außen
+    const dx = new Int8Array(n), dy = new Int8Array(n);
+    for (let j = 0; j < G.h; j++) for (let i = 0; i < G.w; i++) {
+      const k = j * G.w + i; if (!blocked[k]) continue;
+      let best = null, bestD = 1e9;
+      for (let r = 1; r <= 12 && !best; r++) {
+        for (let q = -r; q <= r; q++) for (const [ii, jj] of [[i + q, j - r], [i + q, j + r], [i - r, j + q], [i + r, j + q]]) {
+          if (ii < 0 || jj < 0 || ii >= G.w || jj >= G.h || blocked[jj * G.w + ii]) continue;
+          const d = (ii - i) * (ii - i) + (jj - j) * (jj - j);
+          if (d < bestD) { bestD = d; best = [ii - i, jj - j]; }
+        }
+        if (bestD < 1e9) break;
+      }
+      if (best) { dx[k] = Math.max(-127, Math.min(127, best[0])); dy[k] = Math.max(-127, Math.min(127, best[1])); }
     }
-    return [x, y];
+    return (this._grid = { blocked, dx, dy });
+  },
+  /* Punkt auf die nächste freie Stelle setzen, falls er in einem Hindernis liegt */
+  avoid(x, y) {
+    const G = this.GRID, g = this._grid || this.buildGrid();
+    const i = Math.floor((x - G.x0) / G.cell), j = Math.floor((y - G.y0) / G.cell);
+    if (i < 0 || j < 0 || i >= G.w || j >= G.h) return [x, y];
+    const k = j * G.w + i;
+    if (!g.blocked[k]) return [x, y];
+    return [G.x0 + (i + g.dx[k] + 0.5) * G.cell, G.y0 + (j + g.dy[k] + 0.5) * G.cell];
   },
   /* Höhe der Stegplanken: wer darauf geht, läuft nicht unter dem Steg */
   deckZ(x, y) {
@@ -155,12 +180,7 @@ HK.Scene = {
   walkerWorld(w) {
     const A = HK.ROAD_NODES[w.from], B = HK.ROAD_NODES[w.to];
     const dx = B[0] - A[0], dy = B[1] - A[1], len = Math.hypot(dx, dy) || 1;
-    const cx = A[0] + dx * w.t, cy = A[1] + dy * w.t;
-    let ox = cx - dy / len * w.off, oy = cy + dx / len * w.off;
-    // Wer mit dem seitlichen Versatz neben den Weg ins Wasser geriete, geht auf der Wegmitte; Stege zählen als Boden
-    if (!this.deckZ(ox, oy) && this.isWater(ox, oy)) { ox = cx; oy = cy; }
-    let p = this.avoid(ox, oy);
-    if (!this.deckZ(p[0], p[1]) && this.isWater(p[0], p[1])) p = [cx, cy];
+    const p = this.avoid(A[0] + dx * w.t - dy / len * w.off, A[1] + dy * w.t + dx / len * w.off);
     return { wx: p[0], wy: p[1], wz: this.deckZ(p[0], p[1]), len, dir: (dx - dy) >= 0 ? 1 : -1 };
   },
   walkerPos(w) { const q = this.walkerWorld(w); const s = I.p(q.wx, q.wy, q.wz); return { x: s[0], y: s[1], wx: q.wx, wy: q.wy, wz: q.wz, len: q.len, dir: q.dir }; },
@@ -243,7 +263,7 @@ HK.Scene = {
     const m = HK.BUILDING.market; items.push({ k: 0, f: c => { if (this.picking) I.poly(c, [[m.x, m.y, 0], [m.x + m.w, m.y, 0], [m.x + m.w, m.y + m.d, 0], [m.x, m.y + m.d, 0]], '#000'); }, pick: { kind: 'building', building: m, panel: 'market', label: HK.name(m) } });
     for (const seg of this.wallSegments()) items.push({ k: seg.k, box: seg.box, f: c => seg.f(c, sv) });
     for (const tr of HK.TREES) items.push({ k: tr[0] + tr[1] + tr[2], box: [tr[0] - 0.12, tr[1] - 0.12, tr[0] + 0.12, tr[1] + 0.12], f: c => this.drawTree(c, tr[0], tr[1], tr[2], season, sv) });
-    for (const p of HK.PROPS) { if (p.t === 'stalls') continue; const ps = this.PROP_SIZE[p.t] || [0.5, 0.5]; items.push({ k: p.x + p.y + 0.3, box: [p.x - 0.15, p.y - 0.15, p.x + ps[0], p.y + ps[1]], f: c => this.drawProp(c, p, st, sv) }); }
+    for (const p of HK.PROPS) { if (p.t === 'stalls') continue; const b = this.propBox(p); items.push({ k: (b[0] + b[2]) / 2 + b[3] + 0.1, box: b, f: c => this.drawProp(c, p, st, sv) }); }
     this.marketStalls(HK.BUILDING.market).forEach((sd, i) => items.push({ k: sd.x + 0.55 + sd.y + 0.35, box: [sd.x, sd.y, sd.x + 1.0, sd.y + 0.7], f: c => this.drawStall(c, sd, i, st) }));
     for (const sk of this.marketSacks(HK.BUILDING.market)) items.push({ k: sk[0] + sk[1], box: [sk[0] - 0.1, sk[1] - 0.1, sk[0] + 0.1, sk[1] + 0.1], f: c => { const q = I.p(sk[0], sk[1], 0); c.fillStyle = '#b8a070'; c.beginPath(); c.ellipse(q[0], q[1] - 2, 4, 3, 0, 0, 6.28); c.fill(); } });
     items.push({ k: HK.MOLE.x + HK.MOLE.y1 + 1, box: [HK.MOLE.x, HK.MOLE.y0, HK.MOLE.x + HK.MOLE.w, HK.MOLE.y1], f: c => this.drawMole(c, sv) });
@@ -284,7 +304,10 @@ HK.Scene = {
     for (const w of this.walkers) { const a = this.walkerAlpha(w); if (a <= 0.02) continue; const p = this.walkerPos(w); items.push({ k: this.pointKey(p.wx, p.wy), box: [p.wx - 0.05, p.wy - 0.05, p.wx + 0.05, p.wy + 0.05], f: c => this.drawPerson(c, p.x, p.y, w.color, w.type, a, this.hover && this.hover.walker === w, w.skin, w.pause > 0 ? 0 : w.phase, p.dir, null, w), pick: a >= 0.4 ? { kind: 'walker', walker: w, label: HK.t('enc_' + w.type + '_label') } : null }); }
     return this.depthSort(items);
   },
-  PROP_SIZE: { crane: [1.3, 1.05], ropes: [1.6, 0.3], sails: [0.8, 0.8], frames: [0.9, 0.5], dyecloths: [1.0, 0.4], fishracks: [0.9, 0.5], logs: [1.0, 0.6], nets: [0.5, 0.5], laundry: [1.0, 0.3], boatup: [1.0, 0.5], gallows: [0.5, 0.5], tollbar: [0.9, 0.3], well: [0.3, 0.3], statue: [0.3, 0.3] },
+  /* Gemessene Grundrisse der Requisiten als Abstand von ihrem Bezugspunkt: [x0, y0, x1, y1].
+     Die meisten werden von der Ecke aus gezeichnet, nicht mittig, darum reicht keine bloße Größe. */
+  PROP_BOX: { crates: [-0.17, -0.25, 0.6, 0.52], barrels: [-0.19, -0.23, 0.38, 0.35], crane: [-0.68, -0.56, 0.68, 0.56], well: [-0.32, -0.3, 0.3, 0.32], statue: [-0.26, -0.26, 0.26, 0.28], pillory: [-0.31, -0.27, 0.23, 0.27], nets: [-0.33, -0.02, 0.29, 0.6], laundry: [-0.04, -0.12, 1.18, 0.14], kiln: [-0.23, -0.4, 0.71, 0.54], frames: [-0.12, -0.06, 0.14, 1.0], dyecloths: [-0.14, -0.02, 0.16, 1.1], gallows: [-0.35, -0.33, 0.33, 0.35], tollbar: [-0.2, -0.14, 0.79, 0.2], logs: [-0.31, -0.5, 1.08, 0.88], shrine: [-0.24, -0.22, 0.22, 0.24], boatup: [-0.17, -0.16, 1.05, 0.36], fishracks: [-0.04, -0.12, 0.98, 0.14], cross: [-0.16, -0.14, 0.12, 0.14], ropes: [-0.04, -0.16, 1.9, 0.22], sails: [-0.04, -0.12, 0.98, 0.14] },
+  propBox(p) { const b = this.PROP_BOX[p.t] || [-0.25, -0.25, 0.25, 0.25]; return [p.x + b[0], p.y + b[1], p.x + b[2], p.y + b[3]]; },
   /* Tiefensortierung als Malerreihenfolge: Grundrisse, die sich entlang einer Achse nicht überlappen, legen die Reihenfolge fest
      (der Betrachter steht bei +x,+y); nur bei überlappenden Grundrissen entscheidet der Schlüssel k. */
   depthSort(items) {

@@ -493,54 +493,59 @@ Object.assign(HK.Scene, {
       case 'crane': this.drawTreadCrane(ctx, p.x, p.y, p.face || 'south'); break;
     }
   },
-  /* Tretradkran am Kai: Bockgerüst, begehbares Laufrad, schwenkbarer Ausleger mit Last */
+  /* Tretradkran am Kai: schmaler Bock aus schrägen Beinen, überdachtes Laufrad, Ausleger über das Wasser */
   drawTreadCrane(ctx, x, y, face) {
     const t = this.time, pk = this.picking, west = face === 'west';
-    // Der Kran arbeitet nur, wenn ein Schiff am benachbarten Liegeplatz liegt
+    // Er arbeitet nur, wenn ein Schiff am Liegeplatz daneben liegt
     const busy = Object.keys(this.shipAnim || {}).some(id => { const a = this.shipAnim[id]; return !a.leaving && (west ? (Math.abs(a.y - y) < 3.4 && a.x < x) : (Math.abs(a.x - x) < 3.4 && a.y > y)); });
-    const baseH = 0.18, topZ = 2.05, wheelR = 0.62, wy = y - 0.02;
-    // Grundriss aus Bohlen und zwei Schwellen
-    I.box(ctx, x - 0.62, y - 0.5, 0, 1.24, 1.0, baseH, { wall: '#6e5944', top: '#9f8361' });
-    for (let u = -0.56; u < 0.6; u += 0.16) I.line(ctx, [x + u, y - 0.48, baseH + 0.005], [x + u, y + 0.48, baseH + 0.005], 'rgba(50,34,18,0.3)', 0.7);
-    // Bockgerüst: vier Ständer, Kopfriegel, Streben
-    const post = (px, py) => { I.line(ctx, [px, py, baseH], [px, py, topZ], '#5d4f3f', 4.2); I.line(ctx, [px - 0.012, py, baseH], [px - 0.012, py, topZ], 'rgba(226,200,158,0.35)', 1.4); };
-    for (const px of [x - 0.5, x + 0.5]) for (const py of [y - 0.4, y + 0.4]) post(px, py);
-    for (const py of [y - 0.4, y + 0.4]) {
-      I.line(ctx, [x - 0.5, py, topZ], [x + 0.5, py, topZ], '#5d4f3f', 3.4);
-      I.line(ctx, [x - 0.5, py, topZ - 0.75], [x + 0.5, py, topZ - 0.75], '#6b5b48', 2.2);
-      I.line(ctx, [x - 0.5, py, baseH + 0.15], [x + 0.5, py, topZ - 0.75], '#6b5b48', 1.6);
+    const baseH = 0.12, apex = 1.95, wheelR = 0.5, half = 0.46;
+    // Bohlengrund
+    I.box(ctx, x - 0.5, y - 0.42, 0, 1.0, 0.84, baseH, { wall: '#6e5944', top: '#a3875f' });
+    for (let u = -0.44; u < 0.5; u += 0.15) I.line(ctx, [x + u, y - 0.4, baseH + 0.005], [x + u, y + 0.4, baseH + 0.005], 'rgba(50,34,18,0.28)', 0.6);
+    // Zwei Böcke aus schrägen Beinen, nach oben zusammenlaufend
+    const legs = [];
+    for (const sd of [-1, 1]) {
+      const py = y + sd * 0.3;
+      for (const ex of [-half, half]) { I.line(ctx, [x + ex, py, baseH], [x + ex * 0.16, py, apex], '#5d4f3f', 3); I.line(ctx, [x + ex - 0.01, py, baseH], [x + ex * 0.16 - 0.01, py, apex], 'rgba(228,204,164,0.28)', 1); }
+      I.line(ctx, [x - half * 0.55, py, apex * 0.52], [x + half * 0.55, py, apex * 0.52], '#6b5b48', 1.8);
+      legs.push(py);
     }
-    for (const px of [x - 0.5, x + 0.5]) I.line(ctx, [px, y - 0.4, topZ], [px, y + 0.4, topZ], '#5d4f3f', 3);
-    // Laufrad in der x-z-Ebene, mit Speichen und Trittsprossen
-    const rim = (r, dz) => { const pts = []; for (let k = 0; k < 28; k++) { const a = k / 28 * 6.2832; pts.push(I.p(x + Math.cos(a) * r, wy + dz, topZ - 0.78 + Math.sin(a) * r)); } return pts; };
-    const ring = (r, col, lw, dz) => { const q = rim(r, dz || 0); ctx.strokeStyle = col; ctx.lineWidth = lw; ctx.beginPath(); q.forEach((v, i) => i ? ctx.lineTo(v[0], v[1]) : ctx.moveTo(v[0], v[1])); ctx.closePath(); ctx.stroke(); };
-    const spin = busy ? t * 0.35 : 0;
-    for (const dz of [-0.17, 0.17]) {
-      ring(wheelR, '#6e5944', 3.2, dz); ring(wheelR * 0.82, '#7d6950', 1.6, dz);
-      for (let k = 0; k < 10; k++) { const a = spin + k / 10 * 6.2832; I.line(ctx, [x, wy + dz, topZ - 0.78], [x + Math.cos(a) * wheelR * 0.95, wy + dz, topZ - 0.78 + Math.sin(a) * wheelR * 0.95], '#7d6950', 1.4); }
+    // Querhölzer zwischen den Böcken
+    for (const ex of [-half * 0.16, half * 0.16]) I.line(ctx, [x + ex, legs[0], apex], [x + ex, legs[1], apex], '#5d4f3f', 2.4);
+    I.line(ctx, [x, legs[0], apex * 0.52], [x, legs[1], apex * 0.52], '#6b5b48', 1.6);
+    // Laufrad in der x-z-Ebene: schmale Felge, Speichen, Trittsprossen
+    const wz = apex * 0.54, spin = busy ? t * 0.32 : 0;
+    const ring = (r, col, lw, dy) => { ctx.strokeStyle = col; ctx.lineWidth = lw; ctx.beginPath(); for (let k = 0; k <= 26; k++) { const a = k / 26 * 6.2832, q = I.p(x + Math.cos(a) * r, y + dy, wz + Math.sin(a) * r); k ? ctx.lineTo(q[0], q[1]) : ctx.moveTo(q[0], q[1]); } ctx.stroke(); };
+    for (const dy of [-0.13, 0.13]) {
+      ring(wheelR, '#6e5944', 2.4, dy);
+      for (let k = 0; k < 8; k++) { const a = spin + k / 8 * 6.2832; I.line(ctx, [x, y + dy, wz], [x + Math.cos(a) * wheelR * 0.94, y + dy, wz + Math.sin(a) * wheelR * 0.94], '#84704f', 1.1); }
     }
-    for (let k = 0; k < 14; k++) { const a = spin + k / 14 * 6.2832, cx = x + Math.cos(a) * wheelR * 0.9, cz = topZ - 0.78 + Math.sin(a) * wheelR * 0.9; I.line(ctx, [cx, wy - 0.17, cz], [cx, wy + 0.17, cz], k % 2 ? '#8d7a5c' : '#6e5944', 1.6); }
-    I.line(ctx, [x, wy - 0.24, topZ - 0.78], [x, wy + 0.24, topZ - 0.78], '#4a3d2c', 3.4);
-    // Ausleger über das Wasser, mit Strebe und Seilrolle
-    const bx = west ? x - 1.75 : x - 0.22, by = west ? y - 0.22 : y + 1.75, bz = topZ - 0.5;
-    const ax = west ? x - 0.3 : x, ay = west ? y : y + 0.3;
-    I.line(ctx, [ax, ay, topZ - 0.02], [bx, by, bz], '#5d4f3f', 4.4);
-    I.line(ctx, [ax - 0.012, ay, topZ - 0.02], [bx - 0.012, by, bz], 'rgba(226,200,158,0.3)', 1.5);
-    I.line(ctx, [ax, ay + 0.1, topZ - 1.0], [(ax + bx) / 2, (ay + by) / 2 + 0.1, bz + 0.22], '#6b5b48', 2);
-    const tip = I.p(bx, by, bz);
-    if (!pk) { ctx.strokeStyle = '#4a3d2c'; ctx.lineWidth = 1.4; ctx.beginPath(); ctx.arc(tip[0], tip[1], 3.2, 0, 6.28); ctx.stroke(); }
-    // Last am Seil, langsam pendelnd
-    // Bei Arbeit hängt die Last am Ausleger, sonst steht sie abgesetzt neben dem Gerüst
-    const sw = Math.sin(t * 0.6) * 0.07, lz = 0.7 + Math.sin(t * 0.33) * 0.5, ly = by + sw, lx = bx + (west ? sw : 0);
-    I.line(ctx, [bx, by, bz], [bx, by, busy ? lz + 0.22 : bz - 0.5], 'rgba(60,44,24,0.9)', 1.2);
-    if (!pk && !busy) { const hp = I.p(bx, by, bz - 0.56); ctx.strokeStyle = '#4a3d2c'; ctx.lineWidth = 1.6; ctx.beginPath(); ctx.arc(hp[0], hp[1], 2.6, 0.6, 5.4); ctx.stroke(); }
-    if (busy) { const w = 0.27, q = [[lx - w, ly - w], [lx + w, ly - w], [lx + w, ly + w], [lx - w, ly + w]];
-      I.poly(ctx, q.map(v => [v[0], v[1], lz + 0.22]), '#b09a70', 'rgba(40,26,12,0.6)', 0.7);
-      I.poly(ctx, [[q[3][0], q[3][1], lz + 0.22], [q[2][0], q[2][1], lz + 0.22], [q[2][0], q[2][1], lz - 0.16], [q[3][0], q[3][1], lz - 0.16]], '#8b714d');
-      I.poly(ctx, [[q[1][0], q[1][1], lz + 0.22], [q[2][0], q[2][1], lz + 0.22], [q[2][0], q[2][1], lz - 0.16], [q[1][0], q[1][1], lz - 0.16]], '#6b583c');
-      I.line(ctx, [q[3][0], q[3][1], lz + 0.22], [q[2][0], q[2][1], lz - 0.16], 'rgba(216,190,146,0.5)', 1); }
-    // Kranmeister neben dem Rad
-    if (!pk && busy) { const mp = I.p(west ? x + 0.05 : x - 0.72, west ? y + 0.72 : y - 0.12, 0); this.drawPerson(ctx, mp[0], mp[1], '#5a4a32', 'static', 1, false, '#e8c39e', t * 2, 1, null, null, 0.85); }
+    for (let k = 0; k < 12; k++) { const a = spin + k / 12 * 6.2832, cx = x + Math.cos(a) * wheelR * 0.9, cz = wz + Math.sin(a) * wheelR * 0.9; I.line(ctx, [cx, y - 0.13, cz], [cx, y + 0.13, cz], k % 2 ? '#9a8763' : '#6e5944', 1.3); }
+    I.line(ctx, [x, y - 0.18, wz], [x, y + 0.18, wz], '#4a3d2c', 2.6);
+    // Schindeldach über dem Rad, damit der Bock nicht als Kasten steht
+    { const rz = apex + 0.04, rw = 0.42, rd = 0.46;
+      I.poly(ctx, [[x - rw, y - rd, rz], [x, y - rd, rz + 0.3], [x, y + rd, rz + 0.3], [x - rw, y + rd, rz]], '#6a4a34');
+      I.poly(ctx, [[x + rw, y - rd, rz], [x, y - rd, rz + 0.3], [x, y + rd, rz + 0.3], [x + rw, y + rd, rz]], '#8a6446');
+      I.poly(ctx, [[x - rw, y + rd, rz], [x, y + rd, rz + 0.3], [x + rw, y + rd, rz]], '#7a5a40', 'rgba(40,26,12,0.5)', 0.7);
+      for (let u = 0.06; u < rw; u += 0.1) I.line(ctx, [x - u, y + rd, rz + 0.3 * (1 - u / rw)], [x - u, y - rd, rz + 0.3 * (1 - u / rw)], 'rgba(40,26,12,0.22)', 0.6); }
+    // Ausleger über das Wasser mit Strebe und Seilrolle
+    const bx = west ? x - 1.8 : x - 0.18, by = west ? y - 0.18 : y + 1.8, bz = apex - 0.62;
+    const ax = west ? x - 0.14 : x, ay = west ? y : y + 0.14;
+    I.line(ctx, [ax, ay, apex - 0.12], [bx, by, bz], '#5d4f3f', 3.2);
+    I.line(ctx, [ax - 0.01, ay, apex - 0.12], [bx - 0.01, by, bz], 'rgba(228,204,164,0.26)', 1.1);
+    I.line(ctx, [west ? x - 0.16 : x, west ? y : y + 0.16, apex - 1.0], [(ax + bx) / 2, (ay + by) / 2, bz + 0.3], '#6b5b48', 1.5);
+    if (!pk) { const tp = I.p(bx, by, bz); ctx.strokeStyle = '#4a3d2c'; ctx.lineWidth = 1.2; ctx.beginPath(); ctx.arc(tp[0], tp[1], 2.6, 0, 6.28); ctx.stroke(); }
+    // Last am Seil, nur bei Arbeit; sonst hängt der Haken frei
+    const sw = Math.sin(t * 0.6) * 0.07, lz = 0.7 + Math.sin(t * 0.33) * 0.5, ly = by + (west ? 0 : sw), lx = bx + (west ? sw : 0);
+    I.line(ctx, [bx, by, bz], [bx, by, busy ? lz + 0.2 : bz - 0.52], 'rgba(58,42,22,0.9)', 1.1);
+    if (!pk && !busy) { const hp = I.p(bx, by, bz - 0.58); ctx.strokeStyle = '#4a3d2c'; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.arc(hp[0], hp[1], 2.4, 0.6, 5.4); ctx.stroke(); }
+    if (busy) { const w = 0.25, q = [[lx - w, ly - w], [lx + w, ly - w], [lx + w, ly + w], [lx - w, ly + w]];
+      I.poly(ctx, q.map(v => [v[0], v[1], lz + 0.2]), '#b09a70', 'rgba(40,26,12,0.6)', 0.7);
+      I.poly(ctx, [[q[3][0], q[3][1], lz + 0.2], [q[2][0], q[2][1], lz + 0.2], [q[2][0], q[2][1], lz - 0.14], [q[3][0], q[3][1], lz - 0.14]], '#8b714d');
+      I.poly(ctx, [[q[1][0], q[1][1], lz + 0.2], [q[2][0], q[2][1], lz + 0.2], [q[2][0], q[2][1], lz - 0.14], [q[1][0], q[1][1], lz - 0.14]], '#6b583c');
+      I.line(ctx, [q[3][0], q[3][1], lz + 0.2], [q[2][0], q[2][1], lz - 0.14], 'rgba(216,190,146,0.5)', 1); }
+    // Kranmeister, solange gearbeitet wird
+    if (!pk && busy) { const mp = I.p(west ? x + 0.05 : x - 0.6, west ? y + 0.6 : y - 0.05, 0); this.drawPerson(ctx, mp[0], mp[1], '#5a4a32', 'static', 1, false, '#e8c39e', t * 2, 1, null, null, 0.85); }
   },
   drawBuilding(ctx, b, st, season, sv) {
     switch (b.kind) {
