@@ -531,10 +531,10 @@ Object.assign(HK.Scene, {
     if (!pk) { ctx.strokeStyle = '#4a3d2c'; ctx.lineWidth = 1.4; ctx.beginPath(); ctx.arc(tip[0], tip[1], 3.2, 0, 6.28); ctx.stroke(); }
     // Last am Seil, langsam pendelnd
     // Bei Arbeit hängt die Last am Ausleger, sonst steht sie abgesetzt neben dem Gerüst
-    const sw = busy ? Math.sin(t * 0.6) * 0.07 : 0, lz = busy ? 0.7 + Math.sin(t * 0.33) * 0.5 : baseH + 0.16, ly = busy ? by + sw : y + (west ? 0.62 : 0.34), lx = busy ? bx + (west ? sw : 0) : x + (west ? 0.1 : 0.66);
+    const sw = Math.sin(t * 0.6) * 0.07, lz = 0.7 + Math.sin(t * 0.33) * 0.5, ly = by + sw, lx = bx + (west ? sw : 0);
     I.line(ctx, [bx, by, bz], [bx, by, busy ? lz + 0.22 : bz - 0.5], 'rgba(60,44,24,0.9)', 1.2);
     if (!pk && !busy) { const hp = I.p(bx, by, bz - 0.56); ctx.strokeStyle = '#4a3d2c'; ctx.lineWidth = 1.6; ctx.beginPath(); ctx.arc(hp[0], hp[1], 2.6, 0.6, 5.4); ctx.stroke(); }
-    { const w = 0.27, q = [[lx - w, ly - w], [lx + w, ly - w], [lx + w, ly + w], [lx - w, ly + w]];
+    if (busy) { const w = 0.27, q = [[lx - w, ly - w], [lx + w, ly - w], [lx + w, ly + w], [lx - w, ly + w]];
       I.poly(ctx, q.map(v => [v[0], v[1], lz + 0.22]), '#b09a70', 'rgba(40,26,12,0.6)', 0.7);
       I.poly(ctx, [[q[3][0], q[3][1], lz + 0.22], [q[2][0], q[2][1], lz + 0.22], [q[2][0], q[2][1], lz - 0.16], [q[3][0], q[3][1], lz - 0.16]], '#8b714d');
       I.poly(ctx, [[q[1][0], q[1][1], lz + 0.22], [q[2][0], q[2][1], lz + 0.22], [q[2][0], q[2][1], lz - 0.16], [q[1][0], q[1][1], lz - 0.16]], '#6b583c');
