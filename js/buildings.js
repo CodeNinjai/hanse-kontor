@@ -456,19 +456,84 @@ Object.assign(HK.Scene, {
     I.line(ctx, [p.x, p.y1 - 0.3, 0.2], [p.x, p.y1 - 0.3, 1.1], '#2a2420', 1.4);
     if (!this.picking) { const lp = I.p(p.x, p.y1 - 0.3, 1.1); this.lamps.push([lp[0], lp[1]]); ctx.fillStyle = '#3a3430'; ctx.fillRect(lp[0] - 3, lp[1] - 3, 6, 4); }
   },
-  /* Stapel auf dem Steg: Kisten, Fässer oder Säcke, je nach Ware */
+  /* Farben der Ware: erster Ton die Sonnenseite, zweiter die Schattenseite */
+  CARGO_TONE: {
+    grain: ['#c9ac6e', '#a98f57'], salt: ['#ddd8c6', '#bdb8a4'], wool: ['#d3c6a8', '#b1a386'], spices: ['#b8905a', '#96723f'],
+    beer: ['#8a6538', '#654824'], wine: ['#6e3c38', '#4d2724'], fish: ['#6f7f74', '#556257'], smokedfish: ['#84714c', '#655736'],
+    wax: ['#cbb257', '#a89141'], cloth: ['#8a6a9a', '#6a5078'], finecloth: ['#9c5a86', '#784266'], furs: ['#7d5b39', '#5c4127'],
+    iron: ['#7c7c86', '#5d5d66'], tools: ['#8d7c5c', '#6b5d43'], timber: ['#a67e48', '#815f33'], leather: ['#8d6c45', '#6a5030'],
+  },
+  cargoTone(g) { return this.CARGO_TONE[g] || ['#9a7a4a', '#7a5f38']; },
+  CARGO_STEP: { crate: 0.28, barrel: 0.3, sack: 0.24 },
+  /* Ein Häufchen statt eines Turms: Kisten und Säcke zwei nebeneinander und eines obenauf, Fässer nebeneinander */
+  PILE: {
+    crate: [[-0.105, -0.035, 0], [0.105, 0.03, 0], [0.0, -0.005, 1]],
+    sack: [[-0.11, -0.045, 0], [0.11, 0.02, 0], [0.0, -0.01, 1]],
+    barrel: [[-0.14, -0.06, 0], [0.13, -0.01, 0], [-0.01, 0.16, 0]],
+  },
+  /* Sack: praller Leib, abgebundener Hals, Falten. Keine Ellipse mehr. */
+  sack3(ctx, x, y, z, a, b, k) {
+    const p = I.p(x, y, z);
+    ctx.save(); ctx.translate(p[0], p[1]); ctx.scale(k || 1, k || 1);
+    ctx.fillStyle = a;
+    ctx.beginPath();
+    ctx.moveTo(-5.6, -1.2);
+    ctx.bezierCurveTo(-6.8, -5.6, -4.4, -8.2, -2.4, -9.6);
+    ctx.lineTo(2.4, -9.6);
+    ctx.bezierCurveTo(4.4, -8.2, 6.8, -5.6, 5.6, -1.2);
+    ctx.bezierCurveTo(3.4, 1.8, -3.4, 1.8, -5.6, -1.2);
+    ctx.closePath(); ctx.fill();
+    ctx.fillStyle = b;
+    ctx.beginPath();
+    ctx.moveTo(1.6, -9.6); ctx.bezierCurveTo(4.4, -8.2, 6.8, -5.6, 5.6, -1.2);
+    ctx.bezierCurveTo(4.6, 0.6, 3.2, 1.4, 1.6, 1.8);
+    ctx.bezierCurveTo(3.2, -2.4, 3.1, -6.4, 1.6, -9.6);
+    ctx.fill();
+    ctx.fillStyle = a;
+    ctx.beginPath(); ctx.moveTo(-2.4, -9.6); ctx.quadraticCurveTo(-2.0, -12.4, -3.4, -13.4);
+    ctx.lineTo(3.4, -13.4); ctx.quadraticCurveTo(2.0, -12.4, 2.4, -9.6); ctx.fill();
+    ctx.strokeStyle = 'rgba(66,48,26,0.75)'; ctx.lineWidth = 1.2;
+    ctx.beginPath(); ctx.moveTo(-2.7, -10.1); ctx.lineTo(2.7, -10.1); ctx.stroke();
+    ctx.strokeStyle = 'rgba(66,48,26,0.2)'; ctx.lineWidth = 0.7;
+    ctx.beginPath(); ctx.moveTo(-2.6, -8.2); ctx.quadraticCurveTo(-4.2, -4.6, -3.4, -0.8); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(0.4, -8.4); ctx.quadraticCurveTo(-0.4, -4.4, 0.2, -0.4); ctx.stroke();
+    ctx.restore();
+  },
+  /* Fass in den Farben der Ware */
+  barrelT(ctx, x, y, z, a, b) {
+    I.cylinder(ctx, x, y, z, 0.13, 0.32, a, {});
+    const q = I.p(x, y, z); ctx.fillStyle = b; ctx.globalAlpha = 0.35;
+    ctx.beginPath(); ctx.ellipse(q[0] + 3, q[1] - 4, 2.4, 5, 0, 0, 6.28); ctx.fill(); ctx.globalAlpha = 1;
+    ctx.strokeStyle = '#3a2a1a'; ctx.lineWidth = 0.9;
+    for (const dz of [0.09, 0.24]) { const c = I.p(x, y, z + dz); ctx.beginPath(); ctx.ellipse(c[0], c[1], 0.13 * I.TW, 0.13 * I.TH, 0, 0, Math.PI); ctx.stroke(); }
+  },
+  /* Kiste mit Deckelfuge und Bändern */
+  crateT(ctx, x, y, z, a, b, s) {
+    s = s || 0.28;
+    I.box(ctx, x - s / 2, y - s / 2, z, s, s, s, { wall: a, top: b }, { stroke: 'rgba(52,34,12,0.65)' });
+    I.line(ctx, [x - s / 2, y + s / 2, z], [x + s / 2, y + s / 2, z + s], 'rgba(52,34,12,0.45)', 0.7);
+    I.line(ctx, [x + s / 2, y - s / 2, z], [x + s / 2, y + s / 2, z + s], 'rgba(52,34,12,0.45)', 0.7);
+    I.line(ctx, [x - s / 2, y + s / 2, z + s * 0.78], [x + s / 2, y + s / 2, z + s * 0.78], 'rgba(52,34,12,0.35)', 0.7);
+  },
+  /* Ein Stück Ware, in Form und Farbe passend zur Ware selbst */
+  drawCargo(ctx, x, y, z, it, k) {
+    const t = this.cargoTone(it.good);
+    if (it.kind === 'barrel') this.barrelT(ctx, x, y, z, t[0], t[1]);
+    else if (it.kind === 'sack') this.sack3(ctx, x, y, z, t[0], t[1], 0.85 * (k || 1));
+    else this.crateT(ctx, x, y, z, t[0], this.lighten(t[0]), 0.28 * (k || 1));
+  },
+  lighten(c) {
+    const n = parseInt(c.slice(1), 16), r = Math.min(255, (n >> 16) + 26), g = Math.min(255, ((n >> 8) & 255) + 22), b = Math.min(255, (n & 255) + 16);
+    return '#' + ((r << 16) | (g << 8) | b).toString(16).padStart(6, '0');
+  },
+  /* Stapel auf dem Steg */
   drawStack(ctx, sl, sv) {
     const n = sl.items.length; if (!n) return;
     const z0 = HK.Scene.DECK_Z;
-    if (!this.picking) { const sp = I.p(sl.x + 0.1, sl.y + 0.12, z0); ctx.fillStyle = '#15261e24'; ctx.beginPath(); ctx.ellipse(sp[0], sp[1], 11, 5, 0, 0, 6.28); ctx.fill(); }
+    if (!this.picking) { const sp = I.p(sl.x, sl.y + 0.04, z0); ctx.fillStyle = '#15261e28'; ctx.beginPath(); ctx.ellipse(sp[0], sp[1], 14, 6, 0, 0, 6.28); ctx.fill(); }
     for (let k = 0; k < n; k++) {
-      const it = sl.items[k], z = z0 + k * 0.26, ox = (k % 2) * 0.04 - 0.02;
-      if (it.kind === 'barrel') { this.barrel3(ctx, sl.x - 0.11 + ox, sl.y - 0.11, z); }
-      else if (it.kind === 'sack') {
-        const q = I.p(sl.x + ox, sl.y, z + 0.13);
-        ctx.fillStyle = '#b8a877'; ctx.beginPath(); ctx.ellipse(q[0], q[1], 7.5, 5.5, 0, 0, 6.28); ctx.fill();
-        ctx.fillStyle = 'rgba(80,62,34,0.28)'; ctx.beginPath(); ctx.ellipse(q[0] + 2, q[1] + 1.5, 5.5, 4, 0, 0, 6.28); ctx.fill();
-      } else I.box(ctx, sl.x - 0.15 + ox, sl.y - 0.15, z, 0.3, 0.3, 0.26, { wall: '#9a7a4a', top: '#b08a50' });
+      const it = sl.items[k], pl = this.PILE[it.kind] || this.PILE.crate, p = pl[k] || pl[2];
+      this.drawCargo(ctx, sl.x + p[0], sl.y + p[1], z0 + p[2] * (this.CARGO_STEP[it.kind] || 0.28), it);
     }
   },
   drawTree(ctx, x, y, r, season, sv) {
@@ -561,12 +626,43 @@ Object.assign(HK.Scene, {
     const lz = 0.14 + cs.lift * (bz - 0.56);
     L([bx, by, bz], [bx, by, lz + 0.22], 'rgba(58,42,22,0.9)', 1.1);
     if (!pk && !cs.load) { const hp = P(bx, by, lz + 0.16); ctx.strokeStyle = '#4a3d2c'; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.arc(hp[0], hp[1], 2.4, 0.6, 5.4); ctx.stroke(); }
-    if (cs.load) { const w = 0.2, q = [[bx - w, by - w], [bx + w, by - w], [bx + w, by + w], [bx - w, by + w]];
-      Q(q.map(v => [v[0], v[1], lz + 0.22]), '#b09a70', 'rgba(40,26,12,0.6)', 0.7);
-      Q([[q[3][0], q[3][1], lz + 0.22], [q[2][0], q[2][1], lz + 0.22], [q[2][0], q[2][1], lz - 0.12], [q[3][0], q[3][1], lz - 0.12]], '#8b714d');
-      Q([[q[1][0], q[1][1], lz + 0.22], [q[2][0], q[2][1], lz + 0.22], [q[2][0], q[2][1], lz - 0.12], [q[1][0], q[1][1], lz - 0.12]], '#6b583c');
-      L([q[3][0], q[3][1], lz + 0.22], [q[2][0], q[2][1], lz - 0.12], 'rgba(216,190,146,0.5)', 1); }
+    if (cs.load && d.load) this.drawCargo(ctx, bx, by, lz + z0, d.load);
     if (!pk && busy) { const mp = P(x - 0.6, y - 0.05, 0); this.drawPerson(ctx, mp[0], mp[1], '#5a4a32', 'static', 1, false, '#e8c39e', t * 2, 1, null, null, 0.85); }
+  },
+  /* Handkarren der Hafenarbeiter: Bett mit Bordwänden auf zwei Rädern, ein Mann in der Deichsel */
+  drawPortCart(ctx, x, y, z0, w, t) {
+    const A = HK.ROAD_NODES[w.from], B = HK.ROAD_NODES[w.to];
+    const dx = (B ? B[0] : 1) - (A ? A[0] : 0), dy = (B ? B[1] : 0) - (A ? A[1] : 0);
+    const alongX = Math.abs(dx) >= Math.abs(dy), sg = (alongX ? Math.sign(dx) : Math.sign(dy)) || 1;
+    // u zeigt in Fahrtrichtung, v quer dazu
+    const W = (u, v) => alongX ? [x + u * sg, y + v] : [x + v, y + u * sg];
+    const bw = alongX ? 0.62 : 0.42, bd = alongX ? 0.42 : 0.62;
+    const x0 = x - bw / 2, y0 = y - bd / 2;
+    if (!this.picking) { const sp = I.p(x, y, z0); ctx.fillStyle = 'rgba(0,0,0,0.22)'; ctx.beginPath(); ctx.ellipse(sp[0], sp[1] + 2, 15, 5.5, 0, 0, 6.28); ctx.fill(); }
+    // Räder links und rechts: das hintere vor, das vordere nach der Ladefläche, sonst verdeckt sie es
+    const wheel = (side) => {
+      const wp = W(-0.04, side * (alongX ? bd / 2 + 0.03 : bw / 2 + 0.03)), p = I.p(wp[0], wp[1], z0 + 0.14);
+      ctx.fillStyle = '#3a2c20'; ctx.beginPath(); ctx.ellipse(p[0], p[1], 5.4, 5.4, 0, 0, 6.28); ctx.fill();
+      ctx.fillStyle = '#7b5c3c'; ctx.beginPath(); ctx.ellipse(p[0], p[1], 4, 4, 0, 0, 6.28); ctx.fill();
+      ctx.strokeStyle = '#43301e'; ctx.lineWidth = 0.9;
+      for (let i = 0; i < 4; i++) { const a = i * 0.785 + t * 2.2 * sg; ctx.beginPath(); ctx.moveTo(p[0] - Math.cos(a) * 3.6, p[1] - Math.sin(a) * 3.6); ctx.lineTo(p[0] + Math.cos(a) * 3.6, p[1] + Math.sin(a) * 3.6); ctx.stroke(); }
+    };
+    wheel(-1);
+    I.box(ctx, x0, y0, z0 + 0.15, bw, bd, 0.09, { wall: '#6d5133', top: '#9d8050' });
+    // Bordwände längs der Fahrtrichtung
+    if (alongX) {
+      I.box(ctx, x0, y0, z0 + 0.24, bw, 0.05, 0.13, { wall: '#7a5a3a', top: '#a98a58' });
+      I.box(ctx, x0, y0 + bd - 0.05, z0 + 0.24, bw, 0.05, 0.13, { wall: '#7a5a3a', top: '#a98a58' });
+    } else {
+      I.box(ctx, x0, y0, z0 + 0.24, 0.05, bd, 0.13, { wall: '#7a5a3a', top: '#a98a58' });
+      I.box(ctx, x0 + bw - 0.05, y0, z0 + 0.24, 0.05, bd, 0.13, { wall: '#7a5a3a', top: '#a98a58' });
+    }
+    wheel(1);
+    (w.items || []).forEach((it, i) => { const c = W(-0.17 + i * 0.17, i === 1 ? 0.06 : -0.04); this.drawCargo(ctx, c[0], c[1], z0 + 0.24, it, 0.78); });
+    const d1 = W(0.33, 0), d2 = W(0.6, 0);
+    I.line(ctx, [d1[0], d1[1], z0 + 0.22], [d2[0], d2[1], z0 + 0.34], '#6b5238', 1.8);
+    const m = W(0.72, 0), mp = I.p(m[0], m[1], z0);
+    this.drawPerson(ctx, mp[0], mp[1], w.color, 'porter', 1, false, w.skin, w.wait > 0 ? 0 : w.phase, (alongX ? sg : -sg) >= 0 ? 1 : -1, null, null, 0.88);
   },
   drawBuilding(ctx, b, st, season, sv) {
     switch (b.kind) {
@@ -815,10 +911,12 @@ Object.assign(HK.Scene, {
     if (type === 'torch') { const f = 0.7 + Math.sin((phase || 0) * 3 + x) * 0.3; ctx.strokeStyle = '#5a4020'; ctx.lineWidth = 1.4; ctx.beginPath(); ctx.moveTo(5 * (dir || 1), -6); ctx.lineTo(7 * (dir || 1), -20); ctx.stroke(); ctx.fillStyle = 'rgba(255,150,40,' + (0.25 * f) + ')'; ctx.beginPath(); ctx.arc(7 * (dir || 1), -22, 6, 0, 6.28); ctx.fill(); ctx.fillStyle = '#ffd060'; ctx.beginPath(); ctx.ellipse(7 * (dir || 1), -22, 2, 3.2 * f, 0, 0, 6.28); ctx.fill(); ctx.fillStyle = '#ff8020'; ctx.beginPath(); ctx.ellipse(7 * (dir || 1), -21, 1.2, 2, 0, 0, 6.28); ctx.fill(); }
     if (type === 'knight') { ctx.fillStyle = '#b03030'; ctx.beginPath(); ctx.ellipse(-4 * (dir || 1), -8, 3, 4, 0, 0, 6.28); ctx.fill(); ctx.strokeStyle = '#e8d8b0'; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(-4 * (dir || 1), -11); ctx.lineTo(-4 * (dir || 1), -5); ctx.stroke(); ctx.strokeStyle = '#6a5a4a'; ctx.lineWidth = 1.4; ctx.beginPath(); ctx.moveTo(5 * (dir || 1), 0); ctx.lineTo(5 * (dir || 1), -34); ctx.stroke(); ctx.fillStyle = '#e0b040'; ctx.beginPath(); ctx.moveTo(5 * (dir || 1), -34); ctx.lineTo(5 * (dir || 1) + 9 * (dir || 1), -31); ctx.lineTo(5 * (dir || 1), -28); ctx.fill(); }
     if (w && w.basket) { ctx.fillStyle = '#b8a070'; ctx.beginPath(); ctx.ellipse(5 * (dir || 1), -6, 3, 2.5, 0, 0, 6.28); ctx.fill(); }
-    if (w && w.load) { const k = w.load.kind;
-      if (k === 'sack') { ctx.fillStyle = '#b8a877'; ctx.beginPath(); ctx.ellipse(1, -19, 5.5, 3.6, 0, 0, 6.28); ctx.fill(); ctx.fillStyle = 'rgba(80,62,34,0.25)'; ctx.beginPath(); ctx.ellipse(2.5, -18, 3.4, 2.4, 0, 0, 6.28); ctx.fill(); }
-      else if (k === 'barrel') { ctx.fillStyle = '#8b6a3c'; ctx.beginPath(); ctx.ellipse(1, -19, 4.6, 4.2, 0, 0, 6.28); ctx.fill(); ctx.strokeStyle = '#4a3320'; ctx.lineWidth = 0.8; ctx.beginPath(); ctx.moveTo(-3.4, -19); ctx.lineTo(5.4, -19); ctx.stroke(); }
-      else { ctx.fillStyle = '#9a7a4a'; ctx.fillRect(-3, -22.5, 8.5, 6); ctx.fillStyle = '#b08a50'; ctx.fillRect(-3, -22.5, 8.5, 1.6); ctx.strokeStyle = 'rgba(60,40,18,0.5)'; ctx.lineWidth = 0.7; ctx.strokeRect(-3, -22.5, 8.5, 6); } }
+    if (w && w.items && w.items.length && !w.cart) { const it = w.items[0], tn = this.cargoTone(it.good);
+      ctx.save(); ctx.translate(1, -19.5); ctx.scale(0.8, 0.8);
+      if (it.kind === 'sack') { ctx.fillStyle = tn[0]; ctx.beginPath(); ctx.moveTo(-6, 2); ctx.bezierCurveTo(-7, -3, -4, -6, -2, -7); ctx.lineTo(2, -7); ctx.bezierCurveTo(4, -6, 7, -3, 6, 2); ctx.bezierCurveTo(3.5, 4.5, -3.5, 4.5, -6, 2); ctx.fill(); ctx.fillStyle = tn[1]; ctx.beginPath(); ctx.moveTo(1.6, -7); ctx.bezierCurveTo(4, -6, 7, -3, 6, 2); ctx.bezierCurveTo(4.8, 3.4, 3.4, 4.1, 1.8, 4.4); ctx.bezierCurveTo(3.2, 0.4, 3.1, -4, 1.6, -7); ctx.fill(); ctx.strokeStyle = 'rgba(66,48,26,0.7)'; ctx.lineWidth = 1.1; ctx.beginPath(); ctx.moveTo(-2.4, -7.2); ctx.lineTo(2.4, -7.2); ctx.stroke(); }
+      else if (it.kind === 'barrel') { ctx.fillStyle = tn[0]; ctx.beginPath(); ctx.ellipse(0, -1, 5.2, 4.6, 0, 0, 6.28); ctx.fill(); ctx.fillStyle = tn[1]; ctx.globalAlpha = 0.4; ctx.beginPath(); ctx.ellipse(2.4, -1, 2.4, 4.2, 0, 0, 6.28); ctx.fill(); ctx.globalAlpha = 1; ctx.strokeStyle = '#3a2a1a'; ctx.lineWidth = 0.9; ctx.beginPath(); ctx.moveTo(-4.6, -3); ctx.lineTo(4.6, -3); ctx.moveTo(-4.6, 1); ctx.lineTo(4.6, 1); ctx.stroke(); }
+      else { ctx.fillStyle = tn[0]; ctx.fillRect(-5, -6, 10, 9); ctx.fillStyle = this.lighten(tn[0]); ctx.fillRect(-5, -6, 10, 2.2); ctx.strokeStyle = 'rgba(52,34,12,0.55)'; ctx.lineWidth = 0.8; ctx.strokeRect(-5, -6, 10, 9); ctx.beginPath(); ctx.moveTo(-5, -1.5); ctx.lineTo(5, -1.5); ctx.stroke(); }
+      ctx.restore(); }
     ctx.strokeStyle = color; ctx.lineWidth = 1.6; ctx.beginPath(); ctx.moveTo(-3, -12); ctx.lineTo(-4 - step * 0.4, -6); ctx.moveTo(3, -12); ctx.lineTo(4 + step * 0.4, -6); ctx.stroke();
     ctx.fillStyle = skin || '#e8c39e'; ctx.beginPath(); ctx.arc(0, -16, 3.2, 0, 6.28); ctx.fill();
     if (type === 'monk') { ctx.fillStyle = color; ctx.beginPath(); ctx.arc(0, -16.5, 3.8, Math.PI * 1.05, Math.PI * 1.95); ctx.fill(); }

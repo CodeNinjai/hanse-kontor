@@ -272,12 +272,13 @@ HK.Scene = {
       d.working = busy || d.u > 0.001;
       if (!d.working) continue;
       const prev = d.u;
+      if (!d.load) { const g = this.dockGood(d); d.load = { good: g, kind: this.goodKind[g] || 'crate' }; }
       d.u += dt / this.CRANE_CYCLE;
       if (d.u >= 1) { d.u = busy ? d.u - 1 : 0; d.dropped = -1; }
       if (prev < 0.58 && d.u >= 0.58 && d.dropped < 0) {
-        const slot = this.dockSlotFor(d), g = this.dockGood(d);
-        if (slot.items.length < this.STACK_MAX) slot.items.push({ good: g, kind: this.goodKind[g] || 'crate' });
-        d.dropped = 1;
+        const slot = this.dockSlotFor(d);
+        if (slot.items.length < this.STACK_MAX && d.load) slot.items.push(d.load);
+        d.load = null; d.dropped = 1;
       }
       if (d.u < 0.5) d.dropped = -1;
     }
@@ -297,14 +298,14 @@ HK.Scene = {
   },
   PORTER_MAX: 3, PORTER_HOME: ['H6', 'O6'], PORTER_DOCK: ['PA', 'PB'],
   /* Träger holen die gestapelte Ware vom Steg ins Lager am Kai */
-  spawnPorter(d) {
+  spawnPorter(d, cart) {
     const home = this.PORTER_HOME[d.i], path = this.route(home, this.PORTER_DOCK[d.i]);
     if (path.length < 2) return;
     this.porters.push({
-      type: 'porter', dock: d, state: 'go', path, pi: 1, from: path[0], to: path[1], t: 0,
-      off: this.pickOff(path[0], path[1]), speed: HK.rnd(0.42, 0.55), phase: Math.random() * 6.28,
+      type: 'porter', cart: !!cart, cap: cart ? 3 : 1, dock: d, state: 'go', path, pi: 1, from: path[0], to: path[1], t: 0,
+      off: this.pickOff(path[0], path[1]), speed: cart ? HK.rnd(0.34, 0.42) : HK.rnd(0.42, 0.55), phase: Math.random() * 6.28,
       color: HK.pick(['#6a5236', '#7a6448', '#5c4a34', '#6e5a3e']), skin: HK.pick(['#e8c39e', '#d9a98a', '#c9946c']),
-      load: null, wait: 0, slot: null, a: null, b: null, ft: 0, hat: Math.random() < 0.4,
+      items: [], wait: 0, slot: null, a: null, b: null, ft: 0, hat: Math.random() < 0.4,
     });
   },
   porterPos(w) {
@@ -317,9 +318,12 @@ HK.Scene = {
   updatePorters(dt) {
     const docks = this.docks();
     for (const d of docks) {
-      const want = Math.min(this.PORTER_MAX, Math.floor(this.dockItems(d) / 2));   // erst wenn sich etwas stapelt, kommt ein Träger
-      const have = this.porters.filter(w => w.dock === d).length;
-      if (have < want && Math.random() < dt * 0.5) this.spawnPorter(d);
+      const n = this.dockItems(d);
+      const want = Math.min(this.PORTER_MAX, Math.floor(n / 2));   // erst wenn sich etwas stapelt, kommt ein Träger
+      const mine = this.porters.filter(w => w.dock === d);
+      if (mine.filter(w => !w.cart).length < want && Math.random() < dt * 0.5) this.spawnPorter(d, false);
+      // Türmt es sich, kommt ein Karren und nimmt gleich drei Stück mit
+      if (n >= 4 && !mine.some(w => w.cart) && Math.random() < dt * 0.4) this.spawnPorter(d, true);
     }
     for (let k = this.porters.length - 1; k >= 0; k--) {
       const w = this.porters[k];
@@ -339,19 +343,23 @@ HK.Scene = {
     if (w.state === 'go') {
       const slot = [...d.slots].reverse().find(s => s.items.length);
       if (!slot) { this.porters.splice(this.porters.indexOf(w), 1); return; }
-      w.slot = slot; w.state = 'fetch'; w.a = [node[0], node[1]]; w.b = [slot.x + 0.35, slot.y + 0.1]; w.ft = 0;
+      w.slot = slot; w.state = 'fetch'; w.a = [node[0], node[1]]; w.b = [slot.x + (w.cart ? 0.45 : 0.35), slot.y + 0.1]; w.ft = 0;
     } else if (w.state === 'fetch') {
       w.state = 'lift'; w.wait = 0.7;
     } else if (w.state === 'lift') {
-      const slot = w.slot;
-      if (slot && slot.items.length) w.load = slot.items.pop();
+      const slot = [...d.slots].reverse().find(s => s.items.length);
+      if (slot && w.items.length < w.cap) {
+        w.items.push(slot.items.pop());
+        if (w.items.length < w.cap && d.slots.some(s => s.items.length)) { w.wait = 0.55; return; }
+      }
+      if (!w.items.length) { this.porters.splice(this.porters.indexOf(w), 1); return; }
       w.state = 'back'; w.a = [w.b[0], w.b[1]]; w.b = [node[0], node[1]]; w.ft = 0;
     } else if (w.state === 'back') {
       const path = this.route(this.PORTER_DOCK[d.i], this.PORTER_HOME[d.i]);
       w.a = null; w.b = null; w.state = 'carry'; w.path = path; w.pi = 1; w.t = 0;
       w.from = path[0]; w.to = path[1]; w.off = this.pickOff(w.from, w.to); w.bx = node[0]; w.by = node[1];
     } else if (w.state === 'carry') {
-      w.load = null; w.state = 'drop'; w.wait = 0.8;
+      w.items.length = 0; w.state = 'drop'; w.wait = 0.8;
     } else {
       if (this.dockItems(d)) {
         const path = this.route(this.PORTER_HOME[d.i], this.PORTER_DOCK[d.i]);
@@ -426,7 +434,7 @@ HK.Scene = {
       for (const s of this.smoke) { s.y -= 9 * dt; s.x += s.vx * dt; }
     }
   },
-  snapShips() { this.shipAnim = {}; this.porters.length = 0; if (this._docks) for (const d of this._docks) { d.u = 0; d.working = false; for (const s of d.slots) s.items.length = 0; }
+  snapShips() { this.shipAnim = {}; this.porters.length = 0; if (this._docks) for (const d of this._docks) { d.u = 0; d.working = false; d.load = null; for (const s of d.slots) s.items.length = 0; }
     if (!HK.state) return; HK.state.ships.forEach((s, i) => { const b = HK.BERTHS[s.berth != null ? s.berth : i] || HK.BERTHS[i]; this.shipAnim[s.id] = { x: b.x, y: b.y, tx: b.x, ty: b.y, heading: HK.BERTH_HEADING, leaving: false, name: s.name, origin: s.origin }; }); },
   isWater(wx, wy) { return !I.inHull(HK.LAND, wx, wy); },
   inTown(wx, wy) { return I.inHull(HK.TOWN, wx, wy); },
@@ -475,7 +483,12 @@ HK.Scene = {
       for (const sl of d.slots) if (sl.items.length) items.push({ k: sl.x + sl.y + 0.2, box: [sl.x - 0.2, sl.y - 0.2, sl.x + 0.2, sl.y + 0.2], f: c => this.drawStack(c, sl, sv) });
       items.push({ k: d.pier.x + h + d.pier.y1, box: [d.pier.x - h, d.pier.y1 - 0.3, d.pier.x + h, d.pier.y1], f: c => this.drawPierEnd(c, d.pier, t) });
     }
-    for (const w of this.porters) { const p = this.porterPos(w); const sp = I.p(p.wx, p.wy, p.wz); items.push({ k: this.pointKey(p.wx, p.wy), box: [p.wx - 0.05, p.wy - 0.05, p.wx + 0.05, p.wy + 0.05], f: c => this.drawPerson(c, sp[0], sp[1], w.color, 'porter', this.walkerAlpha(w), false, w.skin, w.wait > 0 ? 0 : w.phase, p.dir, null, w) }); }
+    for (const w of this.porters) {
+      const p = this.porterPos(w), a = this.walkerAlpha(w); if (a <= 0.02) continue;
+      const r = w.cart ? 0.4 : 0.05;
+      if (w.cart) items.push({ k: this.pointKey(p.wx, p.wy), box: [p.wx - r, p.wy - r, p.wx + r, p.wy + r], f: c => { c.save(); c.globalAlpha = a; this.drawPortCart(c, p.wx, p.wy, p.wz, w, t); c.restore(); } });
+      else { const sp = I.p(p.wx, p.wy, p.wz); items.push({ k: this.pointKey(p.wx, p.wy), box: [p.wx - r, p.wy - r, p.wx + r, p.wy + r], f: c => this.drawPerson(c, sp[0], sp[1], w.color, 'porter', a, false, w.skin, w.wait > 0 ? 0 : w.phase, p.dir, null, w) }); }
+    }
     st.ownShips.forEach((sh, i) => { if (sh.status === 'port' && HK.OWN_BERTHS[i]) { const b = HK.OWN_BERTHS[i]; items.push({ k: b.x + b.y + 0.5, box: [b.x - 0.9, b.y - 0.9, b.x + 0.9, b.y + 0.9], f: c => this.drawShip(c, b.x, b.y, HK.BERTH_HEADING + 0.3, HK.SHIP_TYPE[sh.type] ? HK.SHIP_TYPE[sh.type].scale : 0.95, 'own', true, false), pick: { kind: 'building', building: HK.BUILDING.harbour, panel: 'harbour', label: sh.name } }); } });
     st.rivals.forEach((r, i) => { if (!r.ships) return; const sp = HK.RIVAL_ANCHORAGE[i]; items.push({ k: sp.x + sp.y + 0.5, box: [sp.x - 0.9, sp.y - 0.9, sp.x + 0.9, sp.y + 0.9], f: c => this.drawShip(c, sp.x, sp.y, sp.h, 0.9, 'rival_' + r.id, true, false), pick: { kind: 'building', building: HK.BUILDING.harbour, panel: 'rivals', label: HK.rivalName(r.id) } }); });
     for (const id in this.shipAnim) { const a = this.shipAnim[id]; const sh = st.ships.find(x => String(x.id) === id); items.push({ k: a.x + a.y + 0.6, box: [a.x - 1.0, a.y - 1.0, a.x + 1.0, a.y + 1.0], f: c => this.drawShip(c, a.x, a.y, a.heading, HK.SHIP_SCALE, a.origin, !a.leaving && Math.abs(a.x - a.tx) + Math.abs(a.y - a.ty) < 0.05, HK.UI.selectedVisitor === Number(id) && !a.leaving), pick: sh && !a.leaving ? { kind: 'visitor', id: sh.id, panel: 'harbour', label: sh.name + ' (' + HK.name(HK.ORIGIN[sh.origin]) + ')' } : null }); }
