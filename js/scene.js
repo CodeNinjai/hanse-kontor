@@ -8,7 +8,9 @@ HK.Scene = {
 
   init(canvas) {
     this.canvas = canvas; this.ctx = canvas.getContext('2d');
-    canvas.width = HK.SCENE.W * this.RS; canvas.height = HK.SCENE.H * this.RS;
+    this.fit(true);
+    if (window.ResizeObserver) new ResizeObserver(() => this.fit()).observe(canvas.parentElement);
+    else window.addEventListener('resize', () => this.fit());
     this.makePatterns(); this.makeGrain();
     for (let i = 0; i < 70; i++) this.walkers.push(this.makeWalker(true));
     for (let i = 0; i < 9; i++) this.gulls.push({ x: HK.rnd(40, 700), y: HK.rnd(80, 1000), a: HK.rnd(0, 6.28), r: HK.rnd(25, 60), s: HK.rnd(0.25, 0.6) });
@@ -19,17 +21,58 @@ HK.Scene = {
   /* ---------- Kamera: Zoom und Verschieben ---------- */
   cam: { z: 1, x: 0, y: 0 },
   ZOOM_MIN: 1, ZOOM_MAX: 2.8,
-  zoomMin() { return Math.max(HK.SCENE.W / HK.MAP.W, HK.SCENE.H / HK.MAP.H); },
-  clampCam() { const z = this.cam.z; this.cam.x = HK.clamp(this.cam.x, 0, HK.MAP.W - HK.SCENE.W / z); this.cam.y = HK.clamp(this.cam.y, 0, HK.MAP.H - HK.SCENE.H / z); },
+  /* Das Bild füllt den verfügbaren Platz; die Zeichenauflösung wird gedeckelt, damit große Fenster die Bildrate nicht kosten */
+  PIXEL_BUDGET: 3.4e6,
+  fit(first) {
+    const wrap = this.canvas.parentElement;
+    const w = Math.max(360, Math.round(wrap.clientWidth)), h = Math.max(260, Math.round(wrap.clientHeight));
+    if (!first && w === HK.SCENE.W && h === HK.SCENE.H) return;
+    HK.SCENE.W = w; HK.SCENE.H = h;
+    const dpr = Math.min(2, window.devicePixelRatio || 1);
+    this.RS = Math.max(0.75, Math.min(dpr, Math.sqrt(this.PIXEL_BUDGET / (w * h))));
+    this.canvas.width = Math.round(w * this.RS); this.canvas.height = Math.round(h * this.RS);
+    this.emCanvas = null; this.em = null; this.tee = null;
+    // Solange der Spieler nicht selbst gezoomt oder geschoben hat, bleibt das Bild auf die Stadt eingepasst
+    if (first || this.camAuto !== false) this.resetCam(); else this.setZoom(this.cam.z);
+  },
+  /* Kleinster Zoom: die ganze Karte passt ins Bild. Was darüber hinaus sichtbar wird, ist offene See. */
+  zoomMin() { return Math.max(0.4, Math.min(HK.SCENE.W / HK.MAP.W, HK.SCENE.H / HK.MAP.H)); },
+  clampCam() {
+    const z = this.cam.z, vw = HK.SCENE.W / z, vh = HK.SCENE.H / z;
+    this.cam.x = vw >= HK.MAP.W ? (HK.MAP.W - vw) / 2 : HK.clamp(this.cam.x, 0, HK.MAP.W - vw);
+    this.cam.y = vh >= HK.MAP.H ? (HK.MAP.H - vh) / 2 : HK.clamp(this.cam.y, 0, HK.MAP.H - vh);
+  },
   /* Zoom um einen Ankerpunkt (Bildschirm-Szenenkoordinaten), der dabei stehen bleibt */
   setZoom(z, ax, ay) {
+    this.camAuto = false;
     const old = this.cam.z; z = HK.clamp(z, this.zoomMin(), this.ZOOM_MAX);
     if (ax === undefined) { ax = HK.SCENE.W / 2; ay = HK.SCENE.H / 2; }
     const wx = ax / old + this.cam.x, wy = ay / old + this.cam.y;
     this.cam.z = z; this.cam.x = wx - ax / z; this.cam.y = wy - ay / z; this.clampCam();
   },
-  panBy(dx, dy) { this.cam.x -= dx / this.cam.z; this.cam.y -= dy / this.cam.z; this.clampCam(); },
-  resetCam() { this.cam.z = this.zoomMin(); this.cam.x = 0; this.cam.y = 0; this.clampCam(); },
+  panBy(dx, dy) { this.camAuto = false; this.cam.x -= dx / this.cam.z; this.cam.y -= dy / this.cam.z; this.clampCam(); },
+  /* Umriss der bebauten Fläche in Kartenpixeln: darauf passt der Anfangsblick, nicht auf die ganze Seekarte */
+  mapFit() {
+    if (this._fitBox) return this._fitBox;
+    let x0 = 1e9, y0 = 1e9, x1 = -1e9, y1 = -1e9;
+    for (const b of HK.BUILDINGS) {
+      if (b.kind === 'water') continue;
+      for (const c of [[b.x, b.y], [b.x + b.w, b.y], [b.x, b.y + b.d], [b.x + b.w, b.y + b.d]]) {
+        const p = I.p(c[0], c[1], 0);
+        if (p[0] < x0) x0 = p[0]; if (p[0] > x1) x1 = p[0];
+        if (p[1] < y0) y0 = p[1]; if (p[1] > y1) y1 = p[1];
+      }
+    }
+    return (this._fitBox = { x0: x0 - 50, y0: y0 - 130, x1: x1 + 50, y1: y1 + 150 });
+  },
+  resetCam() {
+    const f = this.mapFit(), fw = f.x1 - f.x0, fh = f.y1 - f.y0;
+    const z = HK.clamp(Math.min(HK.SCENE.W / fw, HK.SCENE.H / fh), this.zoomMin(), this.ZOOM_MAX);
+    this.cam.z = z; this.camAuto = true;
+    this.cam.x = (f.x0 + f.x1) / 2 - HK.SCENE.W / (2 * z);
+    this.cam.y = (f.y0 + f.y1) / 2 - HK.SCENE.H / (2 * z);
+    this.clampCam();
+  },
   viewTransform(ctx, scale) { const z = this.cam.z * scale; ctx.setTransform(z, 0, 0, z, -this.cam.x * z, -this.cam.y * z); },
   /* Bildschirmpunkt (Szenenpixel des Canvas) → Szenenkoordinaten der ungezoomten Karte */
   toMap(p) { return { x: p.x / this.cam.z + this.cam.x, y: p.y / this.cam.z + this.cam.y }; },
@@ -412,6 +455,11 @@ HK.Scene = {
     if (season !== this.lastSeason) { this.lastSeason = season; this.makeGround(season); }
     this.windows = []; this.lamps = [];
     this.nightK = P.amb < 0.7 ? HK.clamp((0.7 - P.amb) / 0.4, 0, 1) : 0;
+    // Offene See über das ganze Bild, damit jenseits der Karte keine Leere steht
+    ctx.setTransform(this.RS, 0, 0, this.RS, 0, 0);
+    const sea = ctx.createLinearGradient(0, 0, W * 0.3, H); sea.addColorStop(0, this.rgb(P.far)); sea.addColorStop(1, this.rgb(P.near));
+    ctx.fillStyle = sea; ctx.fillRect(0, 0, W, H);
+    this.viewTransform(ctx, this.RS);
     this.drawWater(ctx, P, t);
     ctx.drawImage(this.ground, 0, 0, HK.MAP.W, HK.MAP.H);
     this.drawCoast(ctx, P, t);
