@@ -83,28 +83,28 @@ HK.Scene = {
   },
   makePatterns() {
     const mk = (w, h, fn) => { const c = document.createElement('canvas'); c.width = w * this.RS; c.height = h * this.RS; const g = c.getContext('2d'); g.scale(this.RS, this.RS); fn(g, w, h); const pat = this.ctx.createPattern(c, 'repeat'); if (pat.setTransform) pat.setTransform(new DOMMatrix().scale(1 / this.RS)); return pat; };
-    this.pat.cobble = mk(20, 10, (g) => { g.fillStyle = '#a89f8a'; g.fillRect(0, 0, 20, 10); for (const [x, y, w, h] of [[1, 1, 7, 3.5], [10, 0.5, 8, 4], [0, 5.5, 6, 4], [8, 5.5, 5, 4], [15, 5.5, 5, 4]]) { g.fillStyle = (x + y) % 3 ? '#b3aa94' : '#9d947f'; g.beginPath(); g.ellipse(x + w / 2, y + h / 2, w / 2, h / 2, 0, 0, 6.28); g.fill(); g.fillStyle = 'rgba(255,255,255,0.18)'; g.beginPath(); g.ellipse(x + w / 2 - 1, y + h / 2 - 1, w / 3, h / 4, 0, 0, 6.28); g.fill(); } });
-    this.pat.earth = mk(40, 40, (g, w, h) => { g.fillStyle = '#b3a57c'; g.fillRect(0, 0, w, h); for (let i = 0; i < 160; i++) { g.fillStyle = Math.random() < 0.5 ? 'rgba(90,70,40,0.18)' : 'rgba(255,245,220,0.14)'; g.fillRect(Math.random() * w, Math.random() * h, 2, 1.5); } });
-    this.pat.grass = mk(30, 30, (g, w, h) => { g.fillStyle = '#6f8f46'; g.fillRect(0, 0, w, h); for (let i = 0; i < 110; i++) { g.strokeStyle = Math.random() < 0.5 ? 'rgba(40,70,20,0.4)' : 'rgba(190,220,110,0.35)'; const x = Math.random() * w, y = Math.random() * h; g.beginPath(); g.moveTo(x, y); g.lineTo(x + 1, y - 3); g.stroke(); } for (let i = 0; i < 6; i++) { g.fillStyle = 'rgba(120,150,70,0.35)'; g.beginPath(); g.ellipse(Math.random() * w, Math.random() * h, 5, 2.5, 0, 0, 6.28); g.fill(); } });
+    this.pat.cobble = mk(20, 10, (g) => { g.fillStyle = '#9f9681'; g.fillRect(0, 0, 20, 10); for (const [x, y, w, h] of [[1, 1, 7, 3.5], [10, 0.5, 8, 4], [0, 5.5, 6, 4], [8, 5.5, 5, 4], [15, 5.5, 5, 4]]) { g.fillStyle = (x + y) % 3 ? '#a9a18a' : '#948c77'; g.beginPath(); g.ellipse(x + w / 2, y + h / 2, w / 2, h / 2, 0, 0, 6.28); g.fill(); g.fillStyle = 'rgba(255,255,255,0.18)'; g.beginPath(); g.ellipse(x + w / 2 - 1, y + h / 2 - 1, w / 3, h / 4, 0, 0, 6.28); g.fill(); } });
+    this.pat.earth = mk(40, 40, (g, w, h) => { g.fillStyle = '#aa9f7b'; g.fillRect(0, 0, w, h); for (let i = 0; i < 160; i++) { g.fillStyle = Math.random() < 0.5 ? 'rgba(90,70,40,0.18)' : 'rgba(255,245,220,0.14)'; g.fillRect(Math.random() * w, Math.random() * h, 2, 1.5); } });
+    this.pat.grass = mk(30, 30, (g, w, h) => { g.fillStyle = '#6e7d58'; g.fillRect(0, 0, w, h); for (let i = 0; i < 110; i++) { g.strokeStyle = Math.random() < 0.5 ? 'rgba(46,58,33,0.4)' : 'rgba(174,192,138,0.35)'; const x = Math.random() * w, y = Math.random() * h; g.beginPath(); g.moveTo(x, y); g.lineTo(x + 1, y - 3); g.stroke(); } for (let i = 0; i < 6; i++) { g.fillStyle = 'rgba(120,150,70,0.35)'; g.beginPath(); g.ellipse(Math.random() * w, Math.random() * h, 5, 2.5, 0, 0, 6.28); g.fill(); } });
     this.pat.snow = mk(30, 30, (g, w, h) => { g.fillStyle = '#e9edf0'; g.fillRect(0, 0, w, h); for (let i = 0; i < 40; i++) { g.fillStyle = 'rgba(180,195,215,0.35)'; g.fillRect(Math.random() * w, Math.random() * h, 2, 1); } });
-    this.pat.stone = mk(24, 12, (g) => { g.fillStyle = '#8f887a'; g.fillRect(0, 0, 24, 12); g.fillStyle = '#6f685c'; g.fillRect(0, 5, 24, 1); g.fillRect(0, 11, 24, 1); g.fillRect(11, 0, 1, 5); g.fillRect(4, 6, 1, 5); g.fillRect(18, 6, 1, 5); g.fillStyle = 'rgba(255,255,255,0.08)'; g.fillRect(0, 0, 11, 2); g.fillRect(12, 0, 12, 2); });
-    this.pat.planks = mk(8, 24, (g) => { g.fillStyle = '#8a6a44'; g.fillRect(0, 0, 8, 24); g.fillStyle = '#5f4630'; g.fillRect(7, 0, 1, 24); g.fillStyle = 'rgba(255,220,170,0.15)'; g.fillRect(1, 0, 1, 24); g.fillStyle = 'rgba(0,0,0,0.15)'; g.fillRect(0, 11, 8, 1); });
-    this.pat.field = mk(24, 24, (g) => { g.fillStyle = '#b9a35a'; g.fillRect(0, 0, 24, 24); g.strokeStyle = 'rgba(90,70,30,0.35)'; for (let i = 0; i < 24; i += 4) { g.beginPath(); g.moveTo(i, 0); g.lineTo(i + 12, 24); g.stroke(); } });
+    this.pat.stone = mk(24, 12, (g) => { g.fillStyle = '#8b8476'; g.fillRect(0, 0, 24, 12); g.fillStyle = '#6b655a'; g.fillRect(0, 5, 24, 1); g.fillRect(0, 11, 24, 1); g.fillRect(11, 0, 1, 5); g.fillRect(4, 6, 1, 5); g.fillRect(18, 6, 1, 5); g.fillStyle = 'rgba(255,255,255,0.08)'; g.fillRect(0, 0, 11, 2); g.fillRect(12, 0, 12, 2); });
+    this.pat.planks = mk(8, 24, (g) => { g.fillStyle = '#9f8361'; g.fillRect(0, 0, 8, 24); g.fillStyle = '#6e5944'; g.fillRect(7, 0, 1, 24); g.fillStyle = 'rgba(255,220,170,0.15)'; g.fillRect(1, 0, 1, 24); g.fillStyle = 'rgba(0,0,0,0.15)'; g.fillRect(0, 11, 8, 1); });
+    this.pat.field = mk(24, 24, (g) => { g.fillStyle = '#ab9b68'; g.fillRect(0, 0, 24, 24); g.strokeStyle = 'rgba(90,70,30,0.35)'; for (let i = 0; i < 24; i += 4) { g.beginPath(); g.moveTo(i, 0); g.lineTo(i + 12, 24); g.stroke(); } });
   },
   makeGrain() { const c = document.createElement('canvas'); c.width = 240; c.height = 160; const g = c.getContext('2d'); const img = g.createImageData(240, 160); for (let i = 0; i < img.data.length; i += 4) { const v = 128 + (Math.random() - 0.5) * 90; img.data[i] = img.data[i + 1] = img.data[i + 2] = v; img.data[i + 3] = 255; } g.putImageData(img, 0, 0); this.grain = c; },
 
   /* ---------- Zeit, Licht, Jahreszeit ---------- */
   KEYS: [
-    { c: 0.00, top: [8, 14, 40], near: [12, 26, 48], far: [24, 42, 70], tint: [8, 16, 60, 0.58], amb: 0.28 },
-    { c: 0.20, top: [10, 16, 46], near: [12, 26, 50], far: [28, 46, 76], tint: [8, 16, 60, 0.54], amb: 0.3 },
-    { c: 0.26, top: [70, 70, 120], near: [60, 90, 120], far: [210, 150, 120], tint: [255, 150, 80, 0.16], amb: 0.7 },
-    { c: 0.34, top: [122, 176, 224], near: [46, 96, 140], far: [120, 165, 195], tint: [255, 225, 170, 0.07], amb: 0.95 },
-    { c: 0.50, top: [92, 150, 214], near: [36, 92, 140], far: [88, 140, 185], tint: [255, 255, 255, 0], amb: 1 },
-    { c: 0.66, top: [110, 140, 200], near: [48, 92, 132], far: [150, 150, 150], tint: [255, 210, 150, 0.08], amb: 0.95 },
-    { c: 0.76, top: [96, 90, 160], near: [54, 78, 116], far: [215, 140, 110], tint: [255, 140, 60, 0.2], amb: 0.75 },
-    { c: 0.84, top: [40, 40, 96], near: [24, 42, 72], far: [100, 66, 96], tint: [50, 30, 90, 0.38], amb: 0.45 },
-    { c: 0.90, top: [10, 16, 44], near: [12, 26, 50], far: [26, 44, 74], tint: [8, 16, 60, 0.56], amb: 0.3 },
-    { c: 1.00, top: [8, 14, 40], near: [12, 26, 48], far: [24, 42, 70], tint: [8, 16, 60, 0.58], amb: 0.28 },
+    { c: 0.00, top: [14, 24, 33], near: [18, 32, 40], far: [32, 50, 59], tint: [10, 30, 46, 0.58], amb: 0.28 },
+    { c: 0.20, top: [16, 28, 38], near: [19, 33, 41], far: [36, 55, 65], tint: [10, 30, 46, 0.54], amb: 0.3 },
+    { c: 0.26, top: [77, 91, 107], near: [69, 95, 105], far: [202, 146, 118], tint: [255, 160, 95, 0.16], amb: 0.7 },
+    { c: 0.34, top: [134, 182, 201], near: [62, 102, 118], far: [128, 165, 177], tint: [255, 228, 186, 0.08], amb: 0.95 },
+    { c: 0.50, top: [109, 163, 188], near: [54, 99, 117], far: [101, 146, 164], tint: [255, 238, 208, 0.06], amb: 1 },
+    { c: 0.66, top: [121, 158, 180], near: [62, 98, 113], far: [146, 146, 146], tint: [255, 214, 164, 0.1], amb: 0.95 },
+    { c: 0.76, top: [100, 119, 142], near: [64, 88, 101], far: [206, 137, 109], tint: [255, 150, 78, 0.2], amb: 0.75 },
+    { c: 0.84, top: [49, 65, 83], near: [32, 51, 61], far: [95, 66, 92], tint: [46, 44, 74, 0.38], amb: 0.45 },
+    { c: 0.90, top: [16, 27, 36], near: [19, 33, 41], far: [34, 53, 63], tint: [10, 30, 46, 0.56], amb: 0.3 },
+    { c: 1.00, top: [14, 24, 33], near: [18, 32, 40], far: [32, 50, 59], tint: [10, 30, 46, 0.58], amb: 0.28 },
   ],
   palette() {
     const c = this.clock, K = this.KEYS; let i = 0;
@@ -255,7 +255,7 @@ HK.Scene = {
     for (const w of this.walkers) { const a = this.walkerAlpha(w); if (a <= 0.02) continue; const p = this.walkerPos(w); items.push({ k: this.pointKey(p.wx, p.wy), box: [p.wx - 0.05, p.wy - 0.05, p.wx + 0.05, p.wy + 0.05], f: c => this.drawPerson(c, p.x, p.y, w.color, w.type, a, this.hover && this.hover.walker === w, w.skin, w.pause > 0 ? 0 : w.phase, p.dir, null, w), pick: a >= 0.4 ? { kind: 'walker', walker: w, label: HK.t('enc_' + w.type + '_label') } : null }); }
     return this.depthSort(items);
   },
-  PROP_SIZE: { ropes: [1.6, 0.3], sails: [0.8, 0.8], frames: [0.9, 0.5], dyecloths: [1.0, 0.4], fishracks: [0.9, 0.5], logs: [1.0, 0.6], nets: [0.5, 0.5], laundry: [1.0, 0.3], boatup: [1.0, 0.5], gallows: [0.5, 0.5], tollbar: [0.9, 0.3], well: [0.3, 0.3], statue: [0.3, 0.3] },
+  PROP_SIZE: { crane: [1.3, 1.1], ropes: [1.6, 0.3], sails: [0.8, 0.8], frames: [0.9, 0.5], dyecloths: [1.0, 0.4], fishracks: [0.9, 0.5], logs: [1.0, 0.6], nets: [0.5, 0.5], laundry: [1.0, 0.3], boatup: [1.0, 0.5], gallows: [0.5, 0.5], tollbar: [0.9, 0.3], well: [0.3, 0.3], statue: [0.3, 0.3] },
   /* Tiefensortierung als Malerreihenfolge: Grundrisse, die sich entlang einer Achse nicht überlappen, legen die Reihenfolge fest
      (der Betrachter steht bei +x,+y); nur bei überlappenden Grundrissen entscheidet der Schlüssel k. */
   depthSort(items) {
@@ -391,9 +391,9 @@ HK.Scene = {
     const winter = season === 'winter';
     // Land
     poly(HK.LAND, winter ? this.pat.snow : this.pat.grass);
-    if (!winter) { for (let i = 0; i < 160; i++) { const x = 7 + Math.random() * 45, y = -30 + Math.random() * 50; if (this.isWater(x, y)) continue; const s = I.p(x, y, 0); g.fillStyle = i % 3 ? 'rgba(40,80,25,0.18)' : 'rgba(200,220,120,0.16)'; g.beginPath(); g.ellipse(s[0], s[1], 8 + Math.random() * 22, 4 + Math.random() * 9, 0, 0, 6.28); g.fill(); } }
+    if (!winter) { for (let i = 0; i < 160; i++) { const x = 7 + Math.random() * 45, y = -30 + Math.random() * 50; if (this.isWater(x, y)) continue; const s = I.p(x, y, 0); g.fillStyle = i % 3 ? 'rgba(52,66,38,0.18)' : 'rgba(184,196,140,0.16)'; g.beginPath(); g.ellipse(s[0], s[1], 8 + Math.random() * 22, 4 + Math.random() * 9, 0, 0, 6.28); g.fill(); } }
     // Sand (Fischerdorf, Strand)
-    for (const sa of HK.SAND) poly(sa, winter ? this.pat.snow : '#c2b48c');
+    for (const sa of HK.SAND) poly(sa, winter ? this.pat.snow : '#b9ad8b');
     // Stadtboden innerhalb der Mauer
     poly(HK.TOWN, winter ? this.pat.snow : this.pat.earth);
     // Kaistreifen entlang der gemauerten Kanten

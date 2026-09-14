@@ -242,6 +242,8 @@ Alle sieben Schritte der ursprünglichen Reihenfolge sind umgesetzt (Titel und C
 
 Die Wohnhäuser der Stadt sind seither keine Kulisse mehr: alle 26 Bürgerhäuser tragen einen Haushalt mit Familie, Gewerbe, Stand und Stimmung, sind einzeln anklickbar und kommen nur dann auf den Markt, wenn eine Familie sich verschuldet, wegzieht oder ausstirbt. Ein Verkaufsangebot steht sechzig Tage; nach fünfunddreißig Tagen greifen auch die Rivalen zu. Eigene Häuser bringen Miete und kosten Unterhalt, brennen im Feuer, stehen nach dem Auszug verbitterter Mieter leer und zahlen in Pest und Aufruhr weniger. Sechs eigene Häuser machen zum Patrizier und geben Rückhalt im Rat, vier Häuser in einer Hand tun das auch für einen Rivalen. Auf der Karte zeigt eine Verkaufstafel das Angebot, eine goldene Fahne den eigenen Besitz und eine vernagelte Tür den Leerstand.
 
+Das Farbklima der Stadt wurde an die gedeckte Hansepalette angeglichen: Das Wasser ist von Blau nach Petrol gedreht und entsättigt, Wiese und Laub liegen im Olivbereich statt im Frühlingsgrün, Kopfstein, Kai und Stadtboden sind wärmer und grauer, Stege und Schiffsrümpfe heller und weniger kontrastreich. Dazu kamen der Tretradkran als Wahrzeichen des Hafens und mehr Ladung an der Kaikante.
+
 ## 10. Ursprünglich vorgeschlagene Reihenfolge
 
 1. **Titel und Chronik** (klein): sechs Wege als Ziele sichtbar machen, Spielende nach 20 Jahren, Bilanzschirm. Gibt sofort Richtung.

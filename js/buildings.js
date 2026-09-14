@@ -453,11 +453,11 @@ Object.assign(HK.Scene, {
     if (!this.picking) { ctx.fillStyle = `rgba(15,10,5,${sv.a * 0.8})`; ctx.beginPath(); ctx.ellipse(s[0] + sv.v[0] * 14, s[1] + sv.v[1] * 8 + 2, R * 0.95, R * 0.42, 0, 0, 6.28); ctx.fill(); }
     ctx.fillStyle = '#4a3320'; ctx.beginPath(); ctx.moveTo(s[0] - 3, s[1] + 1); ctx.lineTo(s[0] + 3, s[1] + 1); ctx.lineTo(s[0] + 2, s[1] - th); ctx.lineTo(s[0] - 2, s[1] - th); ctx.fill();
     if (season === 'winter') { ctx.strokeStyle = '#4a3320'; ctx.lineWidth = 1.6; for (let i = 0; i < 9; i++) { const a = -Math.PI / 2 + (i - 4) * 0.3; ctx.beginPath(); ctx.moveTo(s[0], s[1] - th * 0.9); ctx.lineTo(s[0] + Math.cos(a) * R * 1.1, s[1] - th * 0.9 + Math.sin(a) * R * 1.1); ctx.stroke(); } return; }
-    const pal = season === 'autumn' ? ['#7a4a1a', '#b8702a', '#d08a30', '#e8b050'] : ['#2f5a24', '#3f7a2e', '#5a9a3a', '#86bf52'];
+    const pal = season === 'autumn' ? ['#6c4c28', '#a3733f', '#b88748', '#d1a767'] : ['#405033', '#546b42', '#6c8653', '#8fa76f'];
     const cy = s[1] - th - R * 0.55, sway = Math.sin(this.time * 1.2 + x) * 1.2;
     const lobes = [[0, 0.05, 1], [-0.55, 0.3, 0.68], [0.55, 0.32, 0.66], [-0.3, -0.45, 0.6], [0.32, -0.42, 0.62], [0, -0.7, 0.45]];
     const blob = (k, col, off) => { ctx.fillStyle = col; ctx.beginPath(); for (const [lx, ly, lr] of lobes) ctx.arc(s[0] + sway + lx * R + (off ? off[0] * R : 0), cy + ly * R + (off ? off[1] * R : 0), lr * R * k, 0, 6.28); ctx.fill(); };
-    blob(1.06, 'rgba(25,45,15,0.55)'); // Umriss
+    blob(1.06, 'rgba(37,50,26,0.55)'); // Umriss
     blob(1, pal[1]);
     blob(0.78, pal[0], [0.16, 0.18]); // Schattenseite unten rechts
     blob(0.72, pal[2], [-0.12, -0.12]);
@@ -487,8 +487,52 @@ Object.assign(HK.Scene, {
       case 'shrine': { I.box(ctx, p.x - 0.12, p.y - 0.12, 0, 0.24, 0.24, 0.9, { wall: '#8f887a', top: '#a9a292' }); I.box(ctx, p.x - 0.16, p.y - 0.16, 0.9, 0.32, 0.32, 0.25, { wall: '#7d766a' }, { noTop: true }); I.pyramid(ctx, p.x - 0.2, p.y - 0.2, 1.15, 0.4, 0.4, 0.22, '#3a3038'); const q = I.p(p.x + 0.16, p.y + 0.06, 1.02); ctx.fillStyle = '#c9a24a'; ctx.fillRect(q[0] - 1, q[1] - 2, 2, 3); if (!this.picking) { ctx.fillStyle = 'rgba(255,180,80,0.8)'; ctx.fillRect(q[0] - 0.6, q[1] + 2, 1.2, 1.2); } break; }
       case 'cross': { I.line(ctx, [p.x, p.y, 0], [p.x, p.y, 0.9], '#5a5048', 2.4); I.line(ctx, [p.x - 0.15, p.y, 0.7], [p.x + 0.15, p.y, 0.7], '#5a5048', 2.4); break; }
       case 'laundry': { const a = I.p(p.x, p.y, 0.6), b = I.p(p.x + 1.1, p.y, 0.6); I.line(ctx, [p.x, p.y, 0], [p.x, p.y, 0.65], '#4a3320', 1.2); I.line(ctx, [p.x + 1.1, p.y, 0], [p.x + 1.1, p.y, 0.65], '#4a3320', 1.2); ctx.strokeStyle = '#333'; ctx.lineWidth = 0.7; ctx.beginPath(); ctx.moveTo(a[0], a[1]); ctx.quadraticCurveTo((a[0] + b[0]) / 2, (a[1] + b[1]) / 2 + 3, b[0], b[1]); ctx.stroke(); ['#e8e0c8', '#7a3a3a', '#3a5a7a', '#e8e0c8'].forEach((c, i) => { const t = 0.18 + i * 0.2, lx = a[0] + (b[0] - a[0]) * t, ly = a[1] + (b[1] - a[1]) * t + 2, sw = Math.sin(this.time * 3 + i) * 1.5; ctx.fillStyle = c; ctx.beginPath(); ctx.moveTo(lx, ly); ctx.lineTo(lx + 5, ly + 2); ctx.lineTo(lx + 5 + sw, ly + 9); ctx.lineTo(lx + sw, ly + 7); ctx.fill(); }); break; }
-      case 'crane': { I.line(ctx, [p.x, p.y, 0], [p.x, p.y, 1.6], '#4a3320', 4); I.cylinder(ctx, p.x, p.y, 0.2, 0.28, 0.35, '#5a4020', { noTop: false }); I.line(ctx, [p.x, p.y, 1.55], [p.x - 1.0, p.y - 0.3, 1.1], '#4a3320', 3.5); I.line(ctx, [p.x, p.y, 0.9], [p.x - 0.7, p.y - 0.2, 1.25], '#4a3320', 1.5); const hz = 0.35 + Math.sin(this.time * 0.8) * 0.25; I.line(ctx, [p.x - 1.0, p.y - 0.3, 1.1], [p.x - 1.0, p.y - 0.3, hz], '#222', 0.8); this.crate3(ctx, p.x - 1.1, p.y - 0.4, hz - 0.22, 0.22); break; }
+      case 'crane': this.drawTreadCrane(ctx, p.x, p.y); break;
     }
+  },
+  /* Tretradkran am Kai: Bockgerüst, begehbares Laufrad, schwenkbarer Ausleger mit Last */
+  drawTreadCrane(ctx, x, y) {
+    const t = this.time, pk = this.picking;
+    const baseH = 0.18, topZ = 2.05, wheelR = 0.62, wy = y - 0.02;
+    // Grundriss aus Bohlen und zwei Schwellen
+    I.box(ctx, x - 0.62, y - 0.5, 0, 1.24, 1.0, baseH, { wall: '#6e5944', top: '#9f8361' });
+    for (let u = -0.56; u < 0.6; u += 0.16) I.line(ctx, [x + u, y - 0.48, baseH + 0.005], [x + u, y + 0.48, baseH + 0.005], 'rgba(50,34,18,0.3)', 0.7);
+    // Bockgerüst: vier Ständer, Kopfriegel, Streben
+    const post = (px, py) => { I.line(ctx, [px, py, baseH], [px, py, topZ], '#5d4f3f', 4.2); I.line(ctx, [px - 0.012, py, baseH], [px - 0.012, py, topZ], 'rgba(226,200,158,0.35)', 1.4); };
+    for (const px of [x - 0.5, x + 0.5]) for (const py of [y - 0.4, y + 0.4]) post(px, py);
+    for (const py of [y - 0.4, y + 0.4]) {
+      I.line(ctx, [x - 0.5, py, topZ], [x + 0.5, py, topZ], '#5d4f3f', 3.4);
+      I.line(ctx, [x - 0.5, py, topZ - 0.75], [x + 0.5, py, topZ - 0.75], '#6b5b48', 2.2);
+      I.line(ctx, [x - 0.5, py, baseH + 0.15], [x + 0.5, py, topZ - 0.75], '#6b5b48', 1.6);
+    }
+    for (const px of [x - 0.5, x + 0.5]) I.line(ctx, [px, y - 0.4, topZ], [px, y + 0.4, topZ], '#5d4f3f', 3);
+    // Laufrad in der x-z-Ebene, mit Speichen und Trittsprossen
+    const rim = (r, dz) => { const pts = []; for (let k = 0; k < 28; k++) { const a = k / 28 * 6.2832; pts.push(I.p(x + Math.cos(a) * r, wy + dz, topZ - 0.78 + Math.sin(a) * r)); } return pts; };
+    const ring = (r, col, lw, dz) => { const q = rim(r, dz || 0); ctx.strokeStyle = col; ctx.lineWidth = lw; ctx.beginPath(); q.forEach((v, i) => i ? ctx.lineTo(v[0], v[1]) : ctx.moveTo(v[0], v[1])); ctx.closePath(); ctx.stroke(); };
+    const spin = t * 0.35;
+    for (const dz of [-0.17, 0.17]) {
+      ring(wheelR, '#6e5944', 3.2, dz); ring(wheelR * 0.82, '#7d6950', 1.6, dz);
+      for (let k = 0; k < 10; k++) { const a = spin + k / 10 * 6.2832; I.line(ctx, [x, wy + dz, topZ - 0.78], [x + Math.cos(a) * wheelR * 0.95, wy + dz, topZ - 0.78 + Math.sin(a) * wheelR * 0.95], '#7d6950', 1.4); }
+    }
+    for (let k = 0; k < 14; k++) { const a = spin + k / 14 * 6.2832, cx = x + Math.cos(a) * wheelR * 0.9, cz = topZ - 0.78 + Math.sin(a) * wheelR * 0.9; I.line(ctx, [cx, wy - 0.17, cz], [cx, wy + 0.17, cz], k % 2 ? '#8d7a5c' : '#6e5944', 1.6); }
+    I.line(ctx, [x, wy - 0.24, topZ - 0.78], [x, wy + 0.24, topZ - 0.78], '#4a3d2c', 3.4);
+    // Ausleger über das Wasser, mit Strebe und Seilrolle
+    const bx = x - 0.22, by = y + 1.75, bz = topZ - 0.5;
+    I.line(ctx, [x, y + 0.3, topZ - 0.02], [bx, by, bz], '#5d4f3f', 4.4);
+    I.line(ctx, [x - 0.012, y + 0.3, topZ - 0.02], [bx - 0.012, by, bz], 'rgba(226,200,158,0.3)', 1.5);
+    I.line(ctx, [x, y + 0.4, topZ - 1.0], [(x + bx) / 2, (y + by) / 2 + 0.1, bz + 0.22], '#6b5b48', 2);
+    const tip = I.p(bx, by, bz);
+    if (!pk) { ctx.strokeStyle = '#4a3d2c'; ctx.lineWidth = 1.4; ctx.beginPath(); ctx.arc(tip[0], tip[1], 3.2, 0, 6.28); ctx.stroke(); }
+    // Last am Seil, langsam pendelnd
+    const sw = Math.sin(t * 0.6) * 0.07, lz = 0.7 + Math.sin(t * 0.33) * 0.5, ly = by + sw;
+    I.line(ctx, [bx, ly, bz], [bx, ly, lz + 0.22], 'rgba(60,44,24,0.9)', 1.2);
+    { const w = 0.27, q = [[bx - w, ly - w], [bx + w, ly - w], [bx + w, ly + w], [bx - w, ly + w]];
+      I.poly(ctx, q.map(v => [v[0], v[1], lz + 0.22]), '#b09a70', 'rgba(40,26,12,0.6)', 0.7);
+      I.poly(ctx, [[q[3][0], q[3][1], lz + 0.22], [q[2][0], q[2][1], lz + 0.22], [q[2][0], q[2][1], lz - 0.16], [q[3][0], q[3][1], lz - 0.16]], '#8b714d');
+      I.poly(ctx, [[q[1][0], q[1][1], lz + 0.22], [q[2][0], q[2][1], lz + 0.22], [q[2][0], q[2][1], lz - 0.16], [q[1][0], q[1][1], lz - 0.16]], '#6b583c');
+      I.line(ctx, [q[3][0], q[3][1], lz + 0.22], [q[2][0], q[2][1], lz - 0.16], 'rgba(216,190,146,0.5)', 1); }
+    // Kranmeister neben dem Rad
+    if (!pk) { const mp = I.p(x + 0.62, y + 0.45, baseH); this.drawPerson(ctx, mp[0], mp[1], '#5a4a32', 'static', 1, false, '#e8c39e', t * 2, -1, null, null, 0.85); }
   },
   drawBuilding(ctx, b, st, season, sv) {
     switch (b.kind) {
@@ -545,7 +589,7 @@ Object.assign(HK.Scene, {
     // Bordwand: fünf Klinkerplankengänge je Seite, geteert unten, hell oben, weich entlang der Länge schattiert
     const lightDir = [-0.55, -0.83];
     const lam = (a, b, sign) => { const nx0 = (b[1] - a[1]) * sign, ny0 = -(b[0] - a[0]) * sign; const len = Math.hypot(nx0, ny0) || 1; const nwx = (nx0 * c - ny0 * sn) / len, nwy = (nx0 * sn + ny0 * c) / len; return Math.max(0, nwx * lightDir[0] + nwy * lightDir[1]); };
-    const strakes = ['#a8763f', '#986a36', '#84582c', '#5a3c20', '#3e2a16'];
+    const strakes = ['#b28f68', '#a98153', '#926d45', '#644b31', '#453422'];
     const N = strakes.length;
     const sides = [{ sign: 1 }, { sign: -1 }].map(sd => { const mid = W(0, sd.sign * 0.4, 0.3); return { sign: sd.sign, sy: I.p(mid[0], mid[1], mid[2])[1] }; }).sort((a, b) => a.sy - b.sy);
     const near = sides[1].sign;
@@ -563,13 +607,13 @@ Object.assign(HK.Scene, {
       // Bergholz, Farbstreifen, Nagelreihen
       const rail = P.map(g => W(g[0], sign * g[1], sheer(g[0]) - 0.07)), wale = P.map(g => W(g[0] * 0.99, sign * g[1] * bul(0.4), sheer(g[0]) * 0.6 + 0.03));
       strokeW(rail, flag, 2.2 * s); strokeW(rail.map(q => [q[0], q[1], q[2] - 0.05 * s]), 'rgba(0,0,0,0.25)', 0.8);
-      strokeW(wale, '#2a1a0c', 2.4 * s); strokeW(wale.map(q => [q[0], q[1], q[2] + 0.02 * s]), 'rgba(255,220,160,0.18)', 0.7);
+      strokeW(wale, '#4a3826', 2.4 * s); strokeW(wale.map(q => [q[0], q[1], q[2] + 0.02 * s]), 'rgba(255,220,160,0.18)', 0.7);
       ctx.fillStyle = 'rgba(0,0,0,0.4)'; for (let i = 1; i < P.length - 1; i++) for (let k = 1; k < N; k++) { const g = P[i]; const q = I.p(...W(g[0] * (1 - 0.07 * k / N), sign * g[1] * bul(k / N), sheer(g[0]) * (1 - k / N) + 0.03)); ctx.fillRect(q[0], q[1], 1, 1); }
     }
     strokeW(gw.map(g => W(g[0], g[1], sheer(g[0]))), 'rgba(20,10,5,0.75)', 1.1, true);
     // Deck mit Längsplanken, Schanzkleid innen
     const inner = gw.map(g => W(g[0] * 0.98, g[1] * 0.88, deckZ(g[0])));
-    I.poly(ctx, inner, '#9a7a4e', 'rgba(20,10,5,0.6)', 0.7);
+    I.poly(ctx, inner, '#a68f71', 'rgba(20,10,5,0.5)', 0.7);
     for (let v = -0.3; v <= 0.31; v += 0.075) { const pts = []; for (let u = -1.0; u <= 1.1; u += 0.15) pts.push(W(u, v, deckZ(u))); strokeW(pts, 'rgba(0,0,0,0.22)', 0.5); }
     for (let i = 0; i < gw.length; i++) { const a = gw[i], b = gw[(i + 1) % gw.length]; if ((a[1] + b[1]) * near < 0) I.poly(ctx, [W(a[0], a[1], sheer(a[0])), W(b[0], b[1], sheer(b[0])), W(b[0] * 0.98, b[1] * 0.88, deckZ(b[0])), W(a[0] * 0.98, a[1] * 0.88, deckZ(a[0]))], '#5a3a1c', 'rgba(20,10,5,0.5)', 0.5); }
     // Luke mit Süll und Gräting
@@ -585,11 +629,11 @@ Object.assign(HK.Scene, {
     const castle = (u0, u1, h, isStern) => {
       const us = [u0].concat(prof.map(g => g[0]).filter(u => u > u0 + 1e-6 && u < u1 - 1e-6), [u1]).sort((p, q) => p - q);
       const top = u => sheer(u) + h, ue = isStern ? u1 : u0, ve = vAt(ue) * 0.96;
-      const wall = sign => { const pts = us.map(u => W(u, sign * vAt(u), sheer(u) - 0.03)).concat(us.map(u => W(u, sign * vAt(u), top(u))).reverse()); I.poly(ctx, pts, I.shade('#7a5230', sign === near ? 1 : 0.7), 'rgba(20,10,5,0.6)', 0.7); for (let j = 1; j < 4; j++) strokeW(us.map(u => W(u, sign * vAt(u), sheer(u) - 0.03 + h * j / 4)), 'rgba(0,0,0,0.3)', 0.5); };
-      const bulk = () => { if (viewDot(isStern ? 1 : -1) < 0) return; I.poly(ctx, [W(ue, -ve, deckZ(ue)), W(ue, ve, deckZ(ue)), W(ue, ve, top(ue)), W(ue, -ve, top(ue))], '#5c3d20', 'rgba(20,10,5,0.6)', 0.6); for (let v = -ve + 0.08; v < ve; v += 0.08) I.line(ctx, W(ue, v, deckZ(ue)), W(ue, v, top(ue)), 'rgba(0,0,0,0.3)', 0.5); if (isStern) I.poly(ctx, [W(ue, near * 0.05, deckZ(ue)), W(ue, near * 0.2, deckZ(ue)), W(ue, near * 0.2, deckZ(ue) + 0.28), W(ue, near * 0.05, deckZ(ue) + 0.28)], '#1e140a'); };
+      const wall = sign => { const pts = us.map(u => W(u, sign * vAt(u), sheer(u) - 0.03)).concat(us.map(u => W(u, sign * vAt(u), top(u))).reverse()); I.poly(ctx, pts, I.shade('#856647', sign === near ? 1 : 0.7), 'rgba(20,10,5,0.6)', 0.7); for (let j = 1; j < 4; j++) strokeW(us.map(u => W(u, sign * vAt(u), sheer(u) - 0.03 + h * j / 4)), 'rgba(0,0,0,0.3)', 0.5); };
+      const bulk = () => { if (viewDot(isStern ? 1 : -1) < 0) return; I.poly(ctx, [W(ue, -ve, deckZ(ue)), W(ue, ve, deckZ(ue)), W(ue, ve, top(ue)), W(ue, -ve, top(ue))], '#644b31', 'rgba(20,10,5,0.6)', 0.6); for (let v = -ve + 0.08; v < ve; v += 0.08) I.line(ctx, W(ue, v, deckZ(ue)), W(ue, v, top(ue)), 'rgba(0,0,0,0.3)', 0.5); if (isStern) I.poly(ctx, [W(ue, near * 0.05, deckZ(ue)), W(ue, near * 0.2, deckZ(ue)), W(ue, near * 0.2, deckZ(ue) + 0.28), W(ue, near * 0.05, deckZ(ue) + 0.28)], '#1e140a'); };
       wall(-near); bulk(); wall(near);
       const deck = us.map(u => W(u, -vAt(u) * 0.97, top(u))).concat(us.map(u => W(u, vAt(u) * 0.97, top(u))).reverse());
-      I.poly(ctx, deck, '#a08050', 'rgba(20,10,5,0.6)', 0.6); for (let v = -0.3; v <= 0.31; v += 0.075) strokeW(us.filter(u => Math.abs(v) < vAt(u) * 0.95).map(u => W(u, v, top(u))), 'rgba(0,0,0,0.2)', 0.5);
+      I.poly(ctx, deck, '#aa9576', 'rgba(20,10,5,0.5)', 0.6); for (let v = -0.3; v <= 0.31; v += 0.075) strokeW(us.filter(u => Math.abs(v) < vAt(u) * 0.95).map(u => W(u, v, top(u))), 'rgba(0,0,0,0.2)', 0.5);
       return { us, top, vAt };
     };
     const railingOn = (us, top, sign, hgt, uFrom, uTo) => { const pts = us.filter(u => u >= uFrom - 1e-6 && u <= uTo + 1e-6).map(u => W(u, sign * vAt(u) * 0.97, top(u))); for (const q of pts) I.line(ctx, q, [q[0], q[1], q[2] + hgt], '#3a2410', 1.3 * s); strokeW(pts.map(q => [q[0], q[1], q[2] + hgt]), '#5a4020', 1.8 * s); strokeW(pts.map(q => [q[0], q[1], q[2] + hgt * 0.5]), '#4a3018', 0.9 * s); };
@@ -623,7 +667,30 @@ Object.assign(HK.Scene, {
     // Rah und Segel: am Kai aufgegeit (hängt halb), auf See gebläht, mit Wappen der Heimatstadt
     const yw = 0.66, yz = zT - 0.55; I.line(ctx, W(0.04, -yw, yz), W(0.04, yw, yz), '#2a1a0a', 2.6 * s); I.line(ctx, W(0.04, -yw, yz), W(0.04, yw, yz), '#6a4a2c', 1.1 * s);
     {
+      if (docked) {
+        // Am Kai ist das Segel auf die Rah gegeit: ein geschnürtes Tuchbündel, das Deck bleibt frei
+        const n = 10, pts = []; for (let k = 0; k <= n; k++) { const f = -1 + 2 * k / n; pts.push(S(0.05, f * yw * 0.95, yz - 0.09 - (1 - f * f) * 0.05)); }
+        ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+        ctx.strokeStyle = '#8a7550'; ctx.lineWidth = 5.2 * s; ctx.beginPath(); pts.forEach((q, i) => i ? ctx.lineTo(q[0], q[1]) : ctx.moveTo(q[0], q[1])); ctx.stroke();
+        ctx.strokeStyle = '#c6b48e'; ctx.lineWidth = 3.4 * s; ctx.beginPath(); pts.forEach((q, i) => i ? ctx.lineTo(q[0], q[1] - 0.8 * s) : ctx.moveTo(q[0], q[1] - 0.8 * s)); ctx.stroke();
+        ctx.strokeStyle = 'rgba(238,228,205,0.75)'; ctx.lineWidth = 1.4 * s; ctx.beginPath(); pts.forEach((q, i) => i ? ctx.lineTo(q[0], q[1] - 1.6 * s) : ctx.moveTo(q[0], q[1] - 1.6 * s)); ctx.stroke();
+        ctx.strokeStyle = 'rgba(58,42,22,0.6)'; ctx.lineWidth = 1 * s;
+        for (let k = 1; k < 7; k++) { const f = -1 + 2 * k / 7, a = S(0.05, f * yw * 0.95, yz + 0.02), b = S(0.05, f * yw * 0.95, yz - 0.17); ctx.beginPath(); ctx.moveTo(a[0], a[1]); ctx.lineTo(b[0], b[1]); ctx.stroke(); }
+        ctx.lineCap = 'butt';
+        // Wappenschild am Achterkastell statt im Segel
+        if (!pk) {
+          const su = -0.72, sv = vAt(su) * 1.005, sz = aTop(su) - 0.14, r = 0.155;
+          const SH = (du, dz) => W(su + du * 0.5, near * sv, sz + dz);
+          const sh = [SH(-r, r * 1.5), SH(r, r * 1.5), SH(r, 0)];
+          for (let k = 1; k <= 5; k++) { const a = k / 5; sh.push(SH(r * Math.cos(a * Math.PI / 2), -r * 1.1 * Math.sin(a * Math.PI / 2))); }
+          for (let k = 5; k >= 1; k--) { const a = k / 5; sh.push(SH(-r * Math.cos(a * Math.PI / 2), -r * 1.1 * Math.sin(a * Math.PI / 2))); }
+          sh.push(SH(-r, 0));
+          I.poly(ctx, sh, flag, 'rgba(30,18,8,0.7)', 0.8);
+          I.poly(ctx, [SH(-r * 0.75, r * 0.5), SH(r * 0.75, r * 0.5), SH(r * 0.75, r * 0.05), SH(-r * 0.75, r * 0.05)], flag2);
+        }
+      }
       const belly = docked ? 0.1 : 0.36 + Math.sin(t * 2) * 0.05, hang = docked ? 0.95 : 1.55, zb = yz - hang;
+      if (!docked) {
       const foot = []; const nF = 6; for (let k = 0; k <= nF; k++) { const f = -1 + 2 * k / nF; foot.push(W(0.05 + belly * (1 - f * f * 0.5), f * yw * 0.9, zb + (docked ? Math.abs(Math.sin(k * 2.3)) * 0.12 : 0))); }
       const sail = [W(0.05, -yw, yz), W(0.05, yw, yz)].concat(foot.reverse());
       const g0 = S(0.05, -yw, yz), g1 = S(0.05, yw, yz); const sg = ctx.createLinearGradient(g0[0], g0[1], g1[0], g1[1]); sg.addColorStop(0, '#d9ccb0'); sg.addColorStop(0.5, '#f3ead6'); sg.addColorStop(1, '#e6dcc4');
@@ -642,6 +709,7 @@ Object.assign(HK.Scene, {
       }
       // Schoten und Brassen
       for (const sd of [-1, 1]) { I.line(ctx, foot[sd > 0 ? 0 : nF], W(-0.5, sd * 0.36, sheer(-0.5)), 'rgba(25,15,8,0.6)', 0.5); I.line(ctx, W(0.04, sd * yw, yz), W(-0.6, sd * vAt(-0.6) * 0.9, aTop(-0.6)), 'rgba(25,15,8,0.55)', 0.5); }
+      }
     }
     // Steven mit vergoldetem Knauf, Bugspriet, Ruder mit Pinne, Wimpel, Heckleuchte
     I.line(ctx, W(1.22, 0, 0.1), W(1.3, 0, sheer(1.25) + 0.32), '#3a2a1a', 3.2 * s); const kp = S(1.3, 0, sheer(1.25) + 0.34); ctx.fillStyle = '#d4a944'; ctx.beginPath(); ctx.arc(kp[0], kp[1], 2.2 * s, 0, 6.28); ctx.fill(); ctx.strokeStyle = '#7a5a10'; ctx.lineWidth = 0.6; ctx.stroke();
