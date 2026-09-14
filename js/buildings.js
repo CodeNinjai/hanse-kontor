@@ -629,40 +629,22 @@ Object.assign(HK.Scene, {
     if (cs.load && d.load) this.drawCargo(ctx, bx, by, lz + z0, d.load);
     if (!pk && busy) { const mp = P(x - 0.6, y - 0.05, 0); this.drawPerson(ctx, mp[0], mp[1], '#5a4a32', 'static', 1, false, '#e8c39e', t * 2, 1, null, null, 0.85); }
   },
-  /* Handkarren der Hafenarbeiter: Bett mit Bordwänden auf zwei Rädern, ein Mann in der Deichsel */
-  drawPortCart(ctx, x, y, z0, w, t) {
-    const A = HK.ROAD_NODES[w.from], B = HK.ROAD_NODES[w.to];
-    const dx = (B ? B[0] : 1) - (A ? A[0] : 0), dy = (B ? B[1] : 0) - (A ? A[1] : 0);
-    const alongX = Math.abs(dx) >= Math.abs(dy), sg = (alongX ? Math.sign(dx) : Math.sign(dy)) || 1;
-    // u zeigt in Fahrtrichtung, v quer dazu
-    const W = (u, v) => alongX ? [x + u * sg, y + v] : [x + v, y + u * sg];
-    const bw = alongX ? 0.62 : 0.42, bd = alongX ? 0.42 : 0.62;
-    const x0 = x - bw / 2, y0 = y - bd / 2;
-    if (!this.picking) { const sp = I.p(x, y, z0); ctx.fillStyle = 'rgba(0,0,0,0.22)'; ctx.beginPath(); ctx.ellipse(sp[0], sp[1] + 2, 15, 5.5, 0, 0, 6.28); ctx.fill(); }
-    // Räder links und rechts: das hintere vor, das vordere nach der Ladefläche, sonst verdeckt sie es
-    const wheel = (side) => {
-      const wp = W(-0.04, side * (alongX ? bd / 2 + 0.03 : bw / 2 + 0.03)), p = I.p(wp[0], wp[1], z0 + 0.14);
-      ctx.fillStyle = '#3a2c20'; ctx.beginPath(); ctx.ellipse(p[0], p[1], 5.4, 5.4, 0, 0, 6.28); ctx.fill();
-      ctx.fillStyle = '#7b5c3c'; ctx.beginPath(); ctx.ellipse(p[0], p[1], 4, 4, 0, 0, 6.28); ctx.fill();
-      ctx.strokeStyle = '#43301e'; ctx.lineWidth = 0.9;
-      for (let i = 0; i < 4; i++) { const a = i * 0.785 + t * 2.2 * sg; ctx.beginPath(); ctx.moveTo(p[0] - Math.cos(a) * 3.6, p[1] - Math.sin(a) * 3.6); ctx.lineTo(p[0] + Math.cos(a) * 3.6, p[1] + Math.sin(a) * 3.6); ctx.stroke(); }
-    };
-    wheel(-1);
-    I.box(ctx, x0, y0, z0 + 0.15, bw, bd, 0.09, { wall: '#6d5133', top: '#9d8050' });
-    // Bordwände längs der Fahrtrichtung
-    if (alongX) {
-      I.box(ctx, x0, y0, z0 + 0.24, bw, 0.05, 0.13, { wall: '#7a5a3a', top: '#a98a58' });
-      I.box(ctx, x0, y0 + bd - 0.05, z0 + 0.24, bw, 0.05, 0.13, { wall: '#7a5a3a', top: '#a98a58' });
-    } else {
-      I.box(ctx, x0, y0, z0 + 0.24, 0.05, bd, 0.13, { wall: '#7a5a3a', top: '#a98a58' });
-      I.box(ctx, x0 + bw - 0.05, y0, z0 + 0.24, 0.05, bd, 0.13, { wall: '#7a5a3a', top: '#a98a58' });
+  /* Stehendes Rad in der Isometrie: der Kreis liegt in der Ebene aus Fahrtrichtung und Höhe,
+     projiziert also als geneigte Ellipse. Punkte werden gerechnet statt als Kreis gezeichnet. */
+  isoWheel(ctx, cx, cy, cz, r, dx, dy, spin) {
+    const P = (th, rr) => I.p(cx + Math.cos(th) * rr * dx, cy + Math.cos(th) * rr * dy, cz + Math.sin(th) * rr);
+    const ring = (rr, col) => { ctx.fillStyle = col; ctx.beginPath(); for (let k = 0; k <= 22; k++) { const q = P(k / 22 * 6.2832, rr); k ? ctx.lineTo(q[0], q[1]) : ctx.moveTo(q[0], q[1]); } ctx.closePath(); ctx.fill(); };
+    ring(r, '#342514');
+    ring(r * 0.86, '#8a6b44');
+    ring(r * 0.70, '#5d472e');
+    if (!this.picking) {
+      ctx.strokeStyle = '#9d7c50'; ctx.lineWidth = 1.5;
+      for (let i = 0; i < 6; i++) {
+        const a = spin + i * 1.0472, q0 = P(a, r * 0.16), q1 = P(a, r * 0.78);
+        ctx.beginPath(); ctx.moveTo(q0[0], q0[1]); ctx.lineTo(q1[0], q1[1]); ctx.stroke();
+      }
     }
-    wheel(1);
-    (w.items || []).forEach((it, i) => { const c = W(-0.17 + i * 0.17, i === 1 ? 0.06 : -0.04); this.drawCargo(ctx, c[0], c[1], z0 + 0.24, it, 0.78); });
-    const d1 = W(0.33, 0), d2 = W(0.6, 0);
-    I.line(ctx, [d1[0], d1[1], z0 + 0.22], [d2[0], d2[1], z0 + 0.34], '#6b5238', 1.8);
-    const m = W(0.72, 0), mp = I.p(m[0], m[1], z0);
-    this.drawPerson(ctx, mp[0], mp[1], w.color, 'porter', 1, false, w.skin, w.wait > 0 ? 0 : w.phase, (alongX ? sg : -sg) >= 0 ? 1 : -1, null, null, 0.88);
+    ring(r * 0.2, '#42301d');
   },
   drawBuilding(ctx, b, st, season, sv) {
     switch (b.kind) {
@@ -872,14 +854,41 @@ Object.assign(HK.Scene, {
     I.poly(ctx, [[x - 1.1, y + 0.1, 0], [x - 0.6, y + 0.1, 0], [x - 0.85, y + 0.35, 0.5]], '#c9b078'); I.poly(ctx, [[x - 0.6, y + 0.1, 0], [x - 0.6, y + 0.6, 0], [x - 0.85, y + 0.35, 0.5]], '#a9905a');
     if (this.light() < 0.6) { const p = I.p(x - 1.2, y + 0.4, 0.1); ctx.fillStyle = `rgba(255,160,60,${0.8 + Math.sin(t * 9) * 0.2})`; ctx.beginPath(); ctx.arc(p[0], p[1], 3, 0, 6.28); ctx.fill(); this.lamps.push([p[0], p[1]]); }
   },
+  /* Ein Karren, frei gedreht: Bett zwischen zwei Speichenrädern, Deichsel, Zieher davor.
+     Die Ausrichtung kommt als Winkel, damit der Karren beim Abbiegen mitdreht statt zu springen. */
+  drawBarrow(ctx, x, y, z0, ang, o) {
+    const dx = Math.cos(ang), dy = Math.sin(ang), nx = -dy, ny = dx, t = this.time;
+    const at = (u, v) => [x + dx * u + nx * v, y + dy * u + ny * v];
+    const L = o.ox ? 0.72 : 0.62, Wd = 0.42, R = o.ox ? 0.22 : 0.23, az = o.ox ? 0.22 : 0.23;
+    if (!this.picking) { const sp = I.p(x, y, z0); ctx.fillStyle = 'rgba(0,0,0,0.22)'; ctx.beginPath(); ctx.ellipse(sp[0], sp[1] + 2, 16, 6, 0, 0, 6.28); ctx.fill(); }
+    const off = Wd / 2 + 0.08, spin = o.still ? 0 : t * 2.3;
+    const wp = [at(-0.02, -off), at(-0.02, off)];
+    const near = (wp[0][0] + wp[0][1]) >= (wp[1][0] + wp[1][1]) ? 0 : 1;
+    const wheel = (i) => this.isoWheel(ctx, wp[i][0], wp[i][1], z0 + az, R, dx, dy, spin);
+    wheel(1 - near);
+    I.line(ctx, [wp[0][0], wp[0][1], z0 + az], [wp[1][0], wp[1][1], z0 + az], '#4a3624', 1.6);
+    I.obox(ctx, x, y, z0 + az - 0.01, dx, dy, L, Wd, 0.07, '#7c5c36');
+    const bh = 0.16, side = Wd / 2 - 0.025;
+    for (const sv of [-side, side]) { const c = at(0, sv); I.obox(ctx, c[0], c[1], z0 + az + 0.06, dx, dy, L, 0.05, bh, '#8a6a40'); }
+    const hb = at(-L / 2 + 0.03, 0); I.obox(ctx, hb[0], hb[1], z0 + az + 0.06, dx, dy, 0.05, Wd, bh + 0.03, '#856640');
+    (o.items || []).forEach((it, i) => { const c = at(-0.15 + i * 0.16, i === 1 ? 0.05 : -0.04); this.drawCargo(ctx, c[0], c[1], z0 + az + 0.06, it, 0.72); });
+    if (o.hay) { const c = at(0, 0); I.obox(ctx, c[0], c[1], z0 + az + 0.06, dx, dy, L * 0.78, Wd * 0.78, 0.2, '#bda061'); }
+    for (const v of [-0.11, 0.11]) { const a0 = at(0.3, v), a1 = at(0.56, v * 0.5); I.line(ctx, [a0[0], a0[1], z0 + az + 0.04], [a1[0], a1[1], z0 + 0.38], '#6b5238', 1.6); }
+    wheel(near);
+    const m = at(o.ox ? 0.92 : 0.68, 0);
+    if (o.ox) {
+      I.obox(ctx, m[0], m[1], z0 + 0.12, dx, dy, 0.34, 0.26, 0.24, '#6a4a3a');
+      const hd = I.p(m[0] + dx * 0.24, m[1] + dy * 0.24, z0 + 0.34); ctx.fillStyle = '#5c3f30'; ctx.fillRect(hd[0] - 3, hd[1] - 4.5, 6, 6.5);
+    } else {
+      const mp = I.p(m[0], m[1], z0);
+      this.drawPerson(ctx, mp[0], mp[1], o.color, 'porter', 1, false, o.skin, o.still ? 0 : o.phase, (dx - dy) >= 0 ? 1 : -1, null, null, 0.88);
+    }
+  },
   drawCart(ctx, wx, wy, c, t) {
-    const along = c.a[0] === c.b[0] ? 'y' : 'x', d = c.dir;
-    const W = (u, v, z) => along === 'x' ? [wx + u, wy + v, z] : [wx + v, wy + u, z];
-    const sp = I.p(wx, wy, 0); ctx.fillStyle = 'rgba(0,0,0,0.2)'; ctx.beginPath(); ctx.ellipse(sp[0], sp[1] + 2, 14, 5, 0, 0, 6.28); ctx.fill();
-    I.box(ctx, W(-0.3, -0.18, 0.15)[0], W(-0.3, -0.18, 0.15)[1], 0.15, along === 'x' ? 0.5 : 0.36, along === 'x' ? 0.36 : 0.5, 0.2, { wall: '#7a5a3a', top: '#b8a070' });
-    for (const u of [-0.2, 0.15]) { const p = I.p(...W(u, 0.2, 0.1)); ctx.fillStyle = '#2a2a2a'; ctx.beginPath(); ctx.ellipse(p[0], p[1], 4, 4, 0, 0, 6.28); ctx.fill(); ctx.strokeStyle = '#8a6a4a'; ctx.lineWidth = 0.8; for (let i = 0; i < 3; i++) { const a = i * 2.09 + t * 3 * d; ctx.beginPath(); ctx.moveTo(p[0], p[1]); ctx.lineTo(p[0] + Math.cos(a) * 3.5, p[1] + Math.sin(a) * 3.5); ctx.stroke(); } }
-    if (c.ox) { const o = W(0.55 * d, 0, 0.12); I.box(ctx, o[0] - 0.15, o[1] - 0.12, 0.12, 0.3, 0.24, 0.22, { wall: '#6a4a3a', top: '#7a5a4a' }); const h = I.p(...W(0.75 * d, 0, 0.35)); ctx.fillStyle = '#6a4a3a'; ctx.fillRect(h[0] - 3, h[1] - 4, 6, 6); }
-    else { const p = I.p(...W(0.4 * d, 0, 0)); this.drawPerson(ctx, p[0], p[1], '#5a6a4a', 'citizen', 1, false, '#e8c39e', t * 9, d, null, null, 0.85); }
+    this.drawBarrow(ctx, wx, wy, 0, c.head != null ? c.head : 0, { ox: c.ox, hay: c.ox, color: '#5a6a4a', skin: '#e8c39e', phase: t * 9 });
+  },
+  drawPortCart(ctx, x, y, z0, w, t) {
+    this.drawBarrow(ctx, x, y, z0, w.head != null ? w.head : 0, { items: w.items, color: w.color, skin: w.skin, phase: w.phase, still: w.wait > 0 });
   },
   drawChicken(ctx, x, y, t) { ctx.fillStyle = '#f0ece0'; ctx.beginPath(); ctx.ellipse(x, y - 2, 3, 2.2, 0, 0, 6.28); ctx.fill(); ctx.beginPath(); ctx.arc(x + 2.5, y - 4, 1.4, 0, 6.28); ctx.fill(); ctx.fillStyle = '#c8102e'; ctx.fillRect(x + 2, y - 6, 1, 1.2); ctx.fillStyle = '#e0a020'; ctx.fillRect(x + 3.5, y - 4, 1.2, 0.8); ctx.fillStyle = '#3a2a1a'; ctx.fillRect(x - 1, y, 0.8, 2 + Math.sin(t * 10 + x) * 0.5); ctx.fillRect(x + 1, y, 0.8, 2 - Math.sin(t * 10 + x) * 0.5); },
   /* Reiter: Pferd als Körper mit Beinen, darauf der Ritter */

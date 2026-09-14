@@ -7,6 +7,20 @@ HK.Iso = {
   poly(ctx, pts, fill, stroke, lw) { this.path(ctx, pts); if (fill) { ctx.fillStyle = fill; ctx.fill(); } if (stroke) { ctx.strokeStyle = stroke; ctx.lineWidth = lw || 0.8; ctx.stroke(); } },
   line(ctx, a, b, stroke, lw) { const A = this.p(a[0], a[1], a[2]), B = this.p(b[0], b[1], b[2]); ctx.strokeStyle = stroke; ctx.lineWidth = lw || 0.8; ctx.beginPath(); ctx.moveTo(A[0], A[1]); ctx.lineTo(B[0], B[1]); ctx.stroke(); },
   shade(hex, f) { if (hex[0] !== '#') return hex; const n = parseInt(hex.slice(1), 16); const r = HK.clamp(((n >> 16) & 255) * f, 0, 255) | 0, g = HK.clamp(((n >> 8) & 255) * f, 0, 255) | 0, b = HK.clamp((n & 255) * f, 0, 255) | 0; return `rgb(${r},${g},${b})`; },
+  /* Quader mit freier Ausrichtung in der Bodenebene: Mittelpunkt, Richtung, Länge, Breite, Höhe.
+     Die vier Seiten werden nach Tiefe sortiert gezeichnet, darum stimmt jede Drehung. */
+  obox(ctx, cx, cy, cz, dx, dy, L, Wd, H, col) {
+    const nx = -dy, ny = dx;
+    const c = (u, v) => [cx + dx * u + nx * v, cy + dy * u + ny * v];
+    const A = c(L / 2, Wd / 2), B = c(L / 2, -Wd / 2), C = c(-L / 2, -Wd / 2), D = c(-L / 2, Wd / 2);
+    const quad = [[A, B, [dx, dy]], [B, C, [nx * -1, ny * -1]], [C, D, [-dx, -dy]], [D, A, [nx, ny]]];
+    quad.sort((a, b) => (a[0][0] + a[0][1] + a[1][0] + a[1][1]) - (b[0][0] + b[0][1] + b[1][0] + b[1][1]));
+    for (const [p0, p1, n] of quad) {
+      const lit = 0.64 + 0.44 * Math.max(0, (n[1] - n[0] * 0.45) / 1.2);
+      this.poly(ctx, [[p0[0], p0[1], cz], [p1[0], p1[1], cz], [p1[0], p1[1], cz + H], [p0[0], p0[1], cz + H]], this.shade(col, lit));
+    }
+    this.poly(ctx, [A, B, C, D].map(q => [q[0], q[1], cz + H]), this.shade(col, 1.06));
+  },
   /* Sonnenrichtung: linke (+y) Wand hell, rechte (+x) Wand dunkler */
   LIGHT: { top: 1.08, left: 1.0, right: 0.74, roofL: 1.0, roofR: 0.8, back: 0.6 },
   /* Schatten eines Quaders auf dem Boden (konvexe Hülle von Grundriss und verschobenem Grundriss) */

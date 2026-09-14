@@ -308,6 +308,12 @@ HK.Scene = {
       items: [], wait: 0, slot: null, a: null, b: null, ft: 0, hat: Math.random() < 0.4,
     });
   },
+  /* Ein Fahrzeug dreht sich in die Fahrtrichtung, statt auf die nächste Achse zu springen */
+  turn(o, target, dt) {
+    if (o.head == null) { o.head = target; return; }
+    const d = Math.atan2(Math.sin(target - o.head), Math.cos(target - o.head));
+    o.head += d * Math.min(1, dt * 5);
+  },
   porterPos(w) {
     if (w.a) {
       const wx = w.a[0] + (w.b[0] - w.a[0]) * w.ft, wy = w.a[1] + (w.b[1] - w.a[1]) * w.ft;
@@ -328,8 +334,13 @@ HK.Scene = {
     for (let k = this.porters.length - 1; k >= 0; k--) {
       const w = this.porters[k];
       if (w.wait > 0) { w.wait -= dt; if (w.wait <= 0) this.porterNext(w); continue; }
-      if (w.a) { const len = Math.hypot(w.b[0] - w.a[0], w.b[1] - w.a[1]) || 0.1; w.ft += w.speed * dt / len; w.phase += dt * 9; if (w.ft >= 1) { w.ft = 1; this.porterNext(w); } continue; }
+      if (w.a) {
+        const len = Math.hypot(w.b[0] - w.a[0], w.b[1] - w.a[1]) || 0.1;
+        if (w.cart) this.turn(w, Math.atan2(w.b[1] - w.a[1], w.b[0] - w.a[0]), dt);
+        w.ft += w.speed * dt / len; w.phase += dt * 9; if (w.ft >= 1) { w.ft = 1; this.porterNext(w); } continue;
+      }
       const q = this.walkerWorld(w); w.t += w.speed * dt / q.len; w.phase += dt * 9;
+      if (w.cart) { const A = HK.ROAD_NODES[w.from], B = HK.ROAD_NODES[w.to]; this.turn(w, Math.atan2(B[1] - A[1], B[0] - A[0]), dt); }
       if (w.t >= 1) {
         w.bx = q.wx; w.by = q.wy; w.t = 0; w.pi++;
         if (w.pi >= w.path.length) { this.porterNext(w); continue; }
@@ -405,7 +416,11 @@ HK.Scene = {
       w.t += w.speed * dt / q.len; w.phase += dt * 9;
       if (w.t >= 1) { const prev = w.from; w.bx = q.wx; w.by = q.wy; w.from = w.to; w.t = 0; const opts = HK.ROAD_ADJ[w.from].filter(n => n !== prev); w.to = HK.pick(opts.length ? opts : HK.ROAD_ADJ[w.from]); w.off = this.pickOff(w.from, w.to); if (Math.random() < 0.15) w.pause = HK.rnd(1, 4); }
     }
-    for (const c of this.carts) { const len = Math.hypot(c.b[0] - c.a[0], c.b[1] - c.a[1]); c.t += c.dir * c.v * dt / len; if (c.t > 1) { c.t = 1; c.dir = -1; } if (c.t < 0) { c.t = 0; c.dir = 1; } }
+    for (const c of this.carts) {
+      const len = Math.hypot(c.b[0] - c.a[0], c.b[1] - c.a[1]);
+      c.t += c.dir * c.v * dt / len; if (c.t > 1) { c.t = 1; c.dir = -1; } if (c.t < 0) { c.t = 0; c.dir = 1; }
+      this.turn(c, Math.atan2((c.b[1] - c.a[1]) * c.dir, (c.b[0] - c.a[0]) * c.dir), dt);
+    }
     for (const ch of this.chickens) { ch.t += dt; if (ch.t > 2) { ch.t = 0; ch.a = Math.random() * 6.28; } ch.x = ch.cx + Math.cos(ch.a) * 0.3 * Math.sin(ch.t * 1.5); ch.y = ch.cy + Math.sin(ch.a) * 0.3 * Math.sin(ch.t * 1.5); }
     for (const g of this.gulls) g.a += g.s * dt;
     this.updateDocks(dt); this.updatePorters(dt);
@@ -495,7 +510,7 @@ HK.Scene = {
     const nBoats = Math.min(4, 2 + st.boats);
     for (let i = 0; i < nBoats; i++) { const b = HK.BOAT_SPOTS[i]; items.push({ k: b.x + b.y, box: [b.x - 0.4, b.y - 0.4, b.x + 0.4, b.y + 0.4], f: c => this.drawBoat(c, b.x, b.y, i >= 2, t + i), pick: { kind: 'building', building: HK.BUILDING.fishermen, panel: 'fishermen', label: HK.t('fishingBoat') } }); }
     st.caravans.forEach((cv, i) => { const sp = HK.CARAVAN_SPOTS[i]; items.push({ k: sp.x + sp.y + 0.6, box: [sp.x - 0.6, sp.y - 0.4, sp.x + 0.6, sp.y + 0.4], f: c => this.drawCaravan(c, sp.x, sp.y, t + i, sv), pick: { kind: 'visitor', id: cv.id, panel: 'gate', label: HK.t('caravanFrom', { origin: HK.name(HK.ORIGIN[cv.origin]) }) } }); });
-    for (const c0 of this.carts) { const wx = c0.a[0] + (c0.b[0] - c0.a[0]) * c0.t, wy = c0.a[1] + (c0.b[1] - c0.a[1]) * c0.t; items.push({ k: this.pointKey(wx, wy), box: [wx - 0.3, wy - 0.3, wx + 0.3, wy + 0.3], f: c => this.drawCart(c, wx, wy, c0, t) }); }
+    for (const c0 of this.carts) { const wx = c0.a[0] + (c0.b[0] - c0.a[0]) * c0.t, wy = c0.a[1] + (c0.b[1] - c0.a[1]) * c0.t; items.push({ k: this.pointKey(wx, wy), box: [wx - 0.5, wy - 0.5, wx + 0.5, wy + 0.5], f: c => this.drawCart(c, wx, wy, c0, t) }); }
     for (const ch of this.chickens) items.push({ k: this.pointKey(ch.x, ch.y), box: [ch.x - 0.05, ch.y - 0.05, ch.x + 0.05, ch.y + 0.05], f: c => { const s2 = I.p(ch.x, ch.y, 0); this.drawChicken(c, s2[0], s2[1], t); } });
     for (const n of HK.STATIC_NPCS) { const pp = HK.PERSON[n.person]; items.push({ k: this.pointKey(n.x, n.y), box: [n.x - 0.05, n.y - 0.05, n.x + 0.05, n.y + 0.05], f: c => { const s2 = I.p(n.x, n.y, 0); this.drawPerson(c, s2[0], s2[1], n.color, 'static', 1, this.hover && this.hover.person === n.person, null, 0, 1, n.person); }, pick: { kind: 'person', person: n.person, label: pp.name + ', ' + (pp.title[HK.LANG] || pp.title.de) } }); }
     // Fehde: der Ritter mit seinen Reitern lauert vor dem Landtor
