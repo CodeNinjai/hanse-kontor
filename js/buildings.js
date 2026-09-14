@@ -29,6 +29,7 @@ Object.assign(HK.Scene, {
 
   /* Wandausstattung: Fenster in Reihen auf beiden sichtbaren Wänden */
   facadeWindows(ctx, b, floors, o) {
+    if (this.picking) return;
     o = o || {}; const seed = this.seed(b), shut = [null, '#4f6f3f', '#7a3a3a', '#3a5a7a', '#6a5a2a'][seed % 5], flowers = seed % 2 === 0;
     const nL = Math.max(1, Math.round(b.w / 0.5)), nR = Math.max(1, Math.round(b.d / 0.5));
     for (let f = 0; f < floors; f++) {
@@ -39,6 +40,7 @@ Object.assign(HK.Scene, {
     }
   },
   wallTexture(ctx, b, brick, z0, h) {
+    if (this.picking) return;
     if (brick) { I.brickL(ctx, b.x, b.y, b.d, z0, b.w, h); I.brickR(ctx, b.x, b.w, b.y, z0, b.d, h); return; }
     const nL = Math.max(2, Math.round(b.w / 0.4)), nR = Math.max(2, Math.round(b.d / 0.4));
     I.timberL(ctx, b.x, b.y, b.d, z0, b.w, h, nL); I.timberR(ctx, b.x, b.w, b.y, z0, b.d, h, nR);
@@ -107,6 +109,7 @@ Object.assign(HK.Scene, {
     ctx.restore();
   },
   gableDeco(ctx, b, pts, side) {
+    if (this.picking) return;
     // Blendnischen, Luken, Oculus, Giebelzier auf dem Treppengiebel
     const z0 = b.h, rh = Math.min(b.w, b.d) * 0.62 + 0.12;
     if (side === 'R') { const xx = b.x + b.w, cy = b.y + b.d / 2; I.poly(ctx, [[xx, cy - 0.12, z0 + rh * 0.35], [xx, cy + 0.12, z0 + rh * 0.35], [xx, cy + 0.12, z0 + rh * 0.62], [xx, cy - 0.12, z0 + rh * 0.62]], '#2b2620'); I.poly(ctx, [[xx, cy - 0.28, z0 + 0.1], [xx, cy - 0.06, z0 + 0.1], [xx, cy - 0.06, z0 + 0.5], [xx, cy - 0.28, z0 + 0.5]], '#e8dcc4'); I.poly(ctx, [[xx, cy + 0.06, z0 + 0.1], [xx, cy + 0.28, z0 + 0.1], [xx, cy + 0.28, z0 + 0.5], [xx, cy + 0.06, z0 + 0.5]], '#e8dcc4'); const p = I.p(xx, cy, z0 + rh * 0.82); ctx.fillStyle = '#2b2620'; ctx.beginPath(); ctx.ellipse(p[0], p[1], 2.2, 2.6, 0, 0, 6.28); ctx.fill(); ctx.strokeStyle = '#c9c0ad'; ctx.lineWidth = 0.8; ctx.stroke(); I.line(ctx, [xx, cy, z0 + rh], [xx, cy, z0 + rh + 0.2], '#c9c0ad', 1.5); }
@@ -487,12 +490,14 @@ Object.assign(HK.Scene, {
       case 'shrine': { I.box(ctx, p.x - 0.12, p.y - 0.12, 0, 0.24, 0.24, 0.9, { wall: '#8f887a', top: '#a9a292' }); I.box(ctx, p.x - 0.16, p.y - 0.16, 0.9, 0.32, 0.32, 0.25, { wall: '#7d766a' }, { noTop: true }); I.pyramid(ctx, p.x - 0.2, p.y - 0.2, 1.15, 0.4, 0.4, 0.22, '#3a3038'); const q = I.p(p.x + 0.16, p.y + 0.06, 1.02); ctx.fillStyle = '#c9a24a'; ctx.fillRect(q[0] - 1, q[1] - 2, 2, 3); if (!this.picking) { ctx.fillStyle = 'rgba(255,180,80,0.8)'; ctx.fillRect(q[0] - 0.6, q[1] + 2, 1.2, 1.2); } break; }
       case 'cross': { I.line(ctx, [p.x, p.y, 0], [p.x, p.y, 0.9], '#5a5048', 2.4); I.line(ctx, [p.x - 0.15, p.y, 0.7], [p.x + 0.15, p.y, 0.7], '#5a5048', 2.4); break; }
       case 'laundry': { const a = I.p(p.x, p.y, 0.6), b = I.p(p.x + 1.1, p.y, 0.6); I.line(ctx, [p.x, p.y, 0], [p.x, p.y, 0.65], '#4a3320', 1.2); I.line(ctx, [p.x + 1.1, p.y, 0], [p.x + 1.1, p.y, 0.65], '#4a3320', 1.2); ctx.strokeStyle = '#333'; ctx.lineWidth = 0.7; ctx.beginPath(); ctx.moveTo(a[0], a[1]); ctx.quadraticCurveTo((a[0] + b[0]) / 2, (a[1] + b[1]) / 2 + 3, b[0], b[1]); ctx.stroke(); ['#e8e0c8', '#7a3a3a', '#3a5a7a', '#e8e0c8'].forEach((c, i) => { const t = 0.18 + i * 0.2, lx = a[0] + (b[0] - a[0]) * t, ly = a[1] + (b[1] - a[1]) * t + 2, sw = Math.sin(this.time * 3 + i) * 1.5; ctx.fillStyle = c; ctx.beginPath(); ctx.moveTo(lx, ly); ctx.lineTo(lx + 5, ly + 2); ctx.lineTo(lx + 5 + sw, ly + 9); ctx.lineTo(lx + sw, ly + 7); ctx.fill(); }); break; }
-      case 'crane': this.drawTreadCrane(ctx, p.x, p.y); break;
+      case 'crane': this.drawTreadCrane(ctx, p.x, p.y, p.face || 'south'); break;
     }
   },
   /* Tretradkran am Kai: Bockgerüst, begehbares Laufrad, schwenkbarer Ausleger mit Last */
-  drawTreadCrane(ctx, x, y) {
-    const t = this.time, pk = this.picking;
+  drawTreadCrane(ctx, x, y, face) {
+    const t = this.time, pk = this.picking, west = face === 'west';
+    // Der Kran arbeitet nur, wenn ein Schiff am benachbarten Liegeplatz liegt
+    const busy = Object.keys(this.shipAnim || {}).some(id => { const a = this.shipAnim[id]; return !a.leaving && (west ? (Math.abs(a.y - y) < 3.4 && a.x < x) : (Math.abs(a.x - x) < 3.4 && a.y > y)); });
     const baseH = 0.18, topZ = 2.05, wheelR = 0.62, wy = y - 0.02;
     // Grundriss aus Bohlen und zwei Schwellen
     I.box(ctx, x - 0.62, y - 0.5, 0, 1.24, 1.0, baseH, { wall: '#6e5944', top: '#9f8361' });
@@ -509,7 +514,7 @@ Object.assign(HK.Scene, {
     // Laufrad in der x-z-Ebene, mit Speichen und Trittsprossen
     const rim = (r, dz) => { const pts = []; for (let k = 0; k < 28; k++) { const a = k / 28 * 6.2832; pts.push(I.p(x + Math.cos(a) * r, wy + dz, topZ - 0.78 + Math.sin(a) * r)); } return pts; };
     const ring = (r, col, lw, dz) => { const q = rim(r, dz || 0); ctx.strokeStyle = col; ctx.lineWidth = lw; ctx.beginPath(); q.forEach((v, i) => i ? ctx.lineTo(v[0], v[1]) : ctx.moveTo(v[0], v[1])); ctx.closePath(); ctx.stroke(); };
-    const spin = t * 0.35;
+    const spin = busy ? t * 0.35 : 0;
     for (const dz of [-0.17, 0.17]) {
       ring(wheelR, '#6e5944', 3.2, dz); ring(wheelR * 0.82, '#7d6950', 1.6, dz);
       for (let k = 0; k < 10; k++) { const a = spin + k / 10 * 6.2832; I.line(ctx, [x, wy + dz, topZ - 0.78], [x + Math.cos(a) * wheelR * 0.95, wy + dz, topZ - 0.78 + Math.sin(a) * wheelR * 0.95], '#7d6950', 1.4); }
@@ -517,22 +522,25 @@ Object.assign(HK.Scene, {
     for (let k = 0; k < 14; k++) { const a = spin + k / 14 * 6.2832, cx = x + Math.cos(a) * wheelR * 0.9, cz = topZ - 0.78 + Math.sin(a) * wheelR * 0.9; I.line(ctx, [cx, wy - 0.17, cz], [cx, wy + 0.17, cz], k % 2 ? '#8d7a5c' : '#6e5944', 1.6); }
     I.line(ctx, [x, wy - 0.24, topZ - 0.78], [x, wy + 0.24, topZ - 0.78], '#4a3d2c', 3.4);
     // Ausleger über das Wasser, mit Strebe und Seilrolle
-    const bx = x - 0.22, by = y + 1.75, bz = topZ - 0.5;
-    I.line(ctx, [x, y + 0.3, topZ - 0.02], [bx, by, bz], '#5d4f3f', 4.4);
-    I.line(ctx, [x - 0.012, y + 0.3, topZ - 0.02], [bx - 0.012, by, bz], 'rgba(226,200,158,0.3)', 1.5);
-    I.line(ctx, [x, y + 0.4, topZ - 1.0], [(x + bx) / 2, (y + by) / 2 + 0.1, bz + 0.22], '#6b5b48', 2);
+    const bx = west ? x - 1.75 : x - 0.22, by = west ? y - 0.22 : y + 1.75, bz = topZ - 0.5;
+    const ax = west ? x - 0.3 : x, ay = west ? y : y + 0.3;
+    I.line(ctx, [ax, ay, topZ - 0.02], [bx, by, bz], '#5d4f3f', 4.4);
+    I.line(ctx, [ax - 0.012, ay, topZ - 0.02], [bx - 0.012, by, bz], 'rgba(226,200,158,0.3)', 1.5);
+    I.line(ctx, [ax, ay + 0.1, topZ - 1.0], [(ax + bx) / 2, (ay + by) / 2 + 0.1, bz + 0.22], '#6b5b48', 2);
     const tip = I.p(bx, by, bz);
     if (!pk) { ctx.strokeStyle = '#4a3d2c'; ctx.lineWidth = 1.4; ctx.beginPath(); ctx.arc(tip[0], tip[1], 3.2, 0, 6.28); ctx.stroke(); }
     // Last am Seil, langsam pendelnd
-    const sw = Math.sin(t * 0.6) * 0.07, lz = 0.7 + Math.sin(t * 0.33) * 0.5, ly = by + sw;
-    I.line(ctx, [bx, ly, bz], [bx, ly, lz + 0.22], 'rgba(60,44,24,0.9)', 1.2);
-    { const w = 0.27, q = [[bx - w, ly - w], [bx + w, ly - w], [bx + w, ly + w], [bx - w, ly + w]];
+    // Bei Arbeit hängt die Last am Ausleger, sonst steht sie abgesetzt neben dem Gerüst
+    const sw = busy ? Math.sin(t * 0.6) * 0.07 : 0, lz = busy ? 0.7 + Math.sin(t * 0.33) * 0.5 : baseH + 0.16, ly = busy ? by + sw : y + (west ? 0.62 : 0.34), lx = busy ? bx + (west ? sw : 0) : x + (west ? 0.1 : 0.66);
+    I.line(ctx, [bx, by, bz], [bx, by, busy ? lz + 0.22 : bz - 0.5], 'rgba(60,44,24,0.9)', 1.2);
+    if (!pk && !busy) { const hp = I.p(bx, by, bz - 0.56); ctx.strokeStyle = '#4a3d2c'; ctx.lineWidth = 1.6; ctx.beginPath(); ctx.arc(hp[0], hp[1], 2.6, 0.6, 5.4); ctx.stroke(); }
+    { const w = 0.27, q = [[lx - w, ly - w], [lx + w, ly - w], [lx + w, ly + w], [lx - w, ly + w]];
       I.poly(ctx, q.map(v => [v[0], v[1], lz + 0.22]), '#b09a70', 'rgba(40,26,12,0.6)', 0.7);
       I.poly(ctx, [[q[3][0], q[3][1], lz + 0.22], [q[2][0], q[2][1], lz + 0.22], [q[2][0], q[2][1], lz - 0.16], [q[3][0], q[3][1], lz - 0.16]], '#8b714d');
       I.poly(ctx, [[q[1][0], q[1][1], lz + 0.22], [q[2][0], q[2][1], lz + 0.22], [q[2][0], q[2][1], lz - 0.16], [q[1][0], q[1][1], lz - 0.16]], '#6b583c');
       I.line(ctx, [q[3][0], q[3][1], lz + 0.22], [q[2][0], q[2][1], lz - 0.16], 'rgba(216,190,146,0.5)', 1); }
     // Kranmeister neben dem Rad
-    if (!pk) { const mp = I.p(x + 0.62, y + 0.45, baseH); this.drawPerson(ctx, mp[0], mp[1], '#5a4a32', 'static', 1, false, '#e8c39e', t * 2, -1, null, null, 0.85); }
+    if (!pk && busy) { const mp = I.p(west ? x + 0.05 : x - 0.72, west ? y + 0.72 : y - 0.12, 0); this.drawPerson(ctx, mp[0], mp[1], '#5a4a32', 'static', 1, false, '#e8c39e', t * 2, 1, null, null, 0.85); }
   },
   drawBuilding(ctx, b, st, season, sv) {
     switch (b.kind) {
@@ -665,17 +673,21 @@ Object.assign(HK.Scene, {
     I.line(ctx, W(0, 0, zT), W(1.3, 0, sheer(1.25) + 0.15), 'rgba(25,15,8,0.85)', 0.6); I.line(ctx, W(0, 0, zT), W(-1.18, 0, ridge(-1.14) + 0.02), 'rgba(25,15,8,0.85)', 0.6);
     I.cylinder(ctx, mt[0], mt[1], zT - 0.45, 0.1 * s, 0.12, '#4a3a2a', {});
     // Rah und Segel: am Kai aufgegeit (hängt halb), auf See gebläht, mit Wappen der Heimatstadt
-    const yw = 0.66, yz = zT - 0.55; I.line(ctx, W(0.04, -yw, yz), W(0.04, yw, yz), '#2a1a0a', 2.6 * s); I.line(ctx, W(0.04, -yw, yz), W(0.04, yw, yz), '#6a4a2c', 1.1 * s);
+    const yw = docked ? 0.5 : 0.66, yz = zT - (docked ? 0.95 : 0.55);
+    I.line(ctx, W(0.04, -yw, yz), W(0.04, yw, yz), '#3b2a17', 2.4 * s); I.line(ctx, W(0.04, -yw, yz), W(0.04, yw, yz), '#7d5c37', 1.0 * s);
+    // Toppnanten: die Rah hängt sichtbar am Masttopp
+    if (docked) for (const sd of [-1, 1]) I.line(ctx, W(0, 0, zT - 0.08), W(0.04, sd * yw * 0.92, yz + 0.02), 'rgba(30,20,10,0.75)', 0.55);
     {
       if (docked) {
         // Am Kai ist das Segel auf die Rah gegeit: ein geschnürtes Tuchbündel, das Deck bleibt frei
-        const n = 10, pts = []; for (let k = 0; k <= n; k++) { const f = -1 + 2 * k / n; pts.push(S(0.05, f * yw * 0.95, yz - 0.09 - (1 - f * f) * 0.05)); }
+        // Das Tuch liegt als schlankes Bündel unter der Rah und hängt zur Mitte etwas durch
+        const n = 12, bell = f => 0.055 + (1 - f * f) * 0.055, pts = [];
+        for (let k = 0; k <= n; k++) { const f = -1 + 2 * k / n; pts.push([S(0.05, f * yw * 0.9, yz - bell(f)), bell(f)]); }
         ctx.lineCap = 'round'; ctx.lineJoin = 'round';
-        ctx.strokeStyle = '#8a7550'; ctx.lineWidth = 5.2 * s; ctx.beginPath(); pts.forEach((q, i) => i ? ctx.lineTo(q[0], q[1]) : ctx.moveTo(q[0], q[1])); ctx.stroke();
-        ctx.strokeStyle = '#c6b48e'; ctx.lineWidth = 3.4 * s; ctx.beginPath(); pts.forEach((q, i) => i ? ctx.lineTo(q[0], q[1] - 0.8 * s) : ctx.moveTo(q[0], q[1] - 0.8 * s)); ctx.stroke();
-        ctx.strokeStyle = 'rgba(238,228,205,0.75)'; ctx.lineWidth = 1.4 * s; ctx.beginPath(); pts.forEach((q, i) => i ? ctx.lineTo(q[0], q[1] - 1.6 * s) : ctx.moveTo(q[0], q[1] - 1.6 * s)); ctx.stroke();
-        ctx.strokeStyle = 'rgba(58,42,22,0.6)'; ctx.lineWidth = 1 * s;
-        for (let k = 1; k < 7; k++) { const f = -1 + 2 * k / 7, a = S(0.05, f * yw * 0.95, yz + 0.02), b = S(0.05, f * yw * 0.95, yz - 0.17); ctx.beginPath(); ctx.moveTo(a[0], a[1]); ctx.lineTo(b[0], b[1]); ctx.stroke(); }
+        const band = (dz, wdt, col) => { ctx.strokeStyle = col; ctx.lineWidth = wdt * s; ctx.beginPath(); pts.forEach((q, i) => i ? ctx.lineTo(q[0][0], q[0][1] + dz * s) : ctx.moveTo(q[0][0], q[0][1] + dz * s)); ctx.stroke(); };
+        band(0, 3.6, '#7d6a49'); band(-0.7, 2.4, '#bcab86'); band(-1.4, 1.0, 'rgba(238,228,205,0.7)');
+        ctx.strokeStyle = 'rgba(52,38,20,0.62)'; ctx.lineWidth = 0.9 * s;
+        for (let k = 1; k < 6; k++) { const f = -1 + 2 * k / 6, a = S(0.05, f * yw * 0.9, yz + 0.015), b = S(0.05, f * yw * 0.9, yz - bell(f) - 0.06); ctx.beginPath(); ctx.moveTo(a[0], a[1]); ctx.lineTo(b[0], b[1]); ctx.stroke(); }
         ctx.lineCap = 'butt';
         // Wappenschild am Achterkastell statt im Segel
         if (!pk) {

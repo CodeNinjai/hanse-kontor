@@ -3,7 +3,7 @@
 const I = HK.Iso;
 
 HK.Scene = {
-  canvas: null, ctx: null, RS: 2, walkers: [], carts: [], chickens: [], gulls: [], smoke: [], shipAnim: {}, hover: null, selected: null,
+  canvas: null, ctx: null, RS: 2, PICK_SCALE: 1, walkers: [], carts: [], chickens: [], gulls: [], smoke: [], shipAnim: {}, hover: null, selected: null,
   clock: 0.35, time: 0, pat: {}, windows: [], lamps: [], weather: 'clear', weatherDay: -1, lastSeason: null, ground: null, grain: null,
 
   init(canvas) {
@@ -55,7 +55,7 @@ HK.Scene = {
     });
     const up = e => {
       ptrs.delete(e.pointerId);
-      if (drag && !drag.moved && e.type === 'pointerup') { const p = this.toMap(this.toScene(e)); const h = this.hit(p.x, p.y); if (h) HK.UI.sceneClick(h); }
+      if (drag && !drag.moved && e.type === 'pointerup') { const p = this.toMap(this.toScene(e)); const h = this.hit(p.x, p.y, true); if (h) HK.UI.sceneClick(h); }
       if (ptrs.size < 2) pinch = null;
       if (ptrs.size === 0) { drag = null; canvas.style.cursor = this.hover ? 'pointer' : 'grab'; }
     };
@@ -130,12 +130,40 @@ HK.Scene = {
     const from = HK.pick(keys), to = HK.pick(HK.ROAD_ADJ[from]);
     return { type: t.id, color: HK.pick(t.colors), from, to, t: anywhere ? Math.random() : 0, speed: HK.rnd(0.25, 0.5) * (t.id === 'child' ? 1.5 : t.id === 'beggar' ? 0.6 : 1), off: HK.rnd(-0.22, 0.22), pause: 0, nightOwl: Math.random() < 0.2 || t.id === 'guard', skin: HK.pick(['#e8c39e', '#d9a98a', '#c9946c']), hat: Math.random() < 0.5, basket: Math.random() < 0.3, phase: Math.random() * 6.28 };
   },
+  /* Hindernisse, um die Passanten herumgehen: Requisiten und Karren stehen fest auf der Karte */
+  obstacles() {
+    if (this._obst) return this._obst;
+    const o = [];
+    for (const p of HK.PROPS) { const sz = this.PROP_SIZE[p.t] || [0.5, 0.5]; o.push([p.x - sz[0] / 2 - 0.16, p.y - sz[1] / 2 - 0.16, p.x + sz[0] / 2 + 0.16, p.y + sz[1] / 2 + 0.16]); }
+    for (const b of HK.BUILDINGS) if (b.kind !== 'water' && b.kind !== 'market') o.push([b.x - 0.1, b.y - 0.1, b.x + b.w + 0.1, b.y + b.d + 0.1]);
+    return (this._obst = o);
+  },
+  /* Punkt aus jedem Hindernis heraus auf die kürzeste Seite schieben, zwei Durchgänge gegen Überschneidungen */
+  avoid(x, y) {
+    for (let pass = 0; pass < 2; pass++) for (const b of this.obstacles()) {
+      if (x <= b[0] || x >= b[2] || y <= b[1] || y >= b[3]) continue;
+      const dl = x - b[0], dr = b[2] - x, du = y - b[1], dd = b[3] - y, m = Math.min(dl, dr, du, dd);
+      if (m === dl) x = b[0]; else if (m === dr) x = b[2]; else if (m === du) y = b[1]; else y = b[3];
+    }
+    return [x, y];
+  },
+  /* Höhe der Stegplanken: wer darauf geht, läuft nicht unter dem Steg */
+  deckZ(x, y) {
+    for (const p of HK.PIERS) if (x > p.x - 0.3 && x < p.x + 0.3 && y > p.y0 - 0.1 && y < p.y1 + 0.05) return 0.2;
+    return 0;
+  },
   walkerWorld(w) {
     const A = HK.ROAD_NODES[w.from], B = HK.ROAD_NODES[w.to];
     const dx = B[0] - A[0], dy = B[1] - A[1], len = Math.hypot(dx, dy) || 1;
-    return { wx: A[0] + dx * w.t - dy / len * w.off, wy: A[1] + dy * w.t + dx / len * w.off, len, dir: (dx - dy) >= 0 ? 1 : -1 };
+    const cx = A[0] + dx * w.t, cy = A[1] + dy * w.t;
+    let ox = cx - dy / len * w.off, oy = cy + dx / len * w.off;
+    // Wer mit dem seitlichen Versatz neben den Weg ins Wasser geriete, geht auf der Wegmitte; Stege zählen als Boden
+    if (!this.deckZ(ox, oy) && this.isWater(ox, oy)) { ox = cx; oy = cy; }
+    let p = this.avoid(ox, oy);
+    if (!this.deckZ(p[0], p[1]) && this.isWater(p[0], p[1])) p = [cx, cy];
+    return { wx: p[0], wy: p[1], wz: this.deckZ(p[0], p[1]), len, dir: (dx - dy) >= 0 ? 1 : -1 };
   },
-  walkerPos(w) { const q = this.walkerWorld(w); const s = I.p(q.wx, q.wy, 0); return { x: s[0], y: s[1], wx: q.wx, wy: q.wy, len: q.len, dir: q.dir }; },
+  walkerPos(w) { const q = this.walkerWorld(w); const s = I.p(q.wx, q.wy, q.wz); return { x: s[0], y: s[1], wx: q.wx, wy: q.wy, wz: q.wz, len: q.len, dir: q.dir }; },
   walkerAlpha(w) {
     const l = this.light(), plague = HK.state && HK.state.town.events.some(e => e.type === 'plague');
     let a = w.nightOwl ? 1 : HK.clamp((l - 0.35) * 2.2, 0, 1);
@@ -187,11 +215,12 @@ HK.Scene = {
   inTown(wx, wy) { return I.inHull(HK.TOWN, wx, wy); },
 
   /* ---------- Trefferprüfung ---------- */
-  hit(x, y) {
+  hit(x, y, fresh) {
     const st = HK.state; if (!st) return null;
-    if (!this.pickCanvas || this.time - this.pickTime > 0.25) this.renderPick();
+    if (!this.pickCanvas || this.time - this.pickTime > (fresh ? 0 : 0.7)) this.renderPick();
     // 3×3-Umfeld abtasten: nur reine Kennfarben zählen (Rot voll, Code durch 3 teilbar), Kantenmischungen fallen heraus
-    const px = Math.round(HK.clamp(x, 1, HK.MAP.W - 2)), py = Math.round(HK.clamp(y, 1, HK.MAP.H - 2));
+    const PS = this.PICK_SCALE;
+    const px = HK.clamp(Math.round(x * PS), 1, Math.ceil(HK.MAP.W * PS) - 2), py = HK.clamp(Math.round(y * PS), 1, Math.ceil(HK.MAP.H * PS) - 2);
     const d = this.pickCtx.getImageData(px - 1, py - 1, 3, 3).data, votes = {}; let best = 0, bestN = 0;
     for (let i = 0; i < 9; i++) { const o = i * 4; if (d[o] < 250) continue; const code = d[o + 1] + (d[o + 2] << 8); if (code % 3) continue; const id = code / 3; if (!id || !this.pickTable || !this.pickTable[id]) continue; const n = (votes[id] || 0) + (i === 4 ? 3 : 1); votes[id] = n; if (n > bestN) { bestN = n; best = id; } }
     if (best) return this.pickTable[best];
@@ -255,7 +284,7 @@ HK.Scene = {
     for (const w of this.walkers) { const a = this.walkerAlpha(w); if (a <= 0.02) continue; const p = this.walkerPos(w); items.push({ k: this.pointKey(p.wx, p.wy), box: [p.wx - 0.05, p.wy - 0.05, p.wx + 0.05, p.wy + 0.05], f: c => this.drawPerson(c, p.x, p.y, w.color, w.type, a, this.hover && this.hover.walker === w, w.skin, w.pause > 0 ? 0 : w.phase, p.dir, null, w), pick: a >= 0.4 ? { kind: 'walker', walker: w, label: HK.t('enc_' + w.type + '_label') } : null }); }
     return this.depthSort(items);
   },
-  PROP_SIZE: { crane: [1.3, 1.1], ropes: [1.6, 0.3], sails: [0.8, 0.8], frames: [0.9, 0.5], dyecloths: [1.0, 0.4], fishracks: [0.9, 0.5], logs: [1.0, 0.6], nets: [0.5, 0.5], laundry: [1.0, 0.3], boatup: [1.0, 0.5], gallows: [0.5, 0.5], tollbar: [0.9, 0.3], well: [0.3, 0.3], statue: [0.3, 0.3] },
+  PROP_SIZE: { crane: [1.3, 1.05], ropes: [1.6, 0.3], sails: [0.8, 0.8], frames: [0.9, 0.5], dyecloths: [1.0, 0.4], fishracks: [0.9, 0.5], logs: [1.0, 0.6], nets: [0.5, 0.5], laundry: [1.0, 0.3], boatup: [1.0, 0.5], gallows: [0.5, 0.5], tollbar: [0.9, 0.3], well: [0.3, 0.3], statue: [0.3, 0.3] },
   /* Tiefensortierung als Malerreihenfolge: Grundrisse, die sich entlang einer Achse nicht überlappen, legen die Reihenfolge fest
      (der Betrachter steht bei +x,+y); nur bei überlappenden Grundrissen entscheidet der Schlüssel k. */
   depthSort(items) {
@@ -279,18 +308,41 @@ HK.Scene = {
     for (let i = 0; i < m; i++) visit(i);
     return flat.concat(out);
   },
+  /* Sichtbarer Kartenausschnitt in Kartenpixeln, großzügig nach oben erweitert für hohe Bauten */
+  visibleMapRect() {
+    const c = this.cam, W = HK.SCENE.W / c.z, H = HK.SCENE.H / c.z;
+    return { x0: Math.max(0, c.x - 40), y0: Math.max(0, c.y - 260), x1: Math.min(HK.MAP.W, c.x + W + 40), y1: Math.min(HK.MAP.H, c.y + H + 60) };
+  },
+
   /* Pick-Kanal: jedes anklickbare Objekt in eigener Kennfarbe */
   renderPick() {
     const st = HK.state; if (!st) return;
-    if (!this.pickCanvas) { this.pickCanvas = document.createElement('canvas'); this.pickCanvas.width = HK.MAP.W; this.pickCanvas.height = HK.MAP.H; this.pickCtx = this.pickCanvas.getContext('2d', { willReadFrequently: true }); }
-    const real = this.pickCtx; let color = '#000';
+    const PS = this.PICK_SCALE;
+    if (!this.pickCanvas) { this.pickCanvas = document.createElement('canvas'); this.pickCanvas.width = Math.ceil(HK.MAP.W * PS); this.pickCanvas.height = Math.ceil(HK.MAP.H * PS); this.pickCtx = this.pickCanvas.getContext('2d', { willReadFrequently: true }); }
+    const real = this.pickCtx; this.pickColor = '#000';
     const noop = () => {};
-    const proxy = new Proxy(real, { get: (t, k) => { if (k === 'stroke' || k === 'strokeRect' || k === 'strokeText' || k === 'fillText') return noop; const v = t[k]; return typeof v === 'function' ? v.bind(t) : v; }, set: (t, k, v) => { if (k === 'fillStyle' || k === 'strokeStyle') t[k] = color; else if (k === 'globalAlpha') t[k] = 1; else t[k] = v; return true; } });
-    real.setTransform(1, 0, 0, 1, 0, 0); real.fillStyle = '#000'; real.fillRect(0, 0, HK.MAP.W, HK.MAP.H);
+    // Gebundene Methoden einmal zwischenspeichern: ohne den Zwischenspeicher entsteht bei jedem
+    // Zugriff eine neue Funktion, was den Pick-Durchgang teuer macht und den Bildlauf stocken lässt
+    if (!this.pickBound) this.pickBound = new Map();
+    const bound = this.pickBound;
+    const proxy = this.pickProxy || (this.pickProxy = new Proxy(real, {
+      get: (t, k) => {
+        if (k === 'stroke' || k === 'strokeRect' || k === 'strokeText' || k === 'fillText') return noop;
+        let v = bound.get(k); if (v !== undefined) return v;
+        v = t[k]; if (typeof v === 'function') { v = v.bind(t); bound.set(k, v); }
+        return v;
+      },
+      set: (t, k, v) => { if (k === 'fillStyle' || k === 'strokeStyle') t[k] = this.pickColor; else if (k === 'globalAlpha') t[k] = 1; else t[k] = v; return true; },
+    }));
+    real.setTransform(PS, 0, 0, PS, 0, 0); real.fillStyle = '#000'; real.fillRect(0, 0, HK.MAP.W, HK.MAP.H);
+    // Beschnitt auf den sichtbaren Ausschnitt: beim Hineinzoomen spart das den größten Teil der Arbeit
+    const v = this.visibleMapRect();
+    real.save(); real.beginPath(); real.rect(v.x0, v.y0, v.x1 - v.x0, v.y1 - v.y0); real.clip();
     const savedW = this.windows, savedL = this.lamps; this.windows = []; this.lamps = []; this.picking = true;
     const items = this.buildItems(proxy, st, this.season(), this.time);
     this.pickTable = [null];
-    for (const it of items) { if (!it.pick) continue; const id = this.pickTable.length; this.pickTable.push(it.pick); const code = id * 3; color = `rgb(255,${code & 255},${(code >> 8) & 255})`; real.fillStyle = color; real.strokeStyle = color; it.f(proxy); }
+    for (const it of items) { if (!it.pick) continue; const id = this.pickTable.length; this.pickTable.push(it.pick); const code = id * 3; const col = `rgb(255,${code & 255},${(code >> 8) & 255})`; this.pickColor = col; real.fillStyle = col; real.strokeStyle = col; it.f(proxy); }
+    real.restore();
     this.picking = false; this.windows = savedW; this.lamps = savedL; this.pickTime = this.time;
   },
 
