@@ -80,7 +80,7 @@ HK.BUILDINGS = [
   { id: 'storage2',  kind: 'longhouse', x: 7.4, y: 16.75, w: 2.4, d: 1.3, h: 1.4, brick: true, hoist: true, panel: 'storage', plot: 1, name: { de: 'Lagerhalle am Kai', en: 'Quayside warehouse' } },
   { id: 'fishmarket', kind: 'openhall', x: 10.3, y: 16.9, w: 1.6, d: 1.1, h: 0.8, panel: 'fishmarket', name: { de: 'Fischmarkt', en: 'Fish market' } },
   { id: 'dive',      kind: 'eave',   x: 12.3, y: 16.8, w: 1.4, d: 1.2, h: 1.0, wall: '#b9a07a', roof: '#4a3a30', shabby: true, sign: 'mug', panel: 'dive', name: { de: 'Spelunke „Zum Nassen Hund“', en: 'The Wet Dog dive' } },
-  { id: 'ropewalk',  kind: 'longhouse', x: 11.95, y: 17.15, w: 3.2, d: 0.7, h: 0.6, wall: '#c9b48a', roof: '#7a6a4a', low: true, panel: 'venture', name: { de: 'Seilerei', en: 'Ropewalk' } },
+  { id: 'ropewalk',  kind: 'longhouse', x: 14.0, y: 17.15, w: 3.2, d: 0.7, h: 0.6, wall: '#c9b48a', roof: '#7a6a4a', low: true, panel: 'venture', name: { de: 'Seilerei', en: 'Ropewalk' } },
   { id: 'cooper',    kind: 'eave',   x: 17.5, y: 16.8, w: 1.3, d: 1.2, h: 1.0, wall: '#d9c7a0', roof: '#6b4a3a', sign: 'barrel', panel: 'venture', name: { de: 'Böttcherei', en: 'Cooperage' } },
   { id: 'smokery',   kind: 'eave',   x: 19.1, y: 16.85, w: 1.4, d: 1.15, h: 1.0, wall: '#8a7a6a', roof: '#3a3a3a', bigChimney: true, sign: 'fish', panel: 'venture', name: { de: 'Fischräucherei', en: 'Fish smokery' } },
   { id: 'storage3',  kind: 'longhouse', x: 20.9, y: 16.75, w: 2.4, d: 1.3, h: 1.4, brick: true, hoist: true, panel: 'storage', plot: 2, name: { de: 'Speicher am Bollwerk', en: 'Bulwark warehouse' } },
@@ -98,7 +98,7 @@ HK.BUILDINGS = [
   { id: 'school',    kind: 'school', x: 24.7, y: 14.5, w: 1.5, d: 1.2, h: 1.3, stone: true, wall: '#cfc6b4', roof: '#4e4a52', sign: 'book', panel: 'school', name: { de: 'Lateinschule', en: 'Latin school' } },
   // Neustadt hinter der alten Nordmauer
   { id: 'stables',   kind: 'stable', x: 12.2, y: -1.9, w: 2.0, d: 1.2, h: 0.8, panel: 'venture', name: { de: 'Marstall', en: 'Stables' } },
-  { id: 'granary',   kind: 'longhouse', x: 13.3, y: -1.95, w: 1.9, d: 1.25, h: 1.6, brick: true, hoist: true, panel: 'storage', plot: 3, name: { de: 'Kornspeicher', en: 'Granary' } },
+  { id: 'granary',   kind: 'longhouse', x: 15.78, y: -1.95, w: 1.1, d: 1.25, h: 1.6, brick: true, hoist: true, panel: 'storage', plot: 3, name: { de: 'Kornspeicher', en: 'Granary' } },
   { id: 'weighhouse', kind: 'eave',  x: 16.9, y: -1.9, w: 1.5, d: 1.2, h: 1.3, stone: true, wall: '#cfc6b4', roof: '#4e4a52', sign: 'scale', panel: 'weighhouse', name: { de: 'Stadtwaage', en: 'Weigh house' } },
   { id: 'f20',       kind: 'gable',  x: 18.7, y: -1.9, w: 1.1, d: 1.2, h: 1.1, wall: '#e2d4b4', roof: '#8a3a2a', name: { de: 'Bürgerhaus', en: 'Townhouse' } },
   { id: 'inn',       kind: 'eave',   x: 20.1, y: -1.9, w: 1.8, d: 1.2, h: 1.2, wall: '#c9b48a', roof: '#6b4a3a', sign: 'tavern', panel: 'venture', name: { de: 'Herberge „Zum Wegweiser“', en: 'The Signpost inn' } },
@@ -144,7 +144,7 @@ HK.ROAD_NODES = {
 };
 HK.ROAD_EDGES = [
   ['Q1', 'Q2'], ['Q2', 'Q3'], ['Q3', 'Q4'], ['Q4', 'Q5'], ['Q5', 'Q6'], ['H1', 'H2'], ['H2', 'H23'], ['H23', 'H3'], ['H3', 'H4'], ['H4', 'H5'], ['H5', 'H6'],
-  ['M1', 'M2'], ['M2', 'M23'], ['M23', 'M3'], ['M3', 'M4'], ['M4', 'M5'], ['M5', 'M6'], ['O1', 'O2'], ['O2', 'O3'], ['O3', 'O4'], ['O4', 'O5'], ['O5', 'O6'],
+  ['M1', 'M2'], ['M2', 'M23'], ['M23', 'M3'], ['M3', 'M4'], ['M4', 'M5'], ['O1', 'O2'], ['O2', 'O3'], ['O3', 'O4'], ['O4', 'O5'], ['O5', 'O6'],
   ['C0', 'C1'], ['C1', 'C2'], ['C2', 'C3'], ['C3', 'C4'], ['C4', 'C5'], ['E1', 'E2'], ['E2', 'E3'], ['E3', 'E4'], ['E4', 'E5'], ['E5', 'E6'],
   ['Q1', 'H1'], ['H1', 'M1'], ['M1', 'O1'], ['O1', 'C0'], ['C0', 'E1'], ['Q2', 'H2'], ['M2', 'O2'], ['O2', 'C1'], ['C1', 'E2'],
   ['Q3', 'H3'], ['H3', 'MK'], ['MK', 'M3'], ['M3', 'O3'], ['O3', 'C2'], ['C2', 'E3'], ['E3', 'G'], ['G', 'OUT'], ['OUT', 'OUT2'], ['OUT2', 'OUT3'],
