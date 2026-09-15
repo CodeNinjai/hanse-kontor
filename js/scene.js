@@ -130,8 +130,8 @@ HK.Scene = {
     this.pat.earth = mk(40, 40, (g, w, h) => { g.fillStyle = '#aa9f7b'; g.fillRect(0, 0, w, h); for (let i = 0; i < 160; i++) { g.fillStyle = Math.random() < 0.5 ? 'rgba(90,70,40,0.18)' : 'rgba(255,245,220,0.14)'; g.fillRect(Math.random() * w, Math.random() * h, 2, 1.5); } });
     this.pat.grass = mk(30, 30, (g, w, h) => { g.fillStyle = '#6e7d58'; g.fillRect(0, 0, w, h); for (let i = 0; i < 110; i++) { g.strokeStyle = Math.random() < 0.5 ? 'rgba(46,58,33,0.4)' : 'rgba(174,192,138,0.35)'; const x = Math.random() * w, y = Math.random() * h; g.beginPath(); g.moveTo(x, y); g.lineTo(x + 1, y - 3); g.stroke(); } for (let i = 0; i < 6; i++) { g.fillStyle = 'rgba(120,150,70,0.35)'; g.beginPath(); g.ellipse(Math.random() * w, Math.random() * h, 5, 2.5, 0, 0, 6.28); g.fill(); } });
     this.pat.snow = mk(30, 30, (g, w, h) => { g.fillStyle = '#e9edf0'; g.fillRect(0, 0, w, h); for (let i = 0; i < 40; i++) { g.fillStyle = 'rgba(180,195,215,0.35)'; g.fillRect(Math.random() * w, Math.random() * h, 2, 1); } });
-    this.pat.stone = mk(24, 12, (g) => { g.fillStyle = '#8b8476'; g.fillRect(0, 0, 24, 12); g.fillStyle = '#6b655a'; g.fillRect(0, 5, 24, 1); g.fillRect(0, 11, 24, 1); g.fillRect(11, 0, 1, 5); g.fillRect(4, 6, 1, 5); g.fillRect(18, 6, 1, 5); g.fillStyle = 'rgba(255,255,255,0.08)'; g.fillRect(0, 0, 11, 2); g.fillRect(12, 0, 12, 2); });
-    this.pat.planks = mk(8, 24, (g) => { g.fillStyle = '#9f8361'; g.fillRect(0, 0, 8, 24); g.fillStyle = '#6e5944'; g.fillRect(7, 0, 1, 24); g.fillStyle = 'rgba(255,220,170,0.15)'; g.fillRect(1, 0, 1, 24); g.fillStyle = 'rgba(0,0,0,0.15)'; g.fillRect(0, 11, 8, 1); });
+    this.pat.stone = mk(24, 12, (g) => { g.fillStyle = '#8b8476'; g.fillRect(0, 0, 24, 12); g.fillStyle = '#6f695e'; g.fillRect(0, 5, 24, 1); g.fillRect(0, 11, 24, 1); g.fillRect(11, 0, 1, 5); g.fillRect(4, 6, 1, 5); g.fillRect(18, 6, 1, 5); g.fillStyle = 'rgba(255,255,255,0.08)'; g.fillRect(0, 0, 11, 2); g.fillRect(12, 0, 12, 2); });
+    this.pat.planks = mk(8, 24, (g) => { g.fillStyle = '#9f8361'; g.fillRect(0, 0, 8, 24); g.fillStyle = '#78614a'; g.fillRect(7, 0, 1, 24); g.fillStyle = 'rgba(255,220,170,0.15)'; g.fillRect(1, 0, 1, 24); g.fillStyle = 'rgba(0,0,0,0.15)'; g.fillRect(0, 11, 8, 1); });
     this.pat.field = mk(24, 24, (g) => { g.fillStyle = '#ab9b68'; g.fillRect(0, 0, 24, 24); g.strokeStyle = 'rgba(90,70,30,0.35)'; for (let i = 0; i < 24; i += 4) { g.beginPath(); g.moveTo(i, 0); g.lineTo(i + 12, 24); g.stroke(); } });
   },
   makeGrain() { const c = document.createElement('canvas'); c.width = 240; c.height = 160; const g = c.getContext('2d'); const img = g.createImageData(240, 160); for (let i = 0; i < img.data.length; i += 4) { const v = 128 + (Math.random() - 0.5) * 90; img.data[i] = img.data[i + 1] = img.data[i + 2] = v; img.data[i + 3] = 255; } g.putImageData(img, 0, 0); this.grain = c; },
@@ -168,11 +168,11 @@ HK.Scene = {
   /* ---------- Passanten ---------- */
   makeWalker(anywhere) {
     const types = []; HK.WALKER_TYPES.forEach(t => { for (let i = 0; i < t.weight; i++) types.push(t); });
-    if (HK.state && HK.state.pilgrimage) for (let i = 0; i < 3; i++) types.push({ id: 'pilgrim', colors: ['#6a6058', '#5a4a3a', '#7a6a5a', '#4a4a4a'] });
+    if (HK.state && HK.state.pilgrimage) for (let i = 0; i < 3; i++) types.push({ id: 'pilgrim', colors: ['#6f645c', '#6c5946', '#7b6a5a', '#595959'] });
     const t = HK.pick(types), keys = Object.keys(HK.ROAD_NODES);
     const from = HK.pick(keys), to = HK.pick(HK.ROAD_ADJ[from]);
     const off = this.pickOff(from, to);
-    return { type: t.id, color: HK.pick(t.colors), from, to, t: anywhere ? Math.random() : 0, speed: HK.rnd(0.25, 0.5) * (t.id === 'child' ? 1.5 : t.id === 'beggar' ? 0.6 : 1), off, pause: 0, nightOwl: Math.random() < 0.2 || t.id === 'guard', skin: HK.pick(['#e8c39e', '#d9a98a', '#c9946c']), hat: Math.random() < 0.5, basket: Math.random() < 0.3, phase: Math.random() * 6.28 };
+    return { type: t.id, color: HK.pick(t.colors), from, to, t: anywhere ? Math.random() : 0, speed: HK.rnd(0.25, 0.5) * (t.id === 'child' ? 1.5 : t.id === 'beggar' ? 0.6 : 1), off, pause: 0, nightOwl: Math.random() < 0.2 || t.id === 'guard', skin: HK.pick(['#dcc3aa', '#d2aa91', '#c59570']), hat: Math.random() < 0.5, basket: Math.random() < 0.3, phase: Math.random() * 6.28 };
   },
   /* Hindernisraster: Requisiten und Gebäude werden einmal in ein Gitter gestempelt, und zu jeder
      besetzten Zelle wird die nächste freie Zelle gemerkt. Damit landet nie ein Passant in einer Kiste. */
@@ -304,7 +304,7 @@ HK.Scene = {
     this.porters.push({
       type: 'porter', cart: !!cart, cap: cart ? 3 : 1, dock: d, state: 'go', path, pi: 1, from: path[0], to: path[1], t: 0,
       off: this.pickOff(path[0], path[1]), speed: cart ? HK.rnd(0.34, 0.42) : HK.rnd(0.42, 0.55), phase: Math.random() * 6.28,
-      color: HK.pick(['#6a5236', '#7a6448', '#5c4a34', '#6e5a3e']), skin: HK.pick(['#e8c39e', '#d9a98a', '#c9946c']),
+      color: HK.pick(['#7a5e3e', '#80694b', '#705a3f', '#7a6445']), skin: HK.pick(['#dcc3aa', '#d2aa91', '#c59570']),
       items: [], wait: 0, slot: null, a: null, b: null, ft: 0, hat: Math.random() < 0.4,
     });
   },
@@ -425,7 +425,7 @@ HK.Scene = {
     for (const g of this.gulls) g.a += g.s * dt;
     this.updateDocks(dt); this.updatePorters(dt);
     // Wallfahrt: Pilger mischen sich nach und nach unter die Passanten
-    if (st && st.pilgrimage && Math.random() < dt * 0.5 && this.walkers.filter(w => w.type === 'pilgrim').length < 14) { const i = this.walkers.findIndex(w => w.type === 'citizen'); if (i >= 0) { const old = this.walkers[i], nw = this.makeWalker(false); Object.assign(nw, { from: old.from, to: old.to, t: old.t, type: 'pilgrim', color: HK.pick(['#6a6058', '#5a4a3a', '#7a6a5a', '#4a4a4a']), hat: false, basket: false }); this.walkers[i] = nw; } }
+    if (st && st.pilgrimage && Math.random() < dt * 0.5 && this.walkers.filter(w => w.type === 'pilgrim').length < 14) { const i = this.walkers.findIndex(w => w.type === 'citizen'); if (i >= 0) { const old = this.walkers[i], nw = this.makeWalker(false); Object.assign(nw, { from: old.from, to: old.to, t: old.t, type: 'pilgrim', color: HK.pick(['#6f645c', '#6c5946', '#7b6a5a', '#595959']), hat: false, basket: false }); this.walkers[i] = nw; } }
     // Prozession der Bruderschaft: am Festtag zieht ein Zug von der Kirche über den Markt und zurück
     if (st && st.processionDay === st.day) { if (!this.procession) this.procession = { t: 0, n: Math.min(24, 8 + Math.floor((st.brotherhood ? st.brotherhood.members : 0) / 8)), route: ['NN', 'S1', 'S3', 'MK', 'M3', 'M2', 'NN'] }; this.procession.t += dt * 0.09; }
     else this.procession = null;
@@ -516,20 +516,20 @@ HK.Scene = {
     // Fehde: der Ritter mit seinen Reitern lauert vor dem Landtor
     if (st && st.chains && st.chains.active.some(c => c.id === 'feud')) {
       const K = [[33.3, 9.5, -1, true], [34.0, 10.3, -1, false], [33.9, 8.7, -1, false], [34.8, 9.6, 1, false]];
-      for (const [wx, wy, dir, mounted] of K) { const sp = I.p(wx, wy, 0), r = mounted ? 0.4 : 0.05; items.push({ k: this.pointKey(wx, wy), box: [wx - r, wy - r, wx + r, wy + r], f: c => mounted ? this.drawHorseman(c, sp[0], sp[1], dir, '#5a3a22') : this.drawPerson(c, sp[0], sp[1], '#7a3030', 'guard', 1, false, '#d9a98a', this.time * 2, dir, null, null, 0.85) }); }
-      if (!this.picking) { const fp = I.p(34.4, 9.9, 0); items.push({ k: this.pointKey(34.4, 9.9), box: [34.2, 9.7, 34.6, 10.1], f: c => { c.fillStyle = 'rgba(255,140,40,' + (0.5 + Math.sin(this.time * 7) * 0.2) + ')'; c.beginPath(); c.ellipse(fp[0], fp[1] - 4, 4, 6, 0, 0, 6.28); c.fill(); c.fillStyle = '#4a3a2a'; c.beginPath(); c.ellipse(fp[0], fp[1], 6, 2.5, 0, 0, 6.28); c.fill(); } }); }
+      for (const [wx, wy, dir, mounted] of K) { const sp = I.p(wx, wy, 0), r = mounted ? 0.4 : 0.05; items.push({ k: this.pointKey(wx, wy), box: [wx - r, wy - r, wx + r, wy + r], f: c => mounted ? this.drawHorseman(c, sp[0], sp[1], dir, '#754d30') : this.drawPerson(c, sp[0], sp[1], '#873737', 'guard', 1, false, '#d2aa91', this.time * 2, dir, null, null, 0.85) }); }
+      if (!this.picking) { const fp = I.p(34.4, 9.9, 0); items.push({ k: this.pointKey(34.4, 9.9), box: [34.2, 9.7, 34.6, 10.1], f: c => { c.fillStyle = 'rgba(255,140,40,' + (0.5 + Math.sin(this.time * 7) * 0.2) + ')'; c.beginPath(); c.ellipse(fp[0], fp[1] - 4, 4, 6, 0, 0, 6.28); c.fill(); c.fillStyle = '#66503a'; c.beginPath(); c.ellipse(fp[0], fp[1], 6, 2.5, 0, 0, 6.28); c.fill(); } }); }
     }
     // Zunftaufstand: Handwerker mit Fackeln vor dem Rathaus
     if (st && st.unrestUntil > st.day) {
-      for (let i = 0; i < 12; i++) { const wx = 12.35 + ((i * 37) % 13) / 10, wy = 8.55 + ((i * 53) % 11) / 10, sp = I.p(wx, wy, 0); items.push({ k: this.pointKey(wx, wy), box: [wx - 0.05, wy - 0.05, wx + 0.05, wy + 0.05], f: c => this.drawPerson(c, sp[0], sp[1], ['#7a5a3a', '#5a6a4a', '#8a6a3a', '#6a4a6a'][i % 4], 'torch', 1, false, '#d9a98a', this.time * 2 + i, i % 2 ? 1 : -1, null, null, 0.85) }); }
+      for (let i = 0; i < 12; i++) { const wx = 12.35 + ((i * 37) % 13) / 10, wy = 8.55 + ((i * 53) % 11) / 10, sp = I.p(wx, wy, 0); items.push({ k: this.pointKey(wx, wy), box: [wx - 0.05, wy - 0.05, wx + 0.05, wy + 0.05], f: c => this.drawPerson(c, sp[0], sp[1], ['#84623f', '#627350', '#906e3c', '#735073'][i % 4], 'torch', 1, false, '#d2aa91', this.time * 2 + i, i % 2 ? 1 : -1, null, null, 0.85) }); }
     }
     if (this.procession) {
       const P = this.procession, segs = P.route.length - 1;
       for (let i = 0; i < P.n; i++) {
         let u = P.t - i * 0.055; if (u < 0) continue; u = u % segs; const k = Math.floor(u), f = u - k;
         const A = HK.ROAD_NODES[P.route[k]], B = HK.ROAD_NODES[P.route[k + 1]]; const wx = A[0] + (B[0] - A[0]) * f + (i % 2 ? 0.16 : -0.16), wy = A[1] + (B[1] - A[1]) * f + (i % 2 ? -0.16 : 0.16);
-        const sp = I.p(wx, wy, 0), dir = ((B[0] - A[0]) - (B[1] - A[1])) >= 0 ? 1 : -1, col = i === 0 ? '#e0b040' : i % 3 === 1 ? '#8a2a2a' : '#e8e0d0';
-        items.push({ k: this.pointKey(wx, wy), box: [wx - 0.05, wy - 0.05, wx + 0.05, wy + 0.05], f: c => { this.drawPerson(c, sp[0], sp[1], col, 'monk', 1, false, '#e8c39e', this.time * 5 + i, dir, null, null, 0.85); if (!this.picking && i === 0) { c.strokeStyle = '#e0b040'; c.lineWidth = 2; c.beginPath(); c.moveTo(sp[0], sp[1] - 26); c.lineTo(sp[0], sp[1] - 44); c.moveTo(sp[0] - 4, sp[1] - 40); c.lineTo(sp[0] + 4, sp[1] - 40); c.stroke(); } } });
+        const sp = I.p(wx, wy, 0), dir = ((B[0] - A[0]) - (B[1] - A[1])) >= 0 ? 1 : -1, col = i === 0 ? '#bfa361' : i % 3 === 1 ? '#8b3939' : '#e8e0d0';
+        items.push({ k: this.pointKey(wx, wy), box: [wx - 0.05, wy - 0.05, wx + 0.05, wy + 0.05], f: c => { this.drawPerson(c, sp[0], sp[1], col, 'monk', 1, false, '#dcc3aa', this.time * 5 + i, dir, null, null, 0.85); if (!this.picking && i === 0) { c.strokeStyle = '#bfa361'; c.lineWidth = 2; c.beginPath(); c.moveTo(sp[0], sp[1] - 26); c.lineTo(sp[0], sp[1] - 44); c.moveTo(sp[0] - 4, sp[1] - 40); c.lineTo(sp[0] + 4, sp[1] - 40); c.stroke(); } } });
       }
     }
     for (const w of this.walkers) { const a = this.walkerAlpha(w); if (a <= 0.02) continue; const p = this.walkerPos(w); items.push({ k: this.pointKey(p.wx, p.wy), box: [p.wx - 0.05, p.wy - 0.05, p.wx + 0.05, p.wy + 0.05], f: c => this.drawPerson(c, p.x, p.y, w.color, w.type, a, this.hover && this.hover.walker === w, w.skin, w.pause > 0 ? 0 : w.phase, p.dir, null, w), pick: a >= 0.4 ? { kind: 'walker', walker: w, label: HK.t('enc_' + w.type + '_label') } : null }); }
@@ -625,7 +625,7 @@ HK.Scene = {
     const gr = ctx.createLinearGradient(0, 0, 0, H);
     gr.addColorStop(0, `rgba(216,201,166,${g.far})`); gr.addColorStop(0.55, `rgba(216,201,166,${(g.far + g.near) / 2})`); gr.addColorStop(1, `rgba(216,201,166,${g.near})`);
     ctx.save(); ctx.globalCompositeOperation = 'multiply'; ctx.fillStyle = gr; ctx.fillRect(0, 0, W, H);
-    ctx.globalCompositeOperation = 'screen'; ctx.globalAlpha = 0.055; ctx.fillStyle = '#6d6858'; ctx.fillRect(0, 0, W, H);
+    ctx.globalCompositeOperation = 'screen'; ctx.globalAlpha = 0.055; ctx.fillStyle = '#716c5b'; ctx.fillRect(0, 0, W, H);
     ctx.restore();
   },
   /* ---------- Zeichnen ---------- */
@@ -697,7 +697,7 @@ HK.Scene = {
       if (quay) {
         // Schatten der Kaimauer im Wasser, Mauerstirn wenn sichtbar
         I.poly(ctx, [[A[0], A[1], 0], [B[0], B[1], 0], [B[0] + n[0] * 0.45, B[1] + n[1] * 0.45, 0], [A[0] + n[0] * 0.45, A[1] + n[1] * 0.45, 0]], 'rgba(10,20,40,0.28)');
-        if (vis) { I.poly(ctx, [[A[0], A[1], 0], [B[0], B[1], 0], [B[0], B[1], 0.4], [A[0], A[1], 0.4]], '#6f685c', 'rgba(20,15,10,0.5)'); for (let k = 0; k < len; k += 0.5) { const f = k / len; I.line(ctx, [A[0] + (B[0] - A[0]) * f, A[1] + (B[1] - A[1]) * f, 0], [A[0] + (B[0] - A[0]) * f, A[1] + (B[1] - A[1]) * f, 0.4], 'rgba(0,0,0,0.2)', 0.6); } I.line(ctx, [A[0], A[1], 0.2], [B[0], B[1], 0.2], 'rgba(0,0,0,0.2)', 0.6); I.poly(ctx, [[A[0], A[1], 0], [B[0], B[1], 0], [B[0] + n[0] * 0.2, B[1] + n[1] * 0.2, 0], [A[0] + n[0] * 0.2, A[1] + n[1] * 0.2, 0]], 'rgba(40,70,60,0.4)'); }
+        if (vis) { I.poly(ctx, [[A[0], A[1], 0], [B[0], B[1], 0], [B[0], B[1], 0.4], [A[0], A[1], 0.4]], '#726b5e', 'rgba(20,15,10,0.5)'); for (let k = 0; k < len; k += 0.5) { const f = k / len; I.line(ctx, [A[0] + (B[0] - A[0]) * f, A[1] + (B[1] - A[1]) * f, 0], [A[0] + (B[0] - A[0]) * f, A[1] + (B[1] - A[1]) * f, 0.4], 'rgba(0,0,0,0.2)', 0.6); } I.line(ctx, [A[0], A[1], 0.2], [B[0], B[1], 0.2], 'rgba(0,0,0,0.2)', 0.6); I.poly(ctx, [[A[0], A[1], 0], [B[0], B[1], 0], [B[0] + n[0] * 0.2, B[1] + n[1] * 0.2, 0], [A[0] + n[0] * 0.2, A[1] + n[1] * 0.2, 0]], 'rgba(40,70,60,0.4)'); }
       } else {
         // nasser Saum und Böschung
         I.poly(ctx, [[A[0], A[1], 0], [B[0], B[1], 0], [B[0] + n[0] * 0.25, B[1] + n[1] * 0.25, 0], [A[0] + n[0] * 0.25, A[1] + n[1] * 0.25, 0]], 'rgba(150,140,100,0.55)');
