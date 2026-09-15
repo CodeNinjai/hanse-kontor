@@ -181,6 +181,8 @@ HK.UI = {
     const st = HK.state; if (!st) return;
     this.$('hud-date').textContent = HK.fmtDate(st.day);
     const c = HK.Scene.clock; this.$('hud-time').textContent = c < 0.2 || c > 0.87 ? HK.t('night') : c < 0.4 ? HK.t('morning') : c < 0.65 ? HK.t('noon') : HK.t('evening');
+    const w = HK.Scene.weather, wEl = this.$('hud-weather');
+    if (wEl) { wEl.textContent = { clear: '\u2600', cloudy: '\u2601', rain: '\u2602', snow: '\u2744' }[w] || '\u2600'; wEl.title = HK.t('w' + w[0].toUpperCase() + w.slice(1)); }
     this.$('hud-money').textContent = HK.fmt(st.money) + ' ' + HK.t('mark'); this.$('hud-money').classList.toggle('neg', st.money < 0);
     this.$('hud-rep').textContent = Math.round(st.rep); this.$('hud-influence').textContent = Math.floor(st.influence); this.$('hud-piety').textContent = Math.round(st.piety); this.$('hud-suspicion').textContent = Math.round(st.suspicion);
     document.querySelector('.stat.susp').classList.toggle('high', st.suspicion >= 50);

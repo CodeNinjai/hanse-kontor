@@ -45,7 +45,7 @@ small { color: var(--ink-soft); } .hint { color: var(--ink-soft); font-style: it
 #hud::after { content: ''; position: absolute; left: 0; right: 0; bottom: -6px; height: 3px; background: linear-gradient(rgba(0,0,0,.45), transparent); pointer-events: none; }
 .hud-left, .hud-right, .hud-stats { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
 .logo { font-family: 'Cinzel', 'Palatino Linotype', Georgia, serif; font-size: 1.3em; font-weight: 700; color: var(--gold); letter-spacing: .08em; text-shadow: 0 1px 0 rgba(0,0,0,.6); }
-.hud-date { font-style: italic; font-size: 1.05em; } .hud-time { opacity: .7; font-size: 13px; }
+.hud-date { font-style: italic; font-size: 1.05em; } .hud-time { opacity: .7; font-size: 13px; } .hud-weather { opacity: .75; font-size: 14px; cursor: default; }
 .hud-money { font-weight: 600; font-size: 1.2em; color: #ffe9a8; font-variant-numeric: tabular-nums; text-shadow: 0 1px 0 rgba(0,0,0,.5); } .hud-money.neg { color: #ff9a8a; }
 .stat { background: rgba(0,0,0,.3); padding: 2px 9px; border-radius: 10px; font-size: 13.5px; border: 1px solid rgba(255,220,160,.15); } .stat b { font-variant-numeric: tabular-nums; } .stat.susp.high { background: #7a2020; }
 .hud-rank { opacity: .9; }

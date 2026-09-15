@@ -141,9 +141,9 @@ HK.Scene = {
     { c: 0.00, top: [20, 25, 28], near: [24, 32, 35], far: [39, 50, 53], tint: [10, 30, 46, 0.58], amb: 0.28 },
     { c: 0.20, top: [22, 28, 32], near: [25, 33, 36], far: [43, 55, 59], tint: [10, 30, 46, 0.54], amb: 0.3 },
     { c: 0.26, top: [84, 91, 100], near: [77, 95, 98], far: [197, 150, 124], tint: [255, 160, 95, 0.16], amb: 0.7 },
-    { c: 0.34, top: [146, 180, 191], near: [73, 101, 109], far: [138, 164, 169], tint: [255, 228, 186, 0.08], amb: 0.95 },
-    { c: 0.50, top: [122, 161, 177], near: [65, 97, 108], far: [112, 144, 155], tint: [255, 238, 208, 0.06], amb: 1 },
-    { c: 0.66, top: [131, 157, 170], near: [72, 97, 105], far: [150, 147, 143], tint: [255, 214, 164, 0.1], amb: 0.95 },
+    { c: 0.34, top: [65, 130, 151], near: [58, 92, 101], far: [77, 120, 128], tint: [255, 228, 186, 0.02], amb: 0.95 },
+    { c: 0.50, top: [57, 112, 135], near: [51, 89, 101], far: [64, 101, 114], tint: [255, 238, 208, 0.015], amb: 1 },
+    { c: 0.66, top: [68, 106, 124], near: [58, 88, 98], far: [102, 99, 92], tint: [255, 214, 164, 0.03], amb: 0.95 },
     { c: 0.76, top: [108, 119, 133], near: [72, 88, 94], far: [199, 142, 116], tint: [255, 150, 78, 0.2], amb: 0.75 },
     { c: 0.84, top: [56, 65, 75], near: [39, 51, 55], far: [95, 70, 86], tint: [46, 44, 74, 0.38], amb: 0.45 },
     { c: 0.90, top: [22, 28, 31], near: [25, 33, 36], far: [41, 53, 57], tint: [10, 30, 46, 0.56], amb: 0.3 },
@@ -618,14 +618,19 @@ HK.Scene = {
   emit(pts, col) { if (!this.em || !this.nightK || this.picking || this.emitOff) return; const em = this.em; em.save(); em.fillStyle = col; em.beginPath(); pts.forEach((q, i) => { const p = I.p(q[0], q[1], q[2]); i ? em.lineTo(p[0], p[1]) : em.moveTo(p[0], p[1]); }); em.closePath(); em.fill(); em.restore(); },
 
   /* Dunstschleier: warm eintrüben, nach hinten stärker. Bindet die Farben zusammen wie auf
-     gemalten Hansestadtbildern, ohne dass Grautöne bunt werden. */
-  GRADE: { haze: '#d8c9a6', near: 0.05, far: 0.17 },
+     gemalten Hansestadtbildern. Bei klarem Wetter bleibt davon nur ein leiser Tiefenhinweis;
+     erst Wolken, Regen und Schnee legen wirklich Dunst über die Stadt. */
+  GRADE: { haze: '216,201,166', near: 0.02, far: 0.09 },
+  hazeK() { return this.weather === 'rain' ? 2.3 : this.weather === 'snow' ? 1.9 : this.weather === 'cloudy' ? 1.5 : 1; },
   grade(ctx, W, H) {
     const g = this.GRADE; if (!g || this.picking) return;
+    const k = this.hazeK(), near = g.near * k, far = g.far * k;
     const gr = ctx.createLinearGradient(0, 0, 0, H);
-    gr.addColorStop(0, `rgba(216,201,166,${g.far})`); gr.addColorStop(0.55, `rgba(216,201,166,${(g.far + g.near) / 2})`); gr.addColorStop(1, `rgba(216,201,166,${g.near})`);
+    gr.addColorStop(0, `rgba(${g.haze},${far})`); gr.addColorStop(0.55, `rgba(${g.haze},${(far + near) / 2})`); gr.addColorStop(1, `rgba(${g.haze},${near})`);
     ctx.save(); ctx.globalCompositeOperation = 'multiply'; ctx.fillStyle = gr; ctx.fillRect(0, 0, W, H);
-    ctx.globalCompositeOperation = 'screen'; ctx.globalAlpha = 0.055; ctx.fillStyle = '#716c5b'; ctx.fillRect(0, 0, W, H);
+    // Streulicht hebt die Tiefen an — das ist Dunst und gehört nur zu trübem Wetter
+    const lift = 0.045 * (k - 1);
+    if (lift > 0.002) { ctx.globalCompositeOperation = 'screen'; ctx.globalAlpha = lift; ctx.fillStyle = '#716c5b'; ctx.fillRect(0, 0, W, H); }
     ctx.restore();
   },
   /* ---------- Zeichnen ---------- */
@@ -670,15 +675,15 @@ HK.Scene = {
     const W = HK.MAP.W, H = HK.MAP.H;
     const g = ctx.createLinearGradient(0, 0, W * 0.3, H); g.addColorStop(0, this.rgb(P.far)); g.addColorStop(1, this.rgb(P.near)); ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
     // Farbflecken (Tiefe, Strömung)
-    for (let i = 0; i < 40; i++) { const x = (i * 173) % W, y = (i * 97 + 40) % H, r = 60 + (i % 5) * 30; const gr = ctx.createRadialGradient(x, y, 0, x, y, r); gr.addColorStop(0, i % 2 ? 'rgba(255,255,255,0.05)' : 'rgba(0,10,30,0.10)'); gr.addColorStop(1, 'rgba(0,0,0,0)'); ctx.fillStyle = gr; ctx.fillRect(x - r, y - r, r * 2, r * 2); }
+    for (let i = 0; i < 40; i++) { const x = (i * 173) % W, y = (i * 97 + 40) % H, r = 60 + (i % 5) * 30; const gr = ctx.createRadialGradient(x, y, 0, x, y, r); gr.addColorStop(0, i % 2 ? 'rgba(255,255,255,0.03)' : 'rgba(0,10,30,0.14)'); gr.addColorStop(1, 'rgba(0,0,0,0)'); ctx.fillStyle = gr; ctx.fillRect(x - r, y - r, r * 2, r * 2); }
     // Flachwasser entlang der Küste: heller Saum außen an jeder Landkante
-    for (const e of this.coastEdges()) { const [P0, P1, n] = e; I.poly(ctx, [[P0[0], P0[1], 0], [P1[0], P1[1], 0], [P1[0] + n[0] * 1.3, P1[1] + n[1] * 1.3, 0], [P0[0] + n[0] * 1.3, P0[1] + n[1] * 1.3, 0]], 'rgba(120,190,190,0.16)'); }
-    ctx.strokeStyle = `rgba(255,255,255,${0.08 + 0.14 * P.amb})`; ctx.lineWidth = 1;
+    for (const e of this.coastEdges()) { const [P0, P1, n] = e; I.poly(ctx, [[P0[0], P0[1], 0], [P1[0], P1[1], 0], [P1[0] + n[0] * 1.3, P1[1] + n[1] * 1.3, 0], [P0[0] + n[0] * 1.3, P0[1] + n[1] * 1.3, 0]], 'rgba(120,190,190,0.07)'); }
+    ctx.strokeStyle = `rgba(255,255,255,${0.03 + 0.035 * P.amb})`; ctx.lineWidth = 1;
     for (let i = 0; i < 420; i++) { const x = ((i * 137 + t * 9) % (W + 60)) - 30, y = ((i * 89 + (i % 3) * 7) % (H + 20)) - 10 + Math.sin(t * 1.4 + i) * 1.5; const len = 6 + (i % 5) * 2.5; ctx.beginPath(); ctx.moveTo(x, y); ctx.quadraticCurveTo(x + len / 2, y - 1.5, x + len, y); ctx.stroke(); }
     const st = this.sunT();
-    if (st !== null && this.weather !== 'rain') { const lx = W * (0.05 + 0.24 * st), ly = H * 0.45 + 140 * Math.sin(st * Math.PI); for (let i = 0; i < 70; i++) { const x = lx + Math.cos(i * 2.4) * 90 * Math.sqrt((i % 10) / 10), y = ly + Math.sin(i * 2.4) * 50 * Math.sqrt((i % 10) / 10); const a = 0.35 * (0.5 + 0.5 * Math.sin(t * 5 + i)); ctx.fillStyle = `rgba(255,245,210,${a})`; ctx.fillRect(x, y, 4, 1.2); } }
-    const c = this.clock, fog = c > 0.22 && c < 0.42 ? 1 - Math.abs(c - 0.3) / 0.12 : 0;
-    if (fog > 0) { for (let i = 0; i < 14; i++) { const x = 40 + i * 75 + Math.sin(t * 0.3 + i) * 20, y = 160 + (i % 3) * 200 + i * 30; const gr = ctx.createRadialGradient(x, y, 5, x, y, 110); gr.addColorStop(0, `rgba(235,235,240,${0.35 * fog})`); gr.addColorStop(1, 'rgba(235,235,240,0)'); ctx.fillStyle = gr; ctx.fillRect(x - 110, y - 110, 220, 220); } }
+    if (st !== null && this.weather !== 'rain') { const lx = W * (0.05 + 0.24 * st), ly = H * 0.45 + 140 * Math.sin(st * Math.PI); for (let i = 0; i < 70; i++) { const x = lx + Math.cos(i * 2.4) * 90 * Math.sqrt((i % 10) / 10), y = ly + Math.sin(i * 2.4) * 50 * Math.sqrt((i % 10) / 10); const a = 0.35 * (0.5 + 0.5 * Math.sin(t * 5 + i)); ctx.fillStyle = `rgba(255,243,205,${a * 0.6})`; ctx.fillRect(x, y, 4, 1.2); } }
+    const c = this.clock, fog = c > 0.20 && c < 0.33 ? 1 - Math.abs(c - 0.255) / 0.075 : 0;
+    if (fog > 0) { for (let i = 0; i < 14; i++) { const x = 40 + i * 75 + Math.sin(t * 0.3 + i) * 20, y = 160 + (i % 3) * 200 + i * 30; const gr = ctx.createRadialGradient(x, y, 5, x, y, 110); gr.addColorStop(0, `rgba(228,229,235,${0.2 * fog})`); gr.addColorStop(1, 'rgba(235,235,240,0)'); ctx.fillStyle = gr; ctx.fillRect(x - 110, y - 110, 220, 220); } }
   },
   /* Landkanten mit Normale zur Wasserseite: [P0, P1, n, quay] */
   coastEdges() {
@@ -737,7 +742,7 @@ HK.Scene = {
   drawWeather(ctx, t) {
     if (this.weather === 'rain') { ctx.strokeStyle = 'rgba(200,215,235,0.35)'; ctx.lineWidth = 1; for (let i = 0; i < 220; i++) { const x = ((i * 67 + t * 260) % (HK.SCENE.W + 40)) - 20, y = ((i * 131 + t * 420) % (HK.SCENE.H + 60)) - 30; ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x - 3, y + 12); ctx.stroke(); } }
     if (this.weather === 'snow') { ctx.fillStyle = 'rgba(255,255,255,0.85)'; for (let i = 0; i < 180; i++) { const x = ((i * 89 + t * 18 + Math.sin(t + i) * 20) % (HK.SCENE.W + 40)) - 20, y = ((i * 151 + t * 40) % (HK.SCENE.H + 40)) - 20; ctx.beginPath(); ctx.arc(x, y, 1.2 + (i % 3) * 0.5, 0, 6.28); ctx.fill(); } }
-    if (this.weather === 'cloudy') { ctx.fillStyle = 'rgba(120,125,135,0.10)'; ctx.fillRect(0, 0, HK.SCENE.W, HK.SCENE.H); }
+    if (this.weather === 'cloudy') { ctx.fillStyle = 'rgba(142,134,120,0.09)'; ctx.fillRect(0, 0, HK.SCENE.W, HK.SCENE.H); }
   },
   drawLighting(ctx, P, t) {
     const l = P.amb;
