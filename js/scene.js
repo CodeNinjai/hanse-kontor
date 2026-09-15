@@ -126,7 +126,7 @@ HK.Scene = {
   },
   makePatterns() {
     const mk = (w, h, fn) => { const c = document.createElement('canvas'); c.width = w * this.RS; c.height = h * this.RS; const g = c.getContext('2d'); g.scale(this.RS, this.RS); fn(g, w, h); const pat = this.ctx.createPattern(c, 'repeat'); if (pat.setTransform) pat.setTransform(new DOMMatrix().scale(1 / this.RS)); return pat; };
-    this.pat.cobble = mk(20, 10, (g) => { g.fillStyle = '#9f9681'; g.fillRect(0, 0, 20, 10); for (const [x, y, w, h] of [[1, 1, 7, 3.5], [10, 0.5, 8, 4], [0, 5.5, 6, 4], [8, 5.5, 5, 4], [15, 5.5, 5, 4]]) { g.fillStyle = (x + y) % 3 ? '#a9a18a' : '#948c77'; g.beginPath(); g.ellipse(x + w / 2, y + h / 2, w / 2, h / 2, 0, 0, 6.28); g.fill(); g.fillStyle = 'rgba(255,255,255,0.18)'; g.beginPath(); g.ellipse(x + w / 2 - 1, y + h / 2 - 1, w / 3, h / 4, 0, 0, 6.28); g.fill(); } });
+    this.pat.cobble = mk(20, 10, (g) => { g.fillStyle = '#9f9681'; g.fillRect(0, 0, 20, 10); for (const [x, y, w, h] of [[1, 1, 7, 3.5], [10, 0.5, 8, 4], [0, 5.5, 6, 4], [8, 5.5, 5, 4], [15, 5.5, 5, 4]]) { g.fillStyle = (x + y) % 3 ? '#a49b86' : '#97907c'; g.beginPath(); g.ellipse(x + w / 2, y + h / 2, w / 2, h / 2, 0, 0, 6.28); g.fill(); g.fillStyle = 'rgba(255,250,235,0.07)'; g.beginPath(); g.ellipse(x + w / 2 - 1, y + h / 2 - 1, w / 3, h / 4, 0, 0, 6.28); g.fill(); } });
     this.pat.earth = mk(40, 40, (g, w, h) => { g.fillStyle = '#aa9f7b'; g.fillRect(0, 0, w, h); for (let i = 0; i < 160; i++) { g.fillStyle = Math.random() < 0.5 ? 'rgba(90,70,40,0.18)' : 'rgba(255,245,220,0.14)'; g.fillRect(Math.random() * w, Math.random() * h, 2, 1.5); } });
     this.pat.grass = mk(30, 30, (g, w, h) => { g.fillStyle = '#6e7d58'; g.fillRect(0, 0, w, h); for (let i = 0; i < 110; i++) { g.strokeStyle = Math.random() < 0.5 ? 'rgba(46,58,33,0.4)' : 'rgba(174,192,138,0.35)'; const x = Math.random() * w, y = Math.random() * h; g.beginPath(); g.moveTo(x, y); g.lineTo(x + 1, y - 3); g.stroke(); } for (let i = 0; i < 6; i++) { g.fillStyle = 'rgba(120,150,70,0.35)'; g.beginPath(); g.ellipse(Math.random() * w, Math.random() * h, 5, 2.5, 0, 0, 6.28); g.fill(); } });
     this.pat.snow = mk(30, 30, (g, w, h) => { g.fillStyle = '#e9edf0'; g.fillRect(0, 0, w, h); for (let i = 0; i < 40; i++) { g.fillStyle = 'rgba(180,195,215,0.35)'; g.fillRect(Math.random() * w, Math.random() * h, 2, 1); } });
@@ -138,16 +138,16 @@ HK.Scene = {
 
   /* ---------- Zeit, Licht, Jahreszeit ---------- */
   KEYS: [
-    { c: 0.00, top: [14, 24, 33], near: [18, 32, 40], far: [32, 50, 59], tint: [10, 30, 46, 0.58], amb: 0.28 },
-    { c: 0.20, top: [16, 28, 38], near: [19, 33, 41], far: [36, 55, 65], tint: [10, 30, 46, 0.54], amb: 0.3 },
-    { c: 0.26, top: [77, 91, 107], near: [69, 95, 105], far: [202, 146, 118], tint: [255, 160, 95, 0.16], amb: 0.7 },
-    { c: 0.34, top: [134, 182, 201], near: [62, 102, 118], far: [128, 165, 177], tint: [255, 228, 186, 0.08], amb: 0.95 },
-    { c: 0.50, top: [109, 163, 188], near: [54, 99, 117], far: [101, 146, 164], tint: [255, 238, 208, 0.06], amb: 1 },
-    { c: 0.66, top: [121, 158, 180], near: [62, 98, 113], far: [146, 146, 146], tint: [255, 214, 164, 0.1], amb: 0.95 },
-    { c: 0.76, top: [100, 119, 142], near: [64, 88, 101], far: [206, 137, 109], tint: [255, 150, 78, 0.2], amb: 0.75 },
-    { c: 0.84, top: [49, 65, 83], near: [32, 51, 61], far: [95, 66, 92], tint: [46, 44, 74, 0.38], amb: 0.45 },
-    { c: 0.90, top: [16, 27, 36], near: [19, 33, 41], far: [34, 53, 63], tint: [10, 30, 46, 0.56], amb: 0.3 },
-    { c: 1.00, top: [14, 24, 33], near: [18, 32, 40], far: [32, 50, 59], tint: [10, 30, 46, 0.58], amb: 0.28 },
+    { c: 0.00, top: [20, 25, 28], near: [24, 32, 35], far: [39, 50, 53], tint: [10, 30, 46, 0.58], amb: 0.28 },
+    { c: 0.20, top: [22, 28, 32], near: [25, 33, 36], far: [43, 55, 59], tint: [10, 30, 46, 0.54], amb: 0.3 },
+    { c: 0.26, top: [84, 91, 100], near: [77, 95, 98], far: [197, 150, 124], tint: [255, 160, 95, 0.16], amb: 0.7 },
+    { c: 0.34, top: [146, 180, 191], near: [73, 101, 109], far: [138, 164, 169], tint: [255, 228, 186, 0.08], amb: 0.95 },
+    { c: 0.50, top: [122, 161, 177], near: [65, 97, 108], far: [112, 144, 155], tint: [255, 238, 208, 0.06], amb: 1 },
+    { c: 0.66, top: [131, 157, 170], near: [72, 97, 105], far: [150, 147, 143], tint: [255, 214, 164, 0.1], amb: 0.95 },
+    { c: 0.76, top: [108, 119, 133], near: [72, 88, 94], far: [199, 142, 116], tint: [255, 150, 78, 0.2], amb: 0.75 },
+    { c: 0.84, top: [56, 65, 75], near: [39, 51, 55], far: [95, 70, 86], tint: [46, 44, 74, 0.38], amb: 0.45 },
+    { c: 0.90, top: [22, 28, 31], near: [25, 33, 36], far: [41, 53, 57], tint: [10, 30, 46, 0.56], amb: 0.3 },
+    { c: 1.00, top: [20, 25, 28], near: [24, 32, 35], far: [39, 50, 53], tint: [10, 30, 46, 0.58], amb: 0.28 },
   ],
   palette() {
     const c = this.clock, K = this.KEYS; let i = 0;
@@ -617,6 +617,17 @@ HK.Scene = {
   /* Leuchtendes Fenster in die Emissionsebene schreiben (Weltkoordinaten) */
   emit(pts, col) { if (!this.em || !this.nightK || this.picking || this.emitOff) return; const em = this.em; em.save(); em.fillStyle = col; em.beginPath(); pts.forEach((q, i) => { const p = I.p(q[0], q[1], q[2]); i ? em.lineTo(p[0], p[1]) : em.moveTo(p[0], p[1]); }); em.closePath(); em.fill(); em.restore(); },
 
+  /* Dunstschleier: warm eintrüben, nach hinten stärker. Bindet die Farben zusammen wie auf
+     gemalten Hansestadtbildern, ohne dass Grautöne bunt werden. */
+  GRADE: { haze: '#d8c9a6', near: 0.05, far: 0.17 },
+  grade(ctx, W, H) {
+    const g = this.GRADE; if (!g || this.picking) return;
+    const gr = ctx.createLinearGradient(0, 0, 0, H);
+    gr.addColorStop(0, `rgba(216,201,166,${g.far})`); gr.addColorStop(0.55, `rgba(216,201,166,${(g.far + g.near) / 2})`); gr.addColorStop(1, `rgba(216,201,166,${g.near})`);
+    ctx.save(); ctx.globalCompositeOperation = 'multiply'; ctx.fillStyle = gr; ctx.fillRect(0, 0, W, H);
+    ctx.globalCompositeOperation = 'screen'; ctx.globalAlpha = 0.055; ctx.fillStyle = '#6d6858'; ctx.fillRect(0, 0, W, H);
+    ctx.restore();
+  },
   /* ---------- Zeichnen ---------- */
   draw() {
     const ctx = this.ctx, st = HK.state; if (!st) return;
@@ -646,6 +657,7 @@ HK.Scene = {
     if (hb && hb !== sb && hb.kind !== 'water') this.outline(ctx, hb, 'rgba(255,255,255,0.85)', 1.2 / this.cam.z);
     // Wetter, Licht, Vignette und Korn liegen auf dem Bildausschnitt, nicht auf der Karte
     ctx.setTransform(this.RS, 0, 0, this.RS, 0, 0);
+    this.grade(ctx, W, H);
     this.drawWeather(ctx, t);
     this.drawLighting(ctx, P, t);
     const vg = ctx.createRadialGradient(W / 2, H / 2, H * 0.45, W / 2, H / 2, H * 0.95); vg.addColorStop(0, 'rgba(0,0,0,0)'); vg.addColorStop(1, 'rgba(20,10,0,0.4)'); ctx.fillStyle = vg; ctx.fillRect(0, 0, W, H);
