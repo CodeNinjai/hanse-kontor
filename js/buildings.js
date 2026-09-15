@@ -48,10 +48,10 @@ Object.assign(HK.Scene, {
     const seed = this.seed(b); if (seed % 3 === 0) { for (let i = 0; i < nL; i++) if ((i + seed) % 2) { const u0 = b.x + b.w * i / nL, u1 = b.x + b.w * (i + 1) / nL; I.poly(ctx, [[u0, b.y + b.d, z0 + h * 0.5], [u1, b.y + b.d, z0 + h * 0.5], [u1, b.y + b.d, z0 + h], [u0, b.y + b.d, z0 + h]], 'rgba(162,74,58,0.55)'); } }
   },
   drawHouse(ctx, b, st, season, sv, gableKind) {
-    const wall = b.wall || '#e1d4b5', brick = !!b.brick, roof = b.roof || (brick ? '#605548' : '#8e493a'), rh = Math.min(b.w, b.d) * 0.62;
+    const wall = b.wall || '#cdbc99', brick = !!b.brick, brickCol = brick ? (b.wall || '#9c4e40') : wall, roof = b.roof || (brick ? '#605548' : '#8e493a'), rh = Math.min(b.w, b.d) * 0.62;
     I.shadow(ctx, b.x, b.y, b.w, b.d, b.h + rh * 0.6, sv.v, sv.a);
     // Sockel und Wände
-    I.box(ctx, b.x, b.y, 0, b.w, b.d, b.h, { wall: brick ? '#9c4e40' : (b.stone ? '#9a9284' : wall) }, { noTop: true });
+    I.box(ctx, b.x, b.y, 0, b.w, b.d, b.h, { wall: brick ? brickCol : (b.stone ? '#9a9284' : wall) }, { noTop: true });
     I.poly(ctx, [[b.x, b.y + b.d, 0], [b.x + b.w, b.y + b.d, 0], [b.x + b.w, b.y + b.d, 0.12], [b.x, b.y + b.d, 0.12]], 'rgba(60,50,40,0.5)'); I.poly(ctx, [[b.x + b.w, b.y, 0], [b.x + b.w, b.y + b.d, 0], [b.x + b.w, b.y + b.d, 0.12], [b.x + b.w, b.y, 0.12]], 'rgba(40,30,20,0.55)');
     if (b.stone) { for (let z = 0.15; z < b.h; z += 0.15) { I.line(ctx, [b.x, b.y + b.d, z], [b.x + b.w, b.y + b.d, z], 'rgba(0,0,0,0.18)', 0.5); I.line(ctx, [b.x + b.w, b.y, z], [b.x + b.w, b.y + b.d, z], 'rgba(0,0,0,0.22)', 0.5); } }
     else this.wallTexture(ctx, b, brick, 0.12, b.h - 0.12);
@@ -69,8 +69,8 @@ Object.assign(HK.Scene, {
     if (brick) {
       // Treppengiebel überragen das Dach
       I.gableRoof(ctx, b.x, b.y, b.h, b.w, b.d, rh, roofCol, ridge, { overhang: 0.02, tileDark: 'rgba(0,0,0,0.25)' });
-      if (ridge === 'x') { const pts = I.stepGableR(ctx, b.x, b.w, b.y, b.h, b.d, rh + 0.12, '#9c4e40', 5); I.brickR(ctx, b.x, b.w, b.y, b.h, b.d, rh); this.gableDeco(ctx, b, pts, 'R'); }
-      else { const pts = I.stepGableL(ctx, b.x, b.y, b.d, b.h, b.w, rh + 0.12, '#9c4e40', 5); this.gableDeco(ctx, b, pts, 'L'); }
+      if (ridge === 'x') { const pts = I.stepGableR(ctx, b.x, b.w, b.y, b.h, b.d, rh + 0.12, brickCol, 5); I.brickR(ctx, b.x, b.w, b.y, b.h, b.d, rh); this.gableDeco(ctx, b, pts, 'R'); }
+      else { const pts = I.stepGableL(ctx, b.x, b.y, b.d, b.h, b.w, rh + 0.12, brickCol, 5); this.gableDeco(ctx, b, pts, 'L'); }
     } else {
       I.gableRoof(ctx, b.x, b.y, b.h, b.w, b.d, rh, roofCol, ridge, { gableFill: b.stone ? '#9a9284' : wall, overhang: 0.14 });
       // Giebelfachwerk
@@ -80,7 +80,7 @@ Object.assign(HK.Scene, {
     if ((ridge === 'y' ? b.d : b.w) > 1.4 && this.seed(b) % 2) { if (ridge === 'y') { const gx = b.x + b.w * 0.72, gy = b.y + b.d * 0.5; I.box(ctx, gx, gy - 0.15, b.h + rh * 0.25, 0.3, 0.3, 0.28, { wall: wall }, { noTop: true }); I.pyramid(ctx, gx, gy - 0.15, b.h + rh * 0.25 + 0.28, 0.3, 0.3, 0.16, roofCol); I.windowR(ctx, gx, 0.3, gy - 0.15, b.h + rh * 0.25 + 0.05, 0.15, 0.14, 0.16, {}); } else { const gx = b.x + b.w * 0.5, gy = b.y + b.d * 0.72; I.box(ctx, gx - 0.15, gy, b.h + rh * 0.25, 0.3, 0.3, 0.28, { wall: wall }, { noTop: true }); I.pyramid(ctx, gx - 0.15, gy, b.h + rh * 0.25 + 0.28, 0.3, 0.3, 0.16, roofCol); I.windowL(ctx, gx - 0.15, gy, 0.3, b.h + rh * 0.25 + 0.05, 0.15, 0.14, 0.16, {}); } }
     this.chimney(ctx, b.x + b.w * 0.75, b.y + b.d * 0.4, b.h + rh * 0.55);
     if (b.hoist) { const gx = b.x + b.w, gy = b.y + b.d / 2; I.line(ctx, [gx, gy, b.h + rh + 0.05], [gx + 0.5, gy, b.h + rh - 0.05], '#62472c', 2.5); I.line(ctx, [gx + 0.5, gy, b.h + rh - 0.05], [gx + 0.5, gy, b.h * 0.5 + Math.sin(this.time) * 0.15], '#222', 0.8); I.box(ctx, gx + 0.4, gy - 0.1, b.h * 0.5 + Math.sin(this.time) * 0.15 - 0.25, 0.22, 0.22, 0.25, { wall: '#9a7a4a', top: '#b08a50' }); }
-    if (b.sign) { const p = I.p(b.x + b.w, b.y + b.d * 0.2, b.h * 0.7); ctx.strokeStyle = '#62472c'; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.moveTo(p[0], p[1]); ctx.lineTo(p[0] + 12, p[1] - 4); ctx.stroke(); ctx.fillStyle = '#6c4a2f'; ctx.fillRect(p[0] + 8, p[1] - 4, 9, 8); ctx.fillStyle = '#ece4d0'; ctx.fillRect(p[0] + 9, p[1] - 3, 7, 6); this.signIcon(ctx, b.sign, p[0] + 12.5, p[1]); }
+    if (b.sign) { const p = I.p(b.x + b.w, b.y + b.d * 0.2, b.h * 0.7); ctx.strokeStyle = '#62472c'; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.moveTo(p[0], p[1]); ctx.lineTo(p[0] + 12, p[1] - 4); ctx.stroke(); ctx.fillStyle = '#6c4a2f'; ctx.fillRect(p[0] + 8, p[1] - 4, 9, 8); ctx.fillStyle = '#d8c7a0'; ctx.fillRect(p[0] + 9, p[1] - 3, 7, 6); this.signIcon(ctx, b.sign, p[0] + 12.5, p[1]); }
     if (b.shabby) { I.poly(ctx, [[b.x, b.y + b.d, 0.12], [b.x + b.w, b.y + b.d, 0.12], [b.x + b.w, b.y + b.d, 0.45], [b.x, b.y + b.d, 0.45]], 'rgba(60,50,30,0.3)'); I.poly(ctx, [[b.x + b.w, b.y + 0.1, b.h * 0.5], [b.x + b.w, b.y + 0.5, b.h * 0.5], [b.x + b.w, b.y + 0.4, b.h * 0.95], [b.x + b.w, b.y + 0.15, b.h * 0.9]], 'rgba(40,60,30,0.28)'); this.barrel3(ctx, b.x + b.w + 0.12, b.y + b.d - 0.3, 0); }
     if (b.bigChimney) { I.box(ctx, b.x + b.w * 0.55, b.y + b.d * 0.35, b.h + rh * 0.3, 0.3, 0.3, 0.9, { wall: '#68564f', top: '#4e433b' }); }
     if (b.flagpole) { I.line(ctx, [b.x + b.w + 0.05, b.y + 0.15, 0], [b.x + b.w + 0.05, b.y + 0.15, 1.8], '#62472c', 1.3); this.pennant(ctx, b.x + b.w + 0.05, b.y + 0.15, 1.8, 0.5, 0.3, ['#c8102e', '#f0ece0'], false); }
@@ -119,7 +119,7 @@ Object.assign(HK.Scene, {
     this.drawHouse(ctx, b, st, season, sv, true);
     // Ecktürmchen
     const tx = b.x + b.w - 0.02, ty = b.y + 0.02;
-    I.cylinder(ctx, tx, ty, b.h * 0.45, 0.2, b.h * 0.7, '#9c4e40', { brick: true, noTop: true }); I.cone(ctx, tx, ty, b.h * 1.15, 0.24, 0.5, season === 'winter' ? '#e6eaee' : '#574e42');
+    I.cylinder(ctx, tx, ty, b.h * 0.45, 0.2, b.h * 0.7, b.wall || '#9c4e40', { brick: true, noTop: true }); I.cone(ctx, tx, ty, b.h * 1.15, 0.24, 0.5, season === 'winter' ? '#e6eaee' : '#574e42');
     if (b.banner) { const p = I.p(b.x + b.w, b.y + b.d * 0.5, b.h * 0.85); ctx.fillStyle = b.banner === 'green' ? '#347e46' : b.banner === 'red' ? '#8a3d39' : '#6f398b'; ctx.fillRect(p[0] - 3, p[1], 7, 18); ctx.fillStyle = '#bfa361'; ctx.fillRect(p[0] - 1, p[1] + 4, 3, 3); ctx.fillStyle = '#62472c'; ctx.fillRect(p[0] - 5, p[1] - 1, 11, 1.5); }
     if (b.id === 'bailiff') { const p = I.p(b.x + b.w, b.y + b.d * 0.5, 0.9); this.lamps.push([p[0] + 3, p[1]]); ctx.fillStyle = '#62472c'; ctx.fillRect(p[0] + 2, p[1] - 6, 1.5, 7); }
   },
@@ -225,7 +225,7 @@ Object.assign(HK.Scene, {
       I.line(ctx, [sx - 0.22, sy, top - 0.26], [sx + 0.1, sy, top - 0.26], '#75634b', 1.2);
       return;
     }
-    const cols = { brewery: ['#c9af7b', '#7e4634'], smokehouse: ['#8a7a6a', '#505050'], weaver: ['#d9d0b8', '#605449'], smithy: ['#9a9284', '#605449'], saltworks: ['#e0dcd0', '#635c68'] };
+    const cols = { brewery: ['#c9af7b', '#7e4634'], smokehouse: ['#8a7a6a', '#505050'], weaver: ['#b3ab93', '#605449'], smithy: ['#9a9284', '#605449'], saltworks: ['#b8b4aa', '#635c68'] };
     const c = cols[ws.type];
     this.drawHouse(ctx, Object.assign({}, b, { wall: c[0], roof: c[1], stone: ws.type === 'smithy' }), st, season, sv, false);
     const fx = b.x + b.w + 0.15, fy = b.y + b.d * 0.5;
@@ -266,7 +266,7 @@ Object.assign(HK.Scene, {
     for (const [px, py] of [[b.x, b.y], [b.x + b.w / 2, b.y], [b.x + b.w, b.y], [b.x, b.y + b.d], [b.x + b.w / 2, b.y + b.d], [b.x + b.w, b.y + b.d]]) I.line(ctx, [px, py, 0], [px, py, b.h], '#6c4a2f', 2.6);
     I.line(ctx, [b.x, b.y + b.d, b.h - 0.05], [b.x + b.w, b.y + b.d, b.h - 0.05], '#62472c', 1.8); I.line(ctx, [b.x + b.w, b.y, b.h - 0.05], [b.x + b.w, b.y + b.d, b.h - 0.05], '#62472c', 1.8);
     I.gableRoof(ctx, b.x, b.y, b.h, b.w, b.d, rh, snow ? '#e6eaee' : '#7f6e4d', 'x', { overhang: 0.16, rows: 5, gableFill: '#8c6c45' });
-    const p = I.p(b.x + b.w, b.y + b.d * 0.5, b.h + 0.1); ctx.fillStyle = '#ece4d0'; ctx.fillRect(p[0] - 6, p[1] - 4, 12, 7); ctx.fillStyle = '#416d8e'; ctx.beginPath(); ctx.ellipse(p[0], p[1] - 0.5, 4, 1.8, -0.3, 0, 6.28); ctx.fill();
+    const p = I.p(b.x + b.w, b.y + b.d * 0.5, b.h + 0.1); ctx.fillStyle = '#d8c7a0'; ctx.fillRect(p[0] - 6, p[1] - 4, 12, 7); ctx.fillStyle = '#416d8e'; ctx.beginPath(); ctx.ellipse(p[0], p[1] - 0.5, 4, 1.8, -0.3, 0, 6.28); ctx.fill();
     const gullP = I.p(b.x + 0.3, b.y - 0.1, b.h + rh + 0.05); ctx.fillStyle = '#f0ece0'; ctx.beginPath(); ctx.ellipse(gullP[0], gullP[1], 2.5, 1.8, 0, 0, 6.28); ctx.fill();
   },
   /* Kloster: Kapelle mit Dachreiter, Konventsflügel, Kreuzgang mit Garten und Brunnen */
@@ -436,7 +436,7 @@ Object.assign(HK.Scene, {
     for (let k = 0; k < 4; k++) { const a = a0 + k * Math.PI / 2; const ex = hub[0] + Math.cos(a) * 30, ey = hub[1] + Math.sin(a) * 30 * 0.8; ctx.strokeStyle = '#62472c'; ctx.lineWidth = 1.6; ctx.beginPath(); ctx.moveTo(hub[0], hub[1]); ctx.lineTo(ex, ey); ctx.stroke(); ctx.fillStyle = 'rgba(240,232,210,0.9)'; ctx.beginPath(); ctx.moveTo(hub[0] + Math.cos(a) * 8, hub[1] + Math.sin(a) * 6.4); ctx.lineTo(ex, ey); ctx.lineTo(ex + Math.cos(a + 1.57) * 7, ey + Math.sin(a + 1.57) * 5.6); ctx.lineTo(hub[0] + Math.cos(a) * 8 + Math.cos(a + 1.57) * 7, hub[1] + Math.sin(a) * 6.4 + Math.sin(a + 1.57) * 5.6); ctx.fill(); ctx.strokeStyle = 'rgba(60,40,20,0.5)'; ctx.lineWidth = 0.6; ctx.stroke(); }
     ctx.fillStyle = '#62472c'; ctx.beginPath(); ctx.arc(hub[0], hub[1], 2.5, 0, 6.28); ctx.fill();
   },
-  drawFarm(ctx, season, sv, farm) { const f = farm || HK.FARM; this.drawHouse(ctx, { x: f.x, y: f.y, w: f.w, d: f.d, h: f.h || 0.85, wall: farm ? '#cdbf98' : '#d8c9a6', roof: '#9a8352', thatchLine: true }, HK.state, season, sv, false); for (let u = 0; u < 1.6; u += 0.18) I.line(ctx, [f.x - 0.4 + u, f.y + f.d + 0.5, 0], [f.x - 0.4 + u, f.y + f.d + 0.5, 0.2], '#7e5934', 1); I.line(ctx, [f.x - 0.4, f.y + f.d + 0.5, 0.15], [f.x + 1.2, f.y + f.d + 0.5, 0.15], '#7e5934', 1); for (const [sx, sy] of [[f.x + 0.2, f.y + f.d + 0.25], [f.x + 0.6, f.y + f.d + 0.3], [f.x + 1.0, f.y + f.d + 0.2]]) { const p = I.p(sx, sy, 0); ctx.fillStyle = '#f0ece0'; ctx.beginPath(); ctx.ellipse(p[0], p[1] - 2, 3.5, 2.5, 0, 0, 6.28); ctx.fill(); ctx.fillStyle = '#554646'; ctx.fillRect(p[0] + 2.5, p[1] - 3.5, 2, 2); } },
+  drawFarm(ctx, season, sv, farm) { const f = farm || HK.FARM; this.drawHouse(ctx, { x: f.x, y: f.y, w: f.w, d: f.d, h: f.h || 0.85, wall: farm ? '#bfae86' : '#c3b189', roof: '#9a8352', thatchLine: true }, HK.state, season, sv, false); for (let u = 0; u < 1.6; u += 0.18) I.line(ctx, [f.x - 0.4 + u, f.y + f.d + 0.5, 0], [f.x - 0.4 + u, f.y + f.d + 0.5, 0.2], '#7e5934', 1); I.line(ctx, [f.x - 0.4, f.y + f.d + 0.5, 0.15], [f.x + 1.2, f.y + f.d + 0.5, 0.15], '#7e5934', 1); for (const [sx, sy] of [[f.x + 0.2, f.y + f.d + 0.25], [f.x + 0.6, f.y + f.d + 0.3], [f.x + 1.0, f.y + f.d + 0.2]]) { const p = I.p(sx, sy, 0); ctx.fillStyle = '#f0ece0'; ctx.beginPath(); ctx.ellipse(p[0], p[1] - 2, 3.5, 2.5, 0, 0, 6.28); ctx.fill(); ctx.fillStyle = '#554646'; ctx.fillRect(p[0] + 2.5, p[1] - 3.5, 2, 2); } },
   /* Breiter Steg: Bohlendeck auf Pfählen, Fahrrinne in der Mitte frei */
   drawPier(ctx, p, t) {
     const h = (p.w || 0.6) / 2, x0 = p.x - h, x1 = p.x + h;
