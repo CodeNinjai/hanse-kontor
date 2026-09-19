@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<title>Grundformen: Canvas gegen PixiJS</title>
+<style>
+  body { font: 15px system-ui, sans-serif; background: #17140f; color: #e8e0d0; margin: 0; padding: 20px 24px; }
+  h1 { font-size: 19px; margin: 0 0 4px; }
+  p.hin { color: #9d9384; margin: 0 0 16px; max-width: 60em; }
+  table { border-collapse: collapse; }
+  td, th { padding: 3px 14px 3px 0; text-align: left; }
+  th { color: #9d9384; font-weight: 600; border-bottom: 1px solid #3a342a; }
+  .gut { color: #86b06a; } .schlecht { color: #d07a5a; font-weight: 700; }
+  #urteil { font-size: 17px; margin: 14px 0 20px; padding: 10px 14px; border-radius: 5px; display: inline-block; }
+  #urteil.gut { background: #1e2a17; } #urteil.schlecht { background: #2f1b14; }
+  canvas { border: 1px solid #3a342a; vertical-align: top; }
+  .bilder { margin-top: 20px; display: flex; gap: 12px; }
+</style>
+</head>
+<body>
+<h1>Grundformen: Canvas gegen PixiJS</h1>
+<p class="hin">Der gesamte Zeichencode des Spiels läuft über einen Adapter, der wie ein Canvas-Kontext aussieht,
+seine Befehle aber als PixiJS-Geometrie ablegt (<code>js/gfx-pixi.js</code>). Diese Seite zeichnet jede verwendete
+Grundform einmal auf beiden Wegen und vergleicht die Bilder. Sie braucht keinen Server — einfach öffnen.
+Wer neue Zeichenbefehle benutzt, sollte hier einen Fall ergänzen.</p>
+<div id="urteil">messe …</div>
+<div id="tabelle"></div>
+<div class="bilder"><div><div>Canvas</div><canvas id="ca"></canvas></div><div><div>PixiJS</div><canvas id="px"></canvas></div></div>
+
+<script src="../lib/pixi.min.js"></script>
+<script>
+'use strict';
+const HK = { clamp: (v, a, b) => Math.max(a, Math.min(b, v)) };
+</script>
+<script src="../js/gfx-pixi.js"></script>
+<script src="../js/iso.js"></script>
+<script>'use strict'; const I = HK.Iso; I.OX = 46; I.OY = 26;</script>
+<script>
+'use strict';
+const W = 180, H = 120, S = 2.0;
+
+/* Jeder Fall zeichnet in Nutzerkoordinaten; der Maßstab steckt in der Lage, wie in der Szene */
+const faelle = {
+  linie: c => { c.strokeStyle = '#e0c060'; c.lineWidth = 1.5; c.beginPath(); c.moveTo(6, 6); c.lineTo(80, 50); c.stroke(); },
+  vieleck: c => { c.fillStyle = '#b05040'; c.beginPath(); c.moveTo(10, 10); c.lineTo(70, 14); c.lineTo(60, 50); c.lineTo(12, 44); c.closePath(); c.fill(); },
+  vieleckMitRand: c => { c.fillStyle = '#b05040'; c.strokeStyle = 'rgba(0,0,0,0.6)'; c.lineWidth = 1; c.beginPath(); c.moveTo(10, 10); c.lineTo(70, 14); c.lineTo(60, 50); c.lineTo(12, 44); c.closePath(); c.fill(); c.stroke(); },
+  kreis: c => { c.fillStyle = '#bfa361'; c.beginPath(); c.arc(40, 30, 14, 0, 6.28); c.fill(); },
+  ring: c => { c.fillStyle = '#bfa361'; c.beginPath(); c.arc(40, 30, 14, 0, 6.28); c.fill(); c.fillStyle = '#4f463b'; c.beginPath(); c.arc(40, 30, 9, 0, 6.28); c.fill(); },
+  kreisRand: c => { c.strokeStyle = '#e0c060'; c.lineWidth = 2; c.beginPath(); c.arc(40, 30, 14, 0, 6.28); c.stroke(); },
+  teilbogen: c => { c.fillStyle = '#c07040'; c.beginPath(); c.moveTo(40, 30); c.arc(40, 30, 20, 0.4, 2.4); c.closePath(); c.fill(); },
+  bogenGegenUhr: c => { c.strokeStyle = '#80c0e0'; c.lineWidth = 2; c.beginPath(); c.arc(40, 30, 18, 0.5, 2.6, true); c.stroke(); },
+  kleinerKreis: c => { c.fillStyle = '#d0d0d0'; c.beginPath(); c.arc(30, 25, 2, 0, 6.28); c.fill(); c.beginPath(); c.arc(55, 25, 1.2, 0, 6.28); c.fill(); },
+  ellipse: c => { c.fillStyle = '#7a8c50'; c.beginPath(); c.ellipse(45, 30, 26, 12, 0, 0, 6.28); c.fill(); },
+  ellipseGedreht: c => { c.fillStyle = '#7a8c50'; c.beginPath(); c.ellipse(45, 30, 26, 12, -0.4, 0, 6.28); c.fill(); },
+  rechteck: c => { c.fillStyle = '#5070a0'; c.fillRect(12, 12, 50, 30); },
+  deckkraft: c => { c.fillStyle = '#e0e0e0'; c.globalAlpha = 0.35; c.fillRect(10, 10, 50, 40); c.globalAlpha = 1; },
+  rgbaFarbe: c => { c.fillStyle = 'rgba(200,60,40,0.45)'; c.fillRect(10, 10, 50, 40); },
+  krummeFarbe: c => { c.fillStyle = 'rgba(215,215,220,-0.01)'; c.fillRect(10, 10, 20, 20); c.fillStyle = 'rgba(200,60,40,0.4)'; c.fillRect(34, 10, 26, 30); },
+  verschiebung: c => { c.save(); c.translate(30, 20); c.fillStyle = '#c08040'; c.fillRect(0, 0, 30, 25); c.restore(); c.fillStyle = 'rgba(0,0,0,0.5)'; c.fillRect(0, 0, 10, 10); },
+  stauchung: c => { c.save(); c.translate(20, 20); c.scale(0.5, 0.5); c.fillStyle = '#40a080'; c.fillRect(0, 0, 60, 50); c.restore(); },
+  quadratkurve: c => { c.strokeStyle = '#ffffff'; c.lineWidth = 1; c.beginPath(); c.moveTo(8, 40); c.quadraticCurveTo(40, 5, 75, 40); c.stroke(); },
+  bezier: c => { c.fillStyle = '#9060a0'; c.beginPath(); c.moveTo(8, 40); c.bezierCurveTo(20, 5, 60, 5, 75, 40); c.closePath(); c.fill(); },
+  duennerStrich: c => { c.strokeStyle = 'rgba(0,0,0,0.3)'; c.lineWidth = 0.5; c.beginPath(); for (let i = 0; i < 8; i++) { c.moveTo(8, 8 + i * 5); c.lineTo(78, 8 + i * 5); } c.stroke(); },
+  verlaufLinear: c => { const g = c.createLinearGradient(10, 10, 80, 50); g.addColorStop(0, '#d04020'); g.addColorStop(0.5, '#e0c060'); g.addColorStop(1, '#2040a0'); c.fillStyle = g; c.fillRect(10, 10, 70, 40); },
+  teilEllipse: c => { c.fillStyle = '#c08040'; c.beginPath(); c.ellipse(45, 26, 26, 11, 0, 0, Math.PI); c.closePath(); c.fill(); },
+  teilEllipseRueckwaerts: c => { c.fillStyle = '#5080a0'; c.beginPath(); c.ellipse(45, 20, 26, 11, 0, 0, Math.PI); c.lineTo(19, 44); c.ellipse(45, 44, 26, 11, 0, Math.PI, 0, true); c.closePath(); c.fill(); },
+  gestrichelt: c => { c.strokeStyle = '#ffd766'; c.lineWidth = 2; c.setLineDash([5, 4]); c.beginPath(); c.moveTo(10, 10); c.lineTo(70, 14); c.lineTo(60, 50); c.lineTo(12, 44); c.closePath(); c.stroke(); c.setLineDash([]); },
+  isoZylinder: c => I.cylinder(c, 0, 0, 0, 0.5, 1.2, '#b08050', {}),
+  isoZylinderZiegel: c => I.cylinder(c, 0, 0, 0, 0.5, 1.2, '#9c4e40', { brick: true }),
+  isoKegel: c => I.cone(c, 0, 0, 0.1, 0.6, 1.0, '#6b5a4a'),
+  isoQuader: c => I.box(c, 0, 0, 0, 1.2, 0.8, 0.9, { wall: '#cdbc99' }),
+  isoDach: c => I.gableRoof(c, 0, 0, 0.2, 1.2, 0.9, 0.5, '#8e493a', 'x', { gableFill: '#cdbc99' }),
+  verlaufRadial: c => { const g = c.createRadialGradient(45, 30, 2, 45, 30, 26); g.addColorStop(0, 'rgba(255,140,40,0.9)'); g.addColorStop(1, 'rgba(255,100,20,0)'); c.fillStyle = g; c.fillRect(10, 2, 70, 56); },
+};
+
+/* Musterfüllung: sie braucht eine Quell-Leinwand am Muster, wie makePatterns sie anhängt */
+function musterBauen(ctx2d) {
+  const c = document.createElement('canvas'); c.width = 30; c.height = 30;
+  const g = c.getContext('2d');
+  g.fillStyle = '#6e7d58'; g.fillRect(0, 0, 30, 30);
+  for (let i = 0; i < 90; i++) { g.fillStyle = i % 2 ? 'rgba(46,58,33,0.5)' : 'rgba(174,192,138,0.45)'; g.fillRect((i * 7) % 30, (i * 11) % 30, 2, 3); }
+  const pat = ctx2d.createPattern(c, 'repeat');
+  pat._quelle = c; pat._rs = 1;
+  return pat;
+}
+
+(async () => {
+  const namen = Object.keys(faelle);
+  const ca = document.getElementById('ca'), px = document.getElementById('px');
+  ca.width = W * S; ca.height = H * S * (namen.length + 1);
+  const g2 = ca.getContext('2d');
+  const muster = musterBauen(g2);
+  faelle.muster = c => { c.fillStyle = muster; c.beginPath(); c.moveTo(8, 8); c.lineTo(80, 12); c.lineTo(72, 52); c.lineTo(10, 46); c.closePath(); c.fill(); };
+  const alle = Object.keys(faelle);
+  ca.height = H * S * alle.length;
+
+  g2.fillStyle = '#303030'; g2.fillRect(0, 0, ca.width, ca.height);
+  alle.forEach((n, i) => { g2.setTransform(S, 0, 0, S, 0, i * H * S); faelle[n](g2); });
+
+  const app = new PIXI.Application();
+  await app.init({ canvas: px, width: W * S, height: H * S * alle.length, background: 0x303030, antialias: true, preserveDrawingBuffer: true, preference: 'webgl', autoStart: false });
+  alle.forEach((n, i) => {
+    const pc = new HK.Gfx.PixiCtx();
+    pc.setTransform(S, 0, 0, S, 0, i * H * S);
+    faelle[n](pc);
+    app.stage.addChild(new PIXI.Graphics(pc.gc));
+  });
+  app.renderer.render(app.stage);
+
+  // Vergleichen: Kantenglättung unterscheidet sich immer, darum zusätzlich weichgezeichnet prüfen
+  const hole = (cv, i) => { const t = document.createElement('canvas'); t.width = W * S; t.height = H * S; const g = t.getContext('2d'); g.drawImage(cv, 0, -i * H * S); return g.getImageData(0, 0, t.width, t.height).data; };
+  const weich = d => { const n = d.length / 4, aus = new Float32Array(n * 3); const b = W * S;
+    for (let p = 0; p < n; p++) { let r = 0, gg = 0, bb = 0, z = 0;
+      const x = p % b, y = (p / b) | 0;
+      for (let dy = -2; dy <= 2; dy++) for (let dx = -2; dx <= 2; dx++) {
+        const q = (y + dy) * b + (x + dx); if (q < 0 || q >= n) continue;
+        r += d[q * 4]; gg += d[q * 4 + 1]; bb += d[q * 4 + 2]; z++; }
+      aus[p * 3] = r / z; aus[p * 3 + 1] = gg / z; aus[p * 3 + 2] = bb / z; }
+    return aus; };
+
+  let alleGut = true;
+  const zeilen = alle.map((n, i) => {
+    const a = weich(hole(ca, i)), b = weich(hole(px, i));
+    let summe = 0; for (let k = 0; k < a.length; k += 3) summe += Math.max(Math.abs(a[k] - b[k]), Math.abs(a[k + 1] - b[k + 1]), Math.abs(a[k + 2] - b[k + 2]));
+    const abw = summe / (a.length / 3);
+    const gut = abw < 4;
+    if (!gut) alleGut = false;
+    return `<tr><td>${n}</td><td class="${gut ? 'gut' : 'schlecht'}">${abw.toFixed(2)}</td><td class="${gut ? 'gut' : 'schlecht'}">${gut ? 'stimmt' : 'WEICHT AB'}</td></tr>`;
+  });
+  document.getElementById('tabelle').innerHTML = '<table><tr><th>Form</th><th>Abweichung</th><th></th></tr>' + zeilen.join('') + '</table>';
+  const u = document.getElementById('urteil');
+  u.className = alleGut ? 'gut' : 'schlecht';
+  u.textContent = alleGut ? `Alle ${alle.length} Grundformen stimmen überein.` : 'Mindestens eine Grundform weicht ab — siehe Tabelle.';
+  ca.style.width = px.style.width = (W * S / 2) + 'px';
+})();
+</script>
+</body>
+</html>

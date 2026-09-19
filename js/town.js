@@ -8,19 +8,28 @@ HK.MAP = { W: 1600, H: 1000 };     // gesamte Karte in Szenenpixeln; die Kamera 
 
 /* Landfläche als Polygon (Weltkoordinaten, im Uhrzeigersinn). Alles außerhalb ist Wasser.
    quay markiert gemauerte Kaikanten (Kante von diesem Punkt zum nächsten), sonst natürliches Ufer. */
+/* Landumriss. Ein Punkt mit 'quay' macht die Kante zu ihm hin zur gemauerten Kaikante;
+   sie reicht bis zu der Stelle, an der die Mole wurzelt, damit diese aus Stein wächst. */
 HK.LAND = [
   [7.6, -30], [7.0, -20], [8.2, -16], [7.4, -12], [7.0, -9], [7.9, -6.5], [7.1, -4.2], [7.8, -2.6], [6.6, -0.6], [7.2, 1.6],
-  [6.4, 3.2], [7.0, 5.0, 'quay'], [7.0, 16.0], [6.4, 17.4], [7.6, 19.5], [9.0, 20.45, 'quay'], [25.0, 20.45],
-  [26.4, 19.9], [28.6, 19.1], [30.2, 20.1], [31.8, 18.9], [33.4, 19.8], [35.5, 19.2], [38.0, 20.4], [41.0, 20.0], [45.0, 21.2], [60, 21], [60, -30],
+  [6.4, 3.2], [7.0, 5.0, 'quay'], [7.0, 16.0], [6.4, 17.4], [7.6, 19.5], [9.0, 20.45, 'quay'], [25.0, 20.45, 'quay'],
+  [26.4, 19.9, 'quay'], [28.6, 19.1], [30.2, 20.1], [31.8, 18.9], [33.4, 19.8], [35.5, 19.2], [38.0, 20.4], [41.0, 20.0], [45.0, 21.2], [60, 21], [60, -30],
 ];
-/* Stadtmauer als Polylinie (Mittellinie); die Stadt liegt rechts der Laufrichtung. Tore als Lücken. */
-HK.WALL = { pts: [[7.2, 1.3], [11.5, 1.3], [11.5, -2.4], [23.6, -2.4], [28.3, 0.6], [28.3, 11.8], [31.9, 15.4], [31.9, 18.9]], t: 0.6, h: 1.35,
-  gates: [{ seg: 2, at: 15.5, w: 0.8 }, { seg: 4, at: 10.0, w: 1.4 }],
-  towers: [[7.2, 1.3, 0.5, 2.0], [11.5, 1.3, 0.5, 2.0], [11.5, -2.4, 0.62, 2.3], [23.6, -2.4, 0.62, 2.3], [28.3, 0.6, 0.62, 2.3], [28.3, 11.8, 0.62, 2.3], [31.9, 15.4, 0.62, 2.3], [31.9, 18.9, 0.62, 2.3], [15.0, -2.4, 0.42, 1.9], [16.0, -2.4, 0.42, 1.9], [28.3, 6.0, 0.5, 2.0], [19.5, -2.4, 0.45, 2.0]] };
+/* Stadtmauer als Polylinie (Mittellinie); die Stadt liegt rechts der Laufrichtung. Tore als Lücken.
+   Seit dem Ausbau umschließt sie auch das Ostviertel: die Nordmauer läuft bis zur Nordostecke durch,
+   die Ostmauer steht bei x = 38 und kehrt über eine Schräge zum alten Bollwerk zurück. */
+HK.WALL = { pts: [[7.2, 1.3], [11.5, 1.3], [11.5, -2.4], [23.6, -2.4], [28.6, -2.4], [31.4, 0.4], [38.0, 0.4], [38.0, 13.6], [35.4, 16.6], [31.9, 16.6], [31.9, 18.9]], t: 0.6, h: 1.35,
+  gates: [{ seg: 2, at: 15.5, w: 3.0, pw: 0.8 }, { seg: 6, at: 10.0, w: 3.2, pw: 1.0, haus: 'gebaeude' }],   // w: Lücke in der Mauer (Torhaus samt Flankentürmen), pw: Durchfahrt
+  towers: [[7.2, 1.3, 0.5, 2.0], [11.5, 1.3, 0.5, 2.0], [11.5, -2.4, 0.62, 2.3], [23.6, -2.4, 0.55, 2.1], [28.6, -2.4, 0.62, 2.3], [31.4, 0.4, 0.62, 2.3], [38.0, 0.4, 0.62, 2.3], [38.0, 13.6, 0.62, 2.3], [35.4, 16.6, 0.62, 2.3], [31.9, 16.6, 0.55, 2.1], [31.9, 18.9, 0.62, 2.3],
+           [19.5, -2.4, 0.45, 2.0], [34.7, 0.4, 0.5, 2.0], [38.0, 5.0, 0.5, 2.0]],
+  /* Wassergraben: ein Band vor der Landseite, von der Nordostecke des Fischerdorfs bis zum Meer am Bollwerk */
+  moat: { from: 2, to: 10, d0: 0.75, d1: 1.9 } };
 /* Stadtboden: Mauerlinie und dann am Ufer zurück */
-HK.TOWN = [[7.2, 1.3], [11.5, 1.3], [11.5, -2.4], [23.6, -2.4], [28.3, 0.6], [28.3, 11.8], [31.9, 15.4], [31.9, 18.9], [30.2, 20.1], [28.6, 19.1], [26.4, 19.9], [25.0, 20.45], [9.0, 20.45], [7.6, 19.5], [6.4, 17.4], [7.0, 16.0], [7.0, 5.0], [6.4, 3.2], [7.2, 1.6]];
+HK.TOWN = [[7.2, 1.3], [11.5, 1.3], [11.5, -2.4], [23.6, -2.4], [28.6, -2.4], [31.4, 0.4], [38.0, 0.4], [38.0, 13.6], [35.4, 16.6], [31.9, 16.6], [31.9, 18.9], [30.2, 20.1], [28.6, 19.1], [26.4, 19.9], [25.0, 20.45], [9.0, 20.45], [7.6, 19.5], [6.4, 17.4], [7.0, 16.0], [7.0, 5.0], [6.4, 3.2], [7.2, 1.6]];
 /* Sandflächen (Fischerdorf, Strand), Dorf im Umland */
-HK.SAND = [[[7.0, -4.6], [10.9, -4.6], [11.1, 1.2], [7.2, 1.6], [6.6, -0.6], [7.8, -2.6]], [[33.0, 19.9], [38.2, 20.5], [41.2, 20.1], [41.0, 18.9], [36.0, 18.4], [33.6, 18.9]]];
+HK.SAND = [[[7.0, -4.6], [10.9, -4.6], [11.1, 1.2], [7.2, 1.6], [6.6, -0.6], [7.8, -2.6]], [[35.6, 19.6], [38.2, 20.5], [41.2, 20.1], [41.0, 18.9], [37.4, 18.5], [35.8, 18.9]]];
+/* Gepflasterte Plätze außer dem Marktplatz */
+HK.SQUARES = [[31.6, 6.1, 2.6, 3.3]];   // Neuer Markt im Ostviertel
 
 /* kind: gable (Giebelhaus), eave (Traufenhaus), hall, townhall, church, huts, yard, plot, market, gate,
    longhouse (Lagerhalle), openhall (offene Markthalle), monastery, hospital, school */
@@ -115,8 +124,37 @@ HK.BUILDINGS = [
   { id: 'timberyard', kind: 'timberyard', x: 28.4, y: 13.9, w: 1.3, d: 1.0, h: 0.5, panel: 'venture', name: { de: 'Holzhof', en: 'Timber yard' } },
   { id: 'arsenal',   kind: 'hall',   x: 28.4, y: 16.2, w: 1.5, d: 1.3, h: 1.4, stone: true, wall: '#9c937f', roof: '#574e42', banner: 'red', panel: 'arsenal', name: { de: 'Zeughaus', en: 'Arsenal' } },
   { id: 'pilot',     kind: 'gable',  x: 30.2, y: 16.4, w: 1.0, d: 1.0, h: 1.0, wall: '#a89a7f', roof: '#665a4e', sign: 'anchor', name: { de: 'Lotsenhaus', en: "Pilot's house" } },
-  // Tor (Osttor) und Hafen (Wasser)
-  { id: 'gate',      kind: 'gate',   x: 27.8, y: 9.3,  w: 1.0, d: 1.4, h: 2.1, panel: 'gate', name: { de: 'Stadttor', en: 'Town gate' } },
+  // Ostviertel: Neuer Markt, Schifferhaus und Bürgerhäuser an drei Gassen
+  { id: 'skippers',  kind: 'hall',   x: 35.1, y: 6.0,  w: 1.6, d: 1.4, h: 1.5, brick: true, wall: '#9a5a46',  banner: 'blue', name: { de: 'Schifferhaus', en: "Skippers' hall" } },
+  { id: 'f30',       kind: 'gable',  x: 28.7, y: 1.0,  w: 1.2, d: 1.1, h: 1.2, wall: '#c9b48f', roof: '#8b4639', name: { de: 'Bürgerhaus', en: 'Townhouse' } },
+  { id: 'f31',       kind: 'eave',   x: 28.7, y: 2.6,  w: 1.4, d: 1.0, h: 1.0, wall: '#b09a72', roof: '#795442', name: { de: 'Bürgerhaus', en: 'Townhouse' } },
+  { id: 'f32',       kind: 'gable',  x: 28.7, y: 4.0,  w: 1.1, d: 1.1, h: 1.1, wall: '#c1a367', roof: '#844636', name: { de: 'Bürgerhaus', en: 'Townhouse' } },
+  { id: 'f33',       kind: 'gable',  x: 31.8, y: 1.0,  w: 1.2, d: 1.1, h: 1.2, wall: '#b58059', roof: '#8b4639', name: { de: 'Bürgerhaus', en: 'Townhouse' } },
+  { id: 'f34',       kind: 'eave',   x: 33.2, y: 1.0,  w: 1.0, d: 1.0, h: 1.1, wall: '#cdbc99', roof: '#65554f', name: { de: 'Bürgerhaus', en: 'Townhouse' } },
+  { id: 'f35',       kind: 'gable',  x: 31.8, y: 2.7,  w: 1.3, d: 1.2, h: 1.1, wall: '#c6ab90', roof: '#795442', name: { de: 'Bürgerhaus', en: 'Townhouse' } },
+  { id: 'f36',       kind: 'eave',   x: 33.3, y: 2.7,  w: 0.9, d: 1.1, h: 1.0, wall: '#bfab86', roof: '#844636', name: { de: 'Bürgerhaus', en: 'Townhouse' } },
+  { id: 'f37',       kind: 'gable',  x: 31.8, y: 4.1,  w: 1.1, d: 1.0, h: 1.2, wall: '#ab7350', roof: '#8b4639', name: { de: 'Bürgerhaus', en: 'Townhouse' } },
+  { id: 'f38',       kind: 'eave',   x: 33.0, y: 4.1,  w: 1.2, d: 1.0, h: 1.0, wall: '#c5b48f', roof: '#605449', name: { de: 'Bürgerhaus', en: 'Townhouse' } },
+  { id: 'f39',       kind: 'gable',  x: 35.2, y: 1.0,  w: 1.2, d: 1.1, h: 1.1, wall: '#b39257', roof: '#7e4634', name: { de: 'Bürgerhaus', en: 'Townhouse' } },
+  { id: 'f40',       kind: 'eave',   x: 36.5, y: 1.0,  w: 1.0, d: 1.1, h: 1.0, wall: '#a89a7f', roof: '#65554f', name: { de: 'Bürgerhaus', en: 'Townhouse' } },
+  { id: 'f41',       kind: 'gable',  x: 35.2, y: 2.6,  w: 1.3, d: 1.2, h: 1.2, wall: '#cdbc99', roof: '#844636', name: { de: 'Bürgerhaus', en: 'Townhouse' } },
+  { id: 'f42',       kind: 'gable',  x: 36.6, y: 2.6,  w: 0.9, d: 1.1, h: 1.1, wall: '#c1a367', roof: '#8b4639', name: { de: 'Bürgerhaus', en: 'Townhouse' } },
+  { id: 'f43',       kind: 'eave',   x: 35.2, y: 4.1,  w: 2.2, d: 1.0, h: 1.0, wall: '#b6ad97', roof: '#605449', name: { de: 'Bürgerhaus', en: 'Townhouse' } },
+  { id: 'f44',       kind: 'eave',   x: 28.7, y: 6.0,  w: 1.4, d: 1.2, h: 1.1, wall: '#c9b48f', roof: '#795442', name: { de: 'Bürgerhaus', en: 'Townhouse' } },
+  { id: 'f45',       kind: 'gable',  x: 28.7, y: 7.9,  w: 1.3, d: 1.3, h: 1.2, wall: '#b58059', roof: '#8b4639', name: { de: 'Bürgerhaus', en: 'Townhouse' } },
+  { id: 'f49',       kind: 'gable',  x: 28.7, y: 10.8, w: 1.3, d: 1.2, h: 1.2, wall: '#c6ab90', roof: '#844636', name: { de: 'Bürgerhaus', en: 'Townhouse' } },
+  { id: 'f50',       kind: 'eave',   x: 28.7, y: 12.3, w: 1.4, d: 1.1, h: 1.0, wall: '#b09a72', roof: '#65554f', name: { de: 'Bürgerhaus', en: 'Townhouse' } },
+  { id: 'f51',       kind: 'eave',   x: 31.7, y: 10.8, w: 1.5, d: 1.1, h: 1.1, wall: '#cdbc99', roof: '#7e4634', name: { de: 'Bürgerhaus', en: 'Townhouse' } },
+  { id: 'f52',       kind: 'gable',  x: 33.3, y: 10.8, w: 0.9, d: 1.1, h: 1.2, wall: '#ab7350', roof: '#8b4639', name: { de: 'Bürgerhaus', en: 'Townhouse' } },
+  { id: 'f53',       kind: 'gable',  x: 31.7, y: 12.3, w: 1.2, d: 1.2, h: 1.2, wall: '#c1a367', roof: '#795442', name: { de: 'Bürgerhaus', en: 'Townhouse' } },
+  { id: 'f54',       kind: 'eave',   x: 33.0, y: 12.3, w: 1.2, d: 1.1, h: 1.0, wall: '#bfab86', roof: '#605449', name: { de: 'Bürgerhaus', en: 'Townhouse' } },
+  { id: 'f55',       kind: 'gable',  x: 35.1, y: 11.4, w: 1.2, d: 1.1, h: 1.2, wall: '#b39257', roof: '#844636', name: { de: 'Bürgerhaus', en: 'Townhouse' } },
+  { id: 'f56',       kind: 'eave',   x: 36.4, y: 11.4, w: 1.1, d: 1.1, h: 1.0, wall: '#c5b48f', roof: '#8b4639', name: { de: 'Bürgerhaus', en: 'Townhouse' } },
+  { id: 'f57',       kind: 'eave',   x: 35.1, y: 12.7, w: 2.2, d: 0.9, h: 1.0, wall: '#a89a7f', roof: '#65554f', name: { de: 'Bürgerhaus', en: 'Townhouse' } },
+  { id: 'f58',       kind: 'gable',  x: 31.7, y: 14.8, w: 1.2, d: 1.1, h: 1.1, wall: '#c9b48f', roof: '#7e4634', name: { de: 'Bürgerhaus', en: 'Townhouse' } },
+  { id: 'f59',       kind: 'eave',   x: 33.1, y: 14.8, w: 1.4, d: 1.1, h: 1.0, wall: '#b6ad97', roof: '#795442', name: { de: 'Bürgerhaus', en: 'Townhouse' } },
+  // Tor (Landtor in der neuen Ostmauer) und Hafen (Wasser)
+  { id: 'gate',      kind: 'gate',   x: 36.9, y: 9.1,  w: 1.5, d: 1.8, h: 2.1, panel: 'gate', name: { de: 'Landtor', en: 'Land gate' } },
   { id: 'harbour',   kind: 'water',  x: 0, y: 0, w: 0, d: 0, h: 0, panel: 'harbour', name: { de: 'Hafen', en: 'Harbour' } },
 ];
 HK.BUILDING = {}; HK.BUILDINGS.forEach(b => HK.BUILDING[b.id] = b);
@@ -124,9 +162,11 @@ HK.BUILDING = {}; HK.BUILDINGS.forEach(b => HK.BUILDING[b.id] = b);
 /* Straßen: [x1,y1,x2,y2,breite] in Weltkoordinaten */
 HK.STREETS = [
   [9.5, 1.8, 9.5, 18.3, 0.9], [15.5, 2.4, 15.5, 18.3, 0.9], [21, 1.8, 21, 18.3, 0.8], [24, 0.4, 24, 18.3, 0.8], [27.5, 0.4, 27.5, 18.3, 0.5],
-  [7.4, 5.5, 27.8, 5.5, 0.8], [7.4, 10, 27.8, 10, 0.9], [7.4, 14, 29.9, 14.3, 0.8], [7.4, 2.1, 27.8, 2.1, 0.6], [7.4, 16.2, 31.0, 16.2, 0.6],
+  [7.4, 5.5, 37.4, 5.5, 0.8], [7.4, 10, 37.3, 10, 0.9], [7.4, 14, 29.9, 14.3, 0.8], [7.4, 2.1, 27.8, 2.1, 0.6], [7.4, 16.2, 31.0, 16.2, 0.6],
   [12.0, 0.4, 27.5, 0.4, 0.8], [15.5, 2.4, 15.5, -2.4, 0.8], [29.9, 14.3, 29.9, 18.3, 0.6],
-  [28.8, 10, 31.6, 10, 0.9], [31.6, 10, 34.5, 9.0, 0.7], [34.5, 9.0, 38.5, 9.8, 0.7], [15.5, -2.4, 15.6, -5.2, 0.7], [15.6, -5.2, 16.6, -8.0, 0.6], [16.6, -8.0, 16.0, -11.0, 0.6], [8.2, 0.6, 8.2, -3.4, 0.5],
+  // Ostviertel: zwei Quergassen, die Lange Straße bis zum Landtor, die Landstraße hinaus
+  [31.2, 0.9, 31.2, 16.2, 0.7], [34.6, 0.9, 34.6, 16.2, 0.7], [29.9, 14.3, 36.6, 14.3, 0.7],
+  [37.3, 10, 42.8, 10, 0.9], [42.8, 10, 46.2, 10.3, 0.7], [15.5, -2.4, 15.6, -5.2, 0.7], [15.6, -5.2, 16.6, -8.0, 0.6], [16.6, -8.0, 16.0, -11.0, 0.6], [8.2, 0.6, 8.2, -3.4, 0.5],
 ];
 HK.ROAD_NODES = {
   Q1: [7.2, 2.2], Q2: [7.2, 5.5], Q3: [7.2, 10], Q4: [7.2, 14], Q5: [7.2, 16.2], Q6: [7.2, 18.3],
@@ -135,10 +175,12 @@ HK.ROAD_NODES = {
   O1: [21, 2.2], O2: [21, 5.5], O3: [21, 10], O4: [21, 14], O5: [21, 16.2], O6: [21, 18.3],
   C0: [24, 2.2], C1: [24, 5.5], C2: [24, 10], C3: [24, 14], C4: [24, 16.2], C5: [24, 18.3],
   E1: [27.5, 2.2], E2: [27.5, 5.5], E3: [27.5, 10], E4: [27.5, 14.2], E5: [27.5, 16.2], E6: [27.5, 18.3],
+  X0: [31.2, 1.2], X1n: [31.2, 5.5], X1: [31.2, 10], X1s: [31.2, 14.3], Y0: [34.6, 1.2], Y1n: [34.6, 5.5], Y1: [34.6, 10], Y1s: [34.6, 14.3], Y2s: [34.6, 16.0], X3n: [37.2, 5.5],
+  SQ1: [32.2, 8.9], SQ2: [33.6, 8.9], SQ3: [32.9, 6.8],
   B1: [29.9, 14.5], B2: [29.9, 16.2], B3: [29.9, 18.3], B4: [31.0, 16.2],
   N0: [12.0, 0.4], N1: [15.5, 0.4], N2: [19.5, 0.4], N3: [24, 0.4], N4: [27.3, 0.4],
   S1: [12.6, 7.1], S2: [14.0, 7.1], S3: [12.9, 9.5], MK: [13, 10], NN: [12.6, 5.5],
-  PA: [12.45, 22.9], PB: [19.45, 22.9], SP1: [12.45, 18.3], SP2: [19.45, 18.3], G: [29.2, 10], OUT: [31.6, 10], OUT2: [34.5, 9.0], OUT3: [38.5, 9.8],
+  PA: [12.45, 22.9], PB: [19.45, 22.9], SP1: [12.45, 18.3], SP2: [19.45, 18.3], G: [37.3, 10], OUT: [40.6, 10], OUT2: [43.4, 10.05], OUT3: [46.2, 10.3],
   NG: [15.5, -2.4], NG2: [15.6, -5.2], V1: [16.6, -8.0], V2: [16.0, -11.0], V3: [14.2, -7.6], V4: [18.6, -7.2],
   FV1: [9.5, 0.6], FV2: [9.5, -1.0], FV3: [9.5, -2.4], FV4: [10.9, -1.0],
 };
@@ -147,7 +189,9 @@ HK.ROAD_EDGES = [
   ['M1', 'M2'], ['M2', 'M23'], ['M23', 'M3'], ['M3', 'M4'], ['M4', 'M5'], ['O1', 'O2'], ['O2', 'O3'], ['O3', 'O4'], ['O4', 'O5'], ['O5', 'O6'],
   ['C0', 'C1'], ['C1', 'C2'], ['C2', 'C3'], ['C3', 'C4'], ['C4', 'C5'], ['E1', 'E2'], ['E2', 'E3'], ['E3', 'E4'], ['E4', 'E5'], ['E5', 'E6'],
   ['Q1', 'H1'], ['H1', 'M1'], ['M1', 'O1'], ['O1', 'C0'], ['C0', 'E1'], ['Q2', 'H2'], ['M2', 'O2'], ['O2', 'C1'], ['C1', 'E2'],
-  ['Q3', 'H3'], ['H3', 'MK'], ['MK', 'M3'], ['M3', 'O3'], ['O3', 'C2'], ['C2', 'E3'], ['E3', 'G'], ['G', 'OUT'], ['OUT', 'OUT2'], ['OUT2', 'OUT3'],
+  ['Q3', 'H3'], ['H3', 'MK'], ['MK', 'M3'], ['M3', 'O3'], ['O3', 'C2'], ['C2', 'E3'], ['E3', 'X1'], ['X1', 'Y1'], ['Y1', 'G'], ['G', 'OUT'], ['OUT', 'OUT2'], ['OUT2', 'OUT3'],
+  ['E2', 'X1n'], ['X1n', 'Y1n'], ['Y1n', 'X3n'], ['X0', 'X1n'], ['X1n', 'X1'], ['X1', 'X1s'], ['Y0', 'Y1n'], ['Y1n', 'Y1'], ['Y1', 'Y1s'], ['Y1s', 'Y2s'], ['B1', 'X1s'], ['X1s', 'Y1s'],
+  ['X1', 'SQ1'], ['SQ1', 'SQ2'], ['SQ2', 'Y1'], ['SQ1', 'SQ3'], ['SQ2', 'SQ3'], ['SQ3', 'X1n'],
   ['H4', 'M4'], ['M4', 'O4'], ['O4', 'C3'], ['C3', 'E4'], ['E4', 'B1'], ['Q5', 'H5'], ['H5', 'M5'], ['M5', 'O5'], ['O5', 'C4'], ['C4', 'E5'], ['E5', 'B2'], ['B2', 'B4'],
   ['Q6', 'H6'], ['H6', 'SP1'], ['SP1', 'M6'], ['M6', 'SP2'], ['SP2', 'O6'], ['O6', 'C5'], ['C5', 'E6'], ['E6', 'B3'], ['B1', 'B2'], ['B2', 'B3'],
   ['S1', 'S2'], ['S2', 'M23'], ['S1', 'S3'], ['S2', 'S3'], ['S3', 'MK'], ['H2', 'NN'], ['NN', 'M2'], ['NN', 'S1'], ['PA', 'SP1'], ['PB', 'SP2'],
@@ -167,16 +211,22 @@ HK.RIVAL_ANCHORAGE = [{ x: 20.8, y: 24.7, h: 2.1 }, { x: 23.4, y: 25.5, h: 1.9 }
 HK.ISLET = { x: -3.6, y: 5.6 };
 HK.BOAT_SPOTS = [{ x: 6.2, y: -1.2 }, { x: 5.5, y: -0.4 }, { x: 15.6, y: 22.3 }, { x: 25.2, y: 21.9 }];
 HK.GUARD_SHIP = { x: 15.6, y: 25.7, heading: 0.35 };
-HK.CARAVAN_SPOTS = [{ x: 30.4, y: 10.9 }, { x: 32.0, y: 10.9 }];
+/* Das Wachschiff der Stadt liegt nicht fest, es fährt Streife: eine langgezogene Runde auf der Reede,
+   südlich der Liegeplätze und weit genug ab, dass es niemandem in die Quere kommt. Eine Runde dauert
+   rund zweieinhalb Minuten. */
+HK.GUARD_PATROL = { cx: 19.6, cy: 28.7, a: 5.8, b: 1.15, dauer: 80 };
+HK.CARAVAN_SPOTS = [{ x: 43.6, y: 11.6 }, { x: 46.1, y: 12.0 }];   // zwei Rastplätze auf der Wiese südlich der Landstraße, vor dem Landtor
 HK.ARRIVE_POINT = { x: 4, y: 30.1 };
 HK.LEAVE_POINT = { x: -3, y: 25.1 };
-HK.MOLE = { x: 25.6, y0: 20.8, y1: 22.7, w: 0.7 };
+HK.MOLE = { x: 25.6, y0: 19.9, y1: 23.6, w: 0.7 };   // y0 wurzelt im Ufer, y1 trägt den Leuchtturm: eine Mole ist am Land gewachsen
 HK.LIGHTHOUSE = { x: 25.95, y: 23.05, r: 0.45, h: 2.2 };
 /* Sperrflächen für Passanten: die Krone der Kaimauer ist gemauerte Kante, kein Gehweg */
+/* Streifen auf dem Wehrgang: je ein Wachposten läuft ein Mauerstück (Abschnitt, Wegmarken u0..u1) auf und ab */
+HK.WALL_PATROLS = [{ seg: 6, u0: 0.7, u1: 7.6 }, { seg: 3, u0: 0.4, u1: 4.6 }, { seg: 7, u0: 0.4, u1: 3.5 }, { seg: 2, u0: 5.6, u1: 11.8 }];
 HK.NOWALK = [[8.8, 19.75, 10.3, 20.5], [12.9, 19.75, 17.3, 20.5], [19.9, 19.75, 25.2, 20.5]];
-HK.WINDMILL = { x: 33.8, y: 12.4 };
-HK.FIELDS = [[29.6, 3.6, 2.4, 2.2], [30.4, 6.4, 2.2, 2.0], [33.4, 14.4, 1.8, 2.0], [35.6, 12.0, 2.0, 1.8], [12.2, -8.6, 2.0, 1.4], [18.4, -9.6, 2.2, 1.6], [19.0, -6.2, 1.8, 1.4], [11.6, -6.4, 1.6, 1.2]];
-HK.FARM = { x: 34.6, y: 16.9, w: 1.4, d: 1.0, h: 0.9 };
+HK.WINDMILL = { x: 42.4, y: 16.9 };
+HK.FIELDS = [[40.2, 2.4, 2.4, 2.2], [42.8, 4.4, 2.2, 2.0], [39.4, 16.0, 1.8, 1.4], [44.6, 13.8, 1.8, 2.0], [12.2, -8.6, 2.0, 1.4], [18.4, -9.6, 2.2, 1.6], [19.0, -6.2, 1.8, 1.4], [11.6, -6.4, 1.6, 1.2]];
+HK.FARM = { x: 37.9, y: 17.5, w: 1.4, d: 1.0, h: 0.9 };
 HK.HAMLET = [{ x: 13.6, y: -7.4, w: 1.3, d: 1.0 }, { x: 17.2, y: -8.2, w: 1.4, d: 1.0 }, { x: 15.0, y: -10.4, w: 1.2, d: 0.9 }, { x: 18.6, y: -6.0, w: 1.0, d: 0.9 }];
 
 HK.STATIC_NPCS = [
@@ -207,11 +257,12 @@ HK.WALKER_TYPES = [
 HK.TREES = [
   [15.2, 4.7, 0.5], [20.7, 4.5, 0.45], [15.3, 9.95, 0.45], [20.8, 9.4, 0.4], [14.9, 13.8, 0.5], [20.7, 13.9, 0.45], [23.3, 15.9, 0.45], [9.3, 15.7, 0.4], [13.9, 16.0, 0.4], [19.6, 16.0, 0.45],
   [23.3, 5.2, 0.35], [23.3, 8.9, 0.35], [9.0, 4.9, 0.35], [14.6, 2.6, 0.4], [23.2, 12.2, 0.35], [9.0, 9.4, 0.3], [26.5, 8.4, 0.35], [26.9, 12.2, 0.3], [24.5, 12.6, 0.3], [27.0, 16.3, 0.35], [9.5, 18.1, 0.3], [16.9, 18.15, 0.3],
-  [23.3, 0.2, 0.3], [25.6, -0.3, 0.35], [29.3, 12.4, 0.3], [30.8, 14.9, 0.3], [31.0, 17.6, 0.32],
-  [30.2, 1.6, 0.55], [32.4, 0.4, 0.6], [33.4, 3.6, 0.6], [33.8, 6.6, 0.5], [33.2, 8.4, 0.5], [30.4, 9.0, 0.45], [32.8, 11.0, 0.45], [36.2, 8.2, 0.55], [37.6, 11.4, 0.55], [35.4, 15.8, 0.5], [38.4, 15.0, 0.6], [37.2, 17.6, 0.5], [33.2, 17.4, 0.45], [40.2, 12.8, 0.55], [39.6, 6.4, 0.6], [36.6, 3.2, 0.55], [39.4, 2.2, 0.5], [41.0, 9.4, 0.5], [42.6, 16.6, 0.55], [40.8, 18.6, 0.45],
-  [27.6, -1.6, 0.55], [30.4, -3.0, 0.55], [25.2, -3.8, 0.5], [21.4, -4.4, 0.5], [12.4, -4.6, 0.45], [10.4, -3.0, 0.45], [19.8, -3.8, 0.4], [11.0, -10.2, 0.6], [12.6, -12.4, 0.55], [20.8, -11.4, 0.6], [22.6, -8.6, 0.55], [24.4, -6.4, 0.5], [9.6, -7.4, 0.45], [17.8, -13.2, 0.55], [14.4, -13.8, 0.5], [7.6, 0.5, 0.3], [9.2, -14.6, 0.5], [28.2, -8.2, 0.6], [26.6, -11.0, 0.55], [30.8, -6.4, 0.5],
+  [23.3, 0.2, 0.3], [25.6, -0.3, 0.35], [31.0, 17.6, 0.32],
+  [32.3, 8.8, 0.35], [36.2, 7.9, 0.4], [30.3, 13.6, 0.3], [35.9, 14.9, 0.3], [30.3, 5.0, 0.3], [36.9, 5.1, 0.3],
+  [40.6, 2.4, 0.5], [40.8, 5.6, 0.55], [43.6, 7.6, 0.5], [39.6, 15.0, 0.5], [44.4, 17.2, 0.55], [40.8, 18.6, 0.45], [40.0, 17.6, 0.5], [45.2, 8.0, 0.5], [44.8, 3.0, 0.55],
+  [30.4, -4.8, 0.55], [25.2, -5.0, 0.5], [21.4, -4.6, 0.5], [12.4, -4.9, 0.45], [10.4, -3.0, 0.45], [19.8, -4.9, 0.4], [11.0, -10.2, 0.6], [12.6, -12.4, 0.55], [20.8, -11.4, 0.6], [22.6, -8.6, 0.55], [24.4, -6.4, 0.5], [9.6, -7.4, 0.45], [17.8, -13.2, 0.55], [14.4, -13.8, 0.5], [7.6, 0.5, 0.3], [9.2, -14.6, 0.5], [28.2, -8.2, 0.6], [26.6, -11.0, 0.55], [30.8, -6.4, 0.5],
 ];
 HK.PROPS = [
-  { t: 'crates', x: 8.55, y: 4.65 }, { t: 'barrels', x: 8.69, y: 10.56 }, { t: 'barrels', x: 7.84, y: 10.54 }, { t: 'barrels', x: 17.9, y: 7.7 }, { t: 'well', x: 12.05, y: 9.05 }, { t: 'statue', x: 14.18, y: 8.38 }, { t: 'pillory', x: 14.4, y: 9.2 }, { t: 'crates', x: 5.0, y: 5.6 }, { t: 'nets', x: 10.4, y: 0.6 }, { t: 'nets', x: 10.1, y: -0.4 }, { t: 'laundry', x: 18.9, y: 9.35 }, { t: 'barrels', x: 16.0, y: 4.7 }, { t: 'kiln', x: 26.1, y: 13.05 }, { t: 'frames', x: 27.95, y: 14.65 }, { t: 'dyecloths', x: 27.98, y: 12.75 }, { t: 'gallows', x: 30.6, y: 7.6 }, { t: 'tollbar', x: 29.6, y: 10.0 }, { t: 'well', x: 15.3, y: -6.6 }, { t: 'crates', x: 14.51, y: -0.45 }, { t: 'barrels', x: 17.2, y: -0.35 }, { t: 'logs', x: 30.25, y: 13.5 }, { t: 'logs', x: 30.6, y: 15.0 }, { t: 'shrine', x: 16.2, y: -4.3 }, { t: 'boatup', x: 34.4, y: 19.05 }, { t: 'nets', x: 36.4, y: 18.75 }, { t: 'boatup', x: 9.5, y: -3.0 }, { t: 'fishracks', x: 10.2, y: -1.8 }, { t: 'well', x: 26.9, y: 7.9 }, { t: 'stalls', x: 0.0, y: 0.0 },
+  { t: 'crates', x: 8.55, y: 4.65 }, { t: 'barrels', x: 8.69, y: 10.56 }, { t: 'barrels', x: 7.84, y: 10.54 }, { t: 'barrels', x: 17.9, y: 7.7 }, { t: 'well', x: 12.05, y: 9.05 }, { t: 'statue', x: 14.18, y: 8.38 }, { t: 'pillory', x: 14.4, y: 9.2 }, { t: 'crates', x: 5.0, y: 5.6 }, { t: 'nets', x: 10.4, y: 0.6 }, { t: 'nets', x: 10.1, y: -0.4 }, { t: 'laundry', x: 18.9, y: 9.35 }, { t: 'barrels', x: 16.0, y: 4.7 }, { t: 'kiln', x: 26.1, y: 13.05 }, { t: 'frames', x: 27.95, y: 14.65 }, { t: 'dyecloths', x: 27.98, y: 12.75 }, { t: 'gallows', x: 41.4, y: 7.4 }, { t: 'tollbar', x: 43.0, y: 10.0 }, { t: 'well', x: 15.3, y: -6.6 }, { t: 'crates', x: 14.51, y: -0.45 }, { t: 'barrels', x: 17.2, y: -0.35 }, { t: 'logs', x: 30.25, y: 13.5 }, { t: 'logs', x: 30.6, y: 15.0 }, { t: 'shrine', x: 17.6, y: -6.6 }, { t: 'boatup', x: 37.9, y: 19.3 }, { t: 'nets', x: 39.4, y: 19.1 }, { t: 'well', x: 32.9, y: 7.8 }, { t: 'crates', x: 30.1, y: 9.35 }, { t: 'barrels', x: 35.0, y: 8.25 }, { t: 'boatup', x: 9.5, y: -3.0 }, { t: 'fishracks', x: 10.2, y: -1.8 }, { t: 'well', x: 26.9, y: 7.9 }, { t: 'stalls', x: 0.0, y: 0.0 },
   { t: 'cross', x: 8.95, y: 18.9 }, { t: 'crates', x: 9.25, y: 18.8 }, { t: 'barrels', x: 10.1, y: 18.85 }, { t: 'nets', x: 10.85, y: 18.7 }, { t: 'crates', x: 11.3, y: 19.2 }, { t: 'barrels', x: 13.0, y: 18.85 }, { t: 'crates', x: 13.6, y: 19.2 }, { t: 'ropes', x: 14.4, y: 19.0 }, { t: 'crates', x: 16.5, y: 18.8 }, { t: 'barrels', x: 17.3, y: 18.85 }, { t: 'nets', x: 18.05, y: 18.7 }, { t: 'crates', x: 18.4, y: 19.2 }, { t: 'barrels', x: 19.9, y: 18.85 }, { t: 'crates', x: 20.5, y: 19.2 }, { t: 'nets', x: 21.45, y: 18.7 }, { t: 'crates', x: 22.0, y: 18.8 }, { t: 'sails', x: 22.9, y: 18.7 }, { t: 'ropes', x: 22.8, y: 19.3 },
 ];

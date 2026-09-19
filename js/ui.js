@@ -176,7 +176,9 @@ HK.UI = {
   logText(e) { const v = Object.assign({}, e.vars); if (v.name) v.name = this.esc(v.name); if (v.ship) v.ship = this.esc(v.ship); return HK.t(e.key === 'sermonAgainst' ? 'sermonAgainstLog' : e.key, v); },
 
   /* ---------- Rendering ---------- */
-  renderAll() { this.renderHeader(); this.renderSidebar(); this.renderTabs(); },
+  // Nach jeder Handlung wird die Oberfläche neu aufgebaut — der gute Zeitpunkt, um abgelegte
+  // Szenen-Geometrie für ungültig zu erklären (gekauftes Haus, neuer Betrieb, gehisste Flagge).
+  renderAll() { HK.geoStand++; this.renderHeader(); this.renderSidebar(); this.renderTabs(); },
   renderHeader() {
     const st = HK.state; if (!st) return;
     this.$('hud-date').textContent = HK.fmtDate(st.day);

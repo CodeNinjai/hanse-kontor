@@ -329,17 +329,8 @@ Object.assign(HK.Scene, {
     if (this.light() < 0.6) { const lp = I.p(b.x + b.w + 0.05, b.y + b.d * 0.5, 0.9); this.lamps.push([lp[0], lp[1]]); }
   },
   drawGate(ctx, b, st, season, sv) {
-    I.shadow(ctx, b.x, b.y, b.w, b.d, b.h, sv.v, sv.a);
-    I.box(ctx, b.x, b.y, 0, b.w, b.d, b.h, { wall: '#736d63' }, { stroke: 'rgba(0,0,0,0)', noTop: true }); this.masonry(ctx, true, true, b.x, b.y, b.w, b.d, 0, b.h);
-    // Torbogen auf der Außenseite (+x) und Innenseite
-    const cy = b.y + b.d / 2; I.poly(ctx, [[b.x + b.w, cy - 0.3, 0], [b.x + b.w, cy + 0.3, 0], [b.x + b.w, cy + 0.3, 0.6], [b.x + b.w, cy, 0.85], [b.x + b.w, cy - 0.3, 0.6]], '#463d38');
-    I.poly(ctx, [[b.x + b.w, cy - 0.22, 0], [b.x + b.w, cy + 0.22, 0], [b.x + b.w, cy + 0.22, 0.5], [b.x + b.w, cy - 0.22, 0.5]], 'rgba(255,240,200,0.14)');
-    // Zinnen und Dach
-    I.box(ctx, b.x, b.y, b.h, b.w, b.d, 0.1, { wall: '#736d63', top: '#7d776c' }, { stroke: 'rgba(0,0,0,0)' }); for (let u = 0.04; u < b.w - 0.2; u += 0.4) I.box(ctx, b.x + u, b.y + b.d - 0.16, b.h + 0.1, 0.24, 0.16, 0.3, { wall: '#736d63', top: '#8a847a' }, { stroke: 'rgba(0,0,0,0.35)' }); for (let v = 0.04; v < b.d - 0.2; v += 0.4) I.box(ctx, b.x + b.w - 0.16, b.y + v, b.h + 0.1, 0.16, 0.24, 0.3, { wall: '#736d63', top: '#8a847a' }, { stroke: 'rgba(0,0,0,0.35)' });
-    I.pyramid(ctx, b.x + 0.12, b.y + 0.12, b.h + 0.4, b.w - 0.24, b.d - 0.24, 1.0, season === 'winter' ? '#e6eaee' : '#574e42');
-    I.windowR(ctx, b.x, b.w, b.y, 1.1, cy, 0.18, 0.3, { arch: true });
-    I.poly(ctx, [[b.x + b.w + 0.01, cy - 0.16, 1.5], [b.x + b.w + 0.01, cy + 0.16, 1.5], [b.x + b.w + 0.01, cy + 0.16, 1.3], [b.x + b.w + 0.01, cy - 0.16, 1.3]], '#c8102e'); I.poly(ctx, [[b.x + b.w + 0.01, cy - 0.16, 1.3], [b.x + b.w + 0.01, cy + 0.16, 1.3], [b.x + b.w + 0.01, cy + 0.16, 1.12], [b.x + b.w + 0.01, cy - 0.16, 1.12]], '#f0ece0'); I.line(ctx, [b.x + b.w + 0.02, cy - 0.2, 1.5], [b.x + b.w + 0.02, cy + 0.2, 1.5], '#62472c', 1.2);
-    const lp = I.p(b.x + b.w + 0.05, cy - 0.45, 0.8), lp2 = I.p(b.x + b.w + 0.05, cy + 0.45, 0.8); this.lamps.push([lp[0], lp[1]], [lp2[0], lp2[1]]);
+    const g = HK.WALL.gates.find(x => x.haus === 'gebaeude') || HK.WALL.gates[HK.WALL.gates.length - 1];
+    this.drawGatehouse(ctx, this.gateSpec(g), sv);
   },
   masonry(ctx, faceL, faceR, x, y, w, d, z0, h) {
     // Steinfugen: waagerechte Lagen und versetzte Stoßfugen auf beiden sichtbaren Flächen
@@ -368,22 +359,82 @@ Object.assign(HK.Scene, {
     for (let z = z0 + course; z < z0 + h; z += course, row++) { I.line(ctx, [a[0], a[1], z], [b[0], b[1], z], 'rgba(0,0,0,0.28)', 0.6); I.line(ctx, [a[0], a[1], z + 0.02], [b[0], b[1], z + 0.02], 'rgba(255,255,255,0.07)', 0.6); for (let u = (row % 2) * 0.17; u < len; u += 0.34) { const f = u / len; I.line(ctx, [a[0] + (b[0] - a[0]) * f, a[1] + (b[1] - a[1]) * f, z - course], [a[0] + (b[0] - a[0]) * f, a[1] + (b[1] - a[1]) * f, z], 'rgba(0,0,0,0.22)', 0.6); } }
     I.poly(ctx, [[a[0], a[1], z0], [b[0], b[1], z0], [b[0], b[1], z0 + 0.22], [a[0], a[1], z0 + 0.22]], 'rgba(20,20,15,0.22)');
   },
-  /* Stadtmauer entlang HK.WALL: Stücke von höchstens 2,2 Einheiten, Tore als Lücken, Türme an Knicken und Toren */
+  /* ---------- Stadtmauer ----------
+     Backstein auf Feldsteinsockel, wie an der Ostsee gebaut wurde: unten graue Findlinge, darüber
+     roter Ziegel im Verband, oben ein heller Gesimsstein. Nach außen Schießscharten, nach innen die
+     Bogenblenden, die den Wehrgang tragen. Auf der Krone der Wehrgang: außen die Zinnenbrüstung mit
+     Scharten, innen eine niedrige Brüstung mit Holzgeländer. Stücke von höchstens 2,2 Einheiten,
+     Tore als Lücken, in denen die Torhäuser stehen. */
+  MAUER: { ziegel: '#8f5a47', ziegelTop: '#8a8074', sockel: '#6d685f', sockelTop: '#7a746a', kante: '#b7ab93', holz: '#6b4e34', sockelH: 0.36 },
+  /* Ziegelverband auf einer Fläche a→b: Lagerfugen hell, Stoßfugen versetzt und dunkel */
+  ziegelFace(ctx, a, b, z0, hh) {
+    const lage = 0.075, len = Math.hypot(b[0] - a[0], b[1] - a[1]); let row = 0;
+    const at = f => [a[0] + (b[0] - a[0]) * f, a[1] + (b[1] - a[1]) * f];
+    for (let z = z0 + lage; z < z0 + hh - 0.01; z += lage, row++) {
+      I.line(ctx, [a[0], a[1], z], [b[0], b[1], z], 'rgba(238,220,196,0.17)', 0.5);
+      if (row % 2 === 0) for (let u = 0.11 + (row % 4 ? 0.11 : 0); u < len; u += 0.22) { const q = at(u / len); I.line(ctx, [q[0], q[1], z - lage], [q[0], q[1], z], 'rgba(60,28,18,0.22)', 0.5); }
+    }
+    // Ausblühungen und Feuchte: ein paar hellere und dunklere Flecken je Stück
+    const zuf = u => { const r = Math.sin(u * 12.9898 + a[0] * 7.1 + a[1] * 3.3) * 43758.5453; return r - Math.floor(r); };
+    for (let k = 0; k < 4; k++) { const f0 = zuf(k) * 0.8, f1 = f0 + 0.08 + zuf(k + 9) * 0.14, zz = z0 + 0.1 + zuf(k + 5) * (hh - 0.3); const p = at(f0), q = at(Math.min(1, f1)); I.poly(ctx, [[p[0], p[1], zz], [q[0], q[1], zz], [q[0], q[1], zz + 0.09], [p[0], p[1], zz + 0.09]], k % 2 ? 'rgba(255,240,220,0.07)' : 'rgba(40,20,10,0.09)'); }
+  },
+  /* Feldsteinsockel: unregelmäßige Findlinge als helle Rundungen im dunklen Mörtel */
+  feldsteinFace(ctx, a, b, z0, hh) {
+    const len = Math.hypot(b[0] - a[0], b[1] - a[1]);
+    const zuf = u => { const r = Math.sin(u * 12.9898 + a[0] * 5.7 + a[1] * 2.9) * 43758.5453; return r - Math.floor(r); };
+    const at = f => [a[0] + (b[0] - a[0]) * f, a[1] + (b[1] - a[1]) * f];
+    let i = 0;
+    for (let u = 0.03; u < len - 0.05; u += 0.13 + zuf(i) * 0.12, i++) {
+      const w = 0.09 + zuf(i + 3) * 0.1, zz = z0 + 0.03 + zuf(i + 7) * (hh - 0.16), zh = 0.07 + zuf(i + 11) * 0.07;
+      const p = at(u / len), q = at(Math.min(1, (u + w) / len));
+      I.poly(ctx, [[p[0], p[1], zz], [q[0], q[1], zz], [q[0], q[1], zz + zh], [p[0], p[1], zz + zh]], zuf(i + 2) > 0.5 ? 'rgba(205,200,188,0.28)' : 'rgba(150,146,136,0.3)', 'rgba(35,32,28,0.35)', 0.5);
+    }
+    I.poly(ctx, [[a[0], a[1], z0], [b[0], b[1], z0], [b[0], b[1], z0 + 0.1], [a[0], a[1], z0 + 0.1]], 'rgba(20,20,15,0.22)');
+  },
+  /* Schießscharte auf der Fläche durch P (Fußpunkt der Scharte), n zeigt vom Mauerwerk weg */
+  scharte(ctx, P, n, dirV, z, breit, hoch) {
+    const o = 0.004, bx = P[0] + n[0] * o, by = P[1] + n[1] * o, s = dirV;
+    const w = breit, hh = hoch;
+    I.poly(ctx, [[bx - s[0] * w, by - s[1] * w, z], [bx + s[0] * w, by + s[1] * w, z], [bx + s[0] * w, by + s[1] * w, z + hh], [bx - s[0] * w, by - s[1] * w, z + hh]], 'rgba(230,215,190,0.28)');
+    I.poly(ctx, [[bx - s[0] * w * 0.28, by - s[1] * w * 0.28, z + 0.02], [bx + s[0] * w * 0.28, by + s[1] * w * 0.28, z + 0.02], [bx + s[0] * w * 0.28, by + s[1] * w * 0.28, z + hh - 0.02], [bx - s[0] * w * 0.28, by - s[1] * w * 0.28, z + hh - 0.02]], '#2e2521');
+  },
+  /* Bogenblende an der Innenseite: eine flache Nische mit rundem Sturz, die den Wehrgang trägt */
+  blende(ctx, P, n, s, z0, hh, halb) {
+    const o = 0.004, bx = P[0] + n[0] * o, by = P[1] + n[1] * o;
+    const pts = [[bx - s[0] * halb, by - s[1] * halb, z0], [bx + s[0] * halb, by + s[1] * halb, z0]];
+    for (let k = 0; k <= 6; k++) { const a = Math.PI * k / 6, cx = Math.cos(a) * halb, cz = Math.sin(a) * halb * 0.9; pts.push([bx + s[0] * cx, by + s[1] * cx, z0 + hh - halb * 0.9 + cz]); }
+    I.poly(ctx, pts, 'rgba(40,20,14,0.22)', 'rgba(238,220,196,0.22)', 0.6);
+  },
   wallSegments() {
-    const segs = [], Wd = HK.WALL, t = Wd.t, h = Wd.h, stone = { wall: '#736d63', top: '#7d776c' };
+    const segs = [], Wd = HK.WALL, t = Wd.t, h = Wd.h, M = this.MAUER, zs = M.sockelH;
+    const quad = (p, q, w, n) => [[p[0] + n[0] * w, p[1] + n[1] * w], [q[0] + n[0] * w, q[1] + n[1] * w], [q[0] - n[0] * w, q[1] - n[1] * w], [p[0] - n[0] * w, p[1] - n[1] * w]];
     const piece = (a, b, dir, nOut) => {
-      const base = [[a[0] + nOut[0] * t / 2, a[1] + nOut[1] * t / 2], [b[0] + nOut[0] * t / 2, b[1] + nOut[1] * t / 2], [b[0] - nOut[0] * t / 2, b[1] - nOut[1] * t / 2], [a[0] - nOut[0] * t / 2, a[1] - nOut[1] * t / 2]];
-      const k = Math.max(...base.map(q => q[0] + q[1])), box = [Math.min(...base.map(q => q[0])), Math.min(...base.map(q => q[1])), Math.max(...base.map(q => q[0])), Math.max(...base.map(q => q[1]))];
+      const base = quad(a, b, t / 2, nOut), sock = quad(a, b, t / 2 + 0.06, nOut);
+      const k = Math.max(...sock.map(q => q[0] + q[1])), box = [Math.min(...sock.map(q => q[0])), Math.min(...sock.map(q => q[1])), Math.max(...sock.map(q => q[0])), Math.max(...sock.map(q => q[1]))];
+      const len = Math.hypot(b[0] - a[0], b[1] - a[1]), at = (u, n, w) => [a[0] + dir[0] * u + n[0] * w, a[1] + dir[1] * u + n[1] * w];
       segs.push({ k, box, f: (ctx) => {
-        this.prism(ctx, base, 0, h, stone, { masonry: true });
-        // Wehrgang: Brüstung mit Zinnen an der sichtbaren Längskante, niedrige Brüstung an der anderen
-        const visOut = nOut[0] + nOut[1] > 0.02, nIn = [-nOut[0], -nOut[1]], nz = visOut ? nOut : nIn;
-        const edgeA = [a[0] + nz[0] * (t / 2 - 0.08), a[1] + nz[1] * (t / 2 - 0.08)], edgeB = [b[0] + nz[0] * (t / 2 - 0.08), b[1] + nz[1] * (t / 2 - 0.08)];
-        const other = [[a[0] - nz[0] * (t / 2 - 0.07), a[1] - nz[1] * (t / 2 - 0.07)], [b[0] - nz[0] * (t / 2 - 0.07), b[1] - nz[1] * (t / 2 - 0.07)]];
-        const quad = (p, q, w) => [[p[0] + nz[0] * w, p[1] + nz[1] * w], [q[0] + nz[0] * w, q[1] + nz[1] * w], [q[0] - nz[0] * w, q[1] - nz[1] * w], [p[0] - nz[0] * w, p[1] - nz[1] * w]];
-        this.prism(ctx, quad(edgeA, edgeB, 0.08), h, 0.12, stone, {}); this.prism(ctx, quad(other[0], other[1], 0.07), h, 0.22, stone, {});
-        const len = Math.hypot(b[0] - a[0], b[1] - a[1]);
-        for (let u = 0.05; u + 0.24 <= len; u += 0.4) { const f0 = u / len, f1 = (u + 0.24) / len; const p = [edgeA[0] + (edgeB[0] - edgeA[0]) * f0, edgeA[1] + (edgeB[1] - edgeA[1]) * f0], q = [edgeA[0] + (edgeB[0] - edgeA[0]) * f1, edgeA[1] + (edgeB[1] - edgeA[1]) * f1]; this.prism(ctx, quad(p, q, 0.08), h + 0.12, 0.34, { wall: '#736d63', top: '#8a847a' }, { stroke: 'rgba(0,0,0,0.35)' }); }
+        const fs = this.prism(ctx, sock, 0, zs, { wall: M.sockel, top: M.sockelTop }, { noTop: true });
+        for (const f of fs) this.feldsteinFace(ctx, f.a, f.b, 0, zs);
+        this.prism(ctx, quad(a, b, t / 2 + 0.02, nOut), zs - 0.04, 0.05, { wall: M.kante, top: M.kante }, {});
+        const fz = this.prism(ctx, base, zs, h - zs, { wall: M.ziegel, top: M.ziegelTop }, {});
+        for (const f of fz) this.ziegelFace(ctx, f.a, f.b, zs, h - zs);
+        // Welche Längsseite zeigt zum Betrachter? Außen: Scharten. Innen: Bogenblenden.
+        const visOut = nOut[0] + nOut[1] > 0.02, nIn = [-nOut[0], -nOut[1]];
+        if (visOut) { for (let u = 0.6; u < len - 0.35; u += 1.1) this.scharte(ctx, at(u, nOut, t / 2), nOut, dir, zs + 0.42, 0.075, 0.34); }
+        else { for (let u = 0.42; u + 0.42 < len; u += 0.72) this.blende(ctx, at(u, nIn, t / 2), nIn, dir, zs + 0.04, h - zs - 0.14, 0.27); }
+        // Gesims unter der Krone
+        this.prism(ctx, quad(a, b, t / 2 + 0.03, nOut), h - 0.07, 0.07, { wall: M.kante, top: M.kante }, {});
+        // Wehrgang: Außenbrüstung mit Zinnen und Scharten
+        const eA = at(0, nOut, t / 2 - 0.07), eB = at(len, nOut, t / 2 - 0.07);
+        this.prism(ctx, quad(eA, eB, 0.07, nOut), h, 0.14, { wall: M.ziegel, top: M.kante }, {});
+        for (let u = 0.06; u + 0.3 <= len; u += 0.52) { const p = at(u, nOut, t / 2 - 0.07), q = at(u + 0.3, nOut, t / 2 - 0.07); this.prism(ctx, quad(p, q, 0.07, nOut), h + 0.14, 0.36, { wall: M.ziegel, top: M.kante }, { stroke: 'rgba(0,0,0,0.3)' }); if (visOut) { const m = at(u + 0.15, nOut, t / 2); I.poly(ctx, [[m[0] - dir[0] * 0.02, m[1] - dir[1] * 0.02, h + 0.2], [m[0] + dir[0] * 0.02, m[1] + dir[1] * 0.02, h + 0.2], [m[0] + dir[0] * 0.02, m[1] + dir[1] * 0.02, h + 0.44], [m[0] - dir[0] * 0.02, m[1] - dir[1] * 0.02, h + 0.44]], '#2e2521'); } }
+        // Innen: niedrige Brüstung und ein Holzgeländer
+        const iA = at(0, nIn, t / 2 - 0.05), iB = at(len, nIn, t / 2 - 0.05);
+        this.prism(ctx, quad(iA, iB, 0.05, nIn), h, 0.12, { wall: M.ziegel, top: M.kante }, {});
+        for (let u = 0.12; u < len; u += 0.46) { const p = at(u, nIn, t / 2 - 0.05); I.line(ctx, [p[0], p[1], h + 0.12], [p[0], p[1], h + 0.46], M.holz, 1.4); }
+        I.line(ctx, [iA[0], iA[1], h + 0.44], [iB[0], iB[1], h + 0.44], M.holz, 1.2);
+        // Plattenfugen auf dem Gang
+        for (let u = 0.4; u < len; u += 0.8) { const p = at(u, nOut, t / 2 - 0.14), q = at(u, nIn, t / 2 - 0.1); I.line(ctx, [p[0], p[1], h + 0.003], [q[0], q[1], h + 0.003], 'rgba(0,0,0,0.18)', 0.6); }
       } });
     };
     for (let i = 0; i < Wd.pts.length - 1; i++) {
@@ -393,16 +444,23 @@ Object.assign(HK.Scene, {
       const ranges = []; let s0 = 0; for (const [g0, g1] of gates) { ranges.push([s0, g0]); s0 = g1; } ranges.push([s0, len]);
       for (const [r0, r1] of ranges) for (let u = r0; u < r1 - 0.01; u += 2.2) { const u1 = Math.min(u + 2.2, r1); piece([A[0] + dir[0] * u, A[1] + dir[1] * u], [A[0] + dir[0] * u1, A[1] + dir[1] * u1], dir, nOut); }
     }
-    // Nordtor: Torhaus mit Durchfahrt und Zeltdach
-    segs.push({ k: 15.5 - 2.4 + 2.6, box: [15.05, -2.4 - t / 2 - 0.1, 15.95, -2.4 + t / 2 + 0.1], f: (ctx) => { const gx = 15.05, gy = -2.4 - t / 2 - 0.1, gw = 0.9, gd = t + 0.2; I.box(ctx, gx, gy, 0, gw, gd, h + 0.7, stone, { stroke: 'rgba(0,0,0,0)', noTop: true }); this.masonry(ctx, true, true, gx, gy, gw, gd, 0, h + 0.7); I.poly(ctx, [[15.3, gy + gd + 0.005, 0], [15.7, gy + gd + 0.005, 0], [15.7, gy + gd + 0.005, 0.7], [15.5, gy + gd + 0.005, 0.95], [15.3, gy + gd + 0.005, 0.7]], '#463d38'); I.pyramid(ctx, gx - 0.05, gy - 0.05, h + 0.7, gw + 0.1, gd + 0.1, 0.55, '#574e42'); } });
-    // Türme: Mauerwerk, Schießscharten, Kragsteinkranz, Zinnen, Kegeldach
+    // Torhäuser: das Nordtor gehört zur Mauer; das Landtor ist ein anklickbares Gebäude (drawGate)
+    for (const g of Wd.gates) {
+      if (g.haus === 'gebaeude') continue;
+      const sp = this.gateSpec(g);
+      segs.push({ k: sp.cx + sp.cy + 0.9, box: [sp.cx - 2.2, sp.cy - 2.2, sp.cx + 2.2, sp.cy + 2.2], f: (ctx, sv) => this.drawGatehouse(ctx, sp, sv) });
+    }
+    // Türme: Feldsteinsockel, Ziegelschaft mit Scharten, Gesimsring, Zinnenkranz, Kegeldach
     const tower = (cx, cy, r, hh, k) => segs.push({ k, box: [cx - r, cy - r, cx + r, cy + r], f: (ctx, sv) => {
-      I.cylinder(ctx, cx, cy, 0, r, hh, '#736d63', { noTop: true });
-      for (let z = 0.13; z < hh; z += 0.13) { const P = I.p(cx, cy, z); ctx.strokeStyle = 'rgba(0,0,0,0.26)'; ctx.lineWidth = 0.6; ctx.beginPath(); ctx.ellipse(P[0], P[1], r * I.TW, r * I.TH, 0, 0, Math.PI); ctx.stroke(); const off = ((z / 0.13) | 0) % 2 ? 0.35 : 0; for (let a = 0.15 + off; a < Math.PI; a += 0.7) { const Q = I.p(cx + Math.cos(a) * r, cy + Math.sin(a) * r, z); ctx.beginPath(); ctx.moveTo(Q[0], Q[1]); ctx.lineTo(Q[0], Q[1] + 0.13 * I.ZS); ctx.stroke(); } }
-      const base = I.p(cx, cy, 0); ctx.fillStyle = 'rgba(20,20,15,0.25)'; ctx.beginPath(); ctx.ellipse(base[0], base[1], r * I.TW, r * I.TH, 0, 0, Math.PI); ctx.lineTo(base[0] - r * I.TW, base[1] - 0.2 * I.ZS); ctx.ellipse(base[0], base[1] - 0.2 * I.ZS, r * I.TW, r * I.TH, 0, Math.PI, 0, true); ctx.fill();
-      for (const [a, z] of [[0.9, hh * 0.35], [1.6, hh * 0.6], [0.5, hh * 0.75]]) { const Q = I.p(cx + Math.cos(a) * r * 0.98, cy + Math.sin(a) * r * 0.98, z); ctx.fillStyle = '#463d38'; ctx.fillRect(Q[0] - 1, Q[1] - 8, 2.2, 9); }
-      I.cylinder(ctx, cx, cy, hh, r + 0.09, 0.16, '#6e685e', {}); I.cylinder(ctx, cx, cy, hh + 0.16, r + 0.09, 0.1, '#7d776c', {});
-      for (let a = 0; a < 6.28; a += 0.55) { const px = cx + Math.cos(a) * (r + 0.02), py = cy + Math.sin(a) * (r + 0.02); if (px + py > cx + cy - 0.15) I.box(ctx, px - 0.07, py - 0.07, hh + 0.26, 0.14, 0.14, 0.2, stone, { stroke: 'rgba(0,0,0,0.35)' }); }
+      I.cylinder(ctx, cx, cy, 0, r + 0.06, zs, M.sockel, { noTop: true });
+      { const base = I.p(cx, cy, 0); ctx.fillStyle = 'rgba(20,20,15,0.25)'; ctx.beginPath(); ctx.ellipse(base[0], base[1], (r + 0.06) * I.TW, (r + 0.06) * I.TH, 0, 0, Math.PI); ctx.lineTo(base[0] - (r + 0.06) * I.TW, base[1] - 0.12 * I.ZS); ctx.ellipse(base[0], base[1] - 0.12 * I.ZS, (r + 0.06) * I.TW, (r + 0.06) * I.TH, 0, Math.PI, 0, true); ctx.fill(); }
+      for (let a = 0.1; a < Math.PI; a += 0.32) { const Q = I.p(cx + Math.cos(a) * (r + 0.06), cy + Math.sin(a) * (r + 0.06), 0.06 + ((a * 7) | 0) % 3 * 0.09); ctx.fillStyle = ((a * 13) | 0) % 2 ? 'rgba(205,200,188,0.28)' : 'rgba(150,146,136,0.3)'; ctx.beginPath(); ctx.ellipse(Q[0], Q[1], 2.4, 1.6, 0, 0, 6.28); ctx.fill(); }
+      I.cylinder(ctx, cx, cy, zs - 0.04, r + 0.03, 0.05, M.kante, {});
+      I.cylinder(ctx, cx, cy, zs, r, hh - zs, M.ziegel, { noTop: true });
+      for (let z = zs + 0.075; z < hh; z += 0.075) { const P = I.p(cx, cy, z); ctx.strokeStyle = 'rgba(238,220,196,0.15)'; ctx.lineWidth = 0.5; ctx.beginPath(); ctx.ellipse(P[0], P[1], r * I.TW, r * I.TH, 0, 0, Math.PI); ctx.stroke(); const off = ((z / 0.075) | 0) % 2 ? 0.28 : 0; if (((z / 0.075) | 0) % 2 === 0) for (let a = 0.15 + off; a < Math.PI; a += 0.56) { const Q = I.p(cx + Math.cos(a) * r, cy + Math.sin(a) * r, z); ctx.strokeStyle = 'rgba(60,28,18,0.22)'; ctx.beginPath(); ctx.moveTo(Q[0], Q[1]); ctx.lineTo(Q[0], Q[1] + 0.075 * I.ZS); ctx.stroke(); } }
+      for (const [a, z] of [[0.9, hh * 0.4], [1.6, hh * 0.62], [0.5, hh * 0.78], [2.3, hh * 0.5]]) { const Q = I.p(cx + Math.cos(a) * r * 0.98, cy + Math.sin(a) * r * 0.98, z); ctx.fillStyle = 'rgba(230,215,190,0.28)'; ctx.fillRect(Q[0] - 2.2, Q[1] - 9, 4.4, 10); ctx.fillStyle = '#2e2521'; ctx.fillRect(Q[0] - 0.9, Q[1] - 8.5, 1.8, 9); }
+      I.cylinder(ctx, cx, cy, hh, r + 0.09, 0.16, M.kante, {}); I.cylinder(ctx, cx, cy, hh + 0.16, r + 0.09, 0.1, M.sockelTop, {});
+      for (let a = 0; a < 6.28; a += 0.55) { const px = cx + Math.cos(a) * (r + 0.02), py = cy + Math.sin(a) * (r + 0.02); if (px + py > cx + cy - 0.15) I.box(ctx, px - 0.07, py - 0.07, hh + 0.26, 0.14, 0.14, 0.2, { wall: M.ziegel, top: M.kante }, { stroke: 'rgba(0,0,0,0.35)' }); }
       I.cone(ctx, cx, cy, hh + 0.42, r + 0.02, 1.15, this.season() === 'winter' ? '#e6eaee' : '#574e42');
       const T = I.p(cx, cy, hh + 1.57), B = I.p(cx, cy, hh + 0.42); ctx.strokeStyle = 'rgba(0,0,0,0.3)'; ctx.lineWidth = 0.6; for (let a = 0.2; a < Math.PI; a += 0.5) { ctx.beginPath(); ctx.moveTo(T[0], T[1]); ctx.lineTo(B[0] + Math.cos(a) * (r + 0.02) * I.TW, B[1] + Math.sin(a) * (r + 0.02) * I.TH); ctx.stroke(); }
       I.line(ctx, [cx, cy, hh + 1.57], [cx, cy, hh + 2.05], '#62472c', 1.2); this.pennant(ctx, cx, cy, hh + 2.05, 0.5, 0.22, ['#c8102e'], true);
@@ -410,15 +468,144 @@ Object.assign(HK.Scene, {
     for (const [cx, cy, r, hh] of Wd.towers) tower(cx, cy, r, hh, cx + cy + r + 0.6);
     return segs;
   },
+  /* Lage eines Tors: Mittelpunkt auf der Mauerlinie, Außenrichtung d, Richtung entlang der Mauer s, Durchfahrtbreite */
+  gateSpec(g) {
+    const Wd = HK.WALL, A = Wd.pts[g.seg], B = Wd.pts[g.seg + 1], dx = B[0] - A[0], dy = B[1] - A[1], len = Math.hypot(dx, dy), dir = [dx / len, dy / len];
+    const d = [dir[1], -dir[0]];
+    const cx = Math.abs(dir[0]) > Math.abs(dir[1]) ? g.at : A[0], cy = Math.abs(dir[0]) > Math.abs(dir[1]) ? A[1] : g.at;
+    return { cx, cy, d, s: dir, pw: g.pw || 0.9, moat: Wd.moat };
+  },
+  /* Torhaus mit Zugbrücke und Vorwerk. Beide Tore stehen achsparallel, darum genügen Kästen.
+     u zählt von der Mauerlinie nach außen, v entlang der Mauer. */
+  drawGatehouse(ctx, sp, sv) {
+    const M = this.MAUER, zs = M.sockelH, h = HK.WALL.h, pw = sp.pw, d = sp.d, s = sp.s, pk = this.picking, winter = this.season() === 'winter';
+    const R = (u0, u1, v0, v1) => {                       // Rechteck (u,v) → achsparalleles Rechteck (x,y,w,d)
+      const xs = [sp.cx + d[0] * u0 + s[0] * v0, sp.cx + d[0] * u1 + s[0] * v1], ys = [sp.cy + d[1] * u0 + s[1] * v0, sp.cy + d[1] * u1 + s[1] * v1];
+      return { x: Math.min(...xs), y: Math.min(...ys), w: Math.abs(xs[1] - xs[0]), d: Math.abs(ys[1] - ys[0]) };
+    };
+    const P = (u, v, z) => [sp.cx + d[0] * u + s[0] * v, sp.cy + d[1] * u + s[1] * v, z];
+    const box = (r, z0, hh, col, o) => I.box(ctx, r.x, r.y, z0, r.w, r.d, hh, col, o || {});
+    const brick = (r, z0, hh) => { box(r, z0, hh, { wall: M.ziegel, top: M.ziegelTop }, { stroke: 'rgba(0,0,0,0)' }); this.ziegelFace(ctx, [r.x, r.y + r.d], [r.x + r.w, r.y + r.d], z0, hh); this.ziegelFace(ctx, [r.x + r.w, r.y], [r.x + r.w, r.y + r.d], z0, hh); };
+    const sockel = (r, hh) => { box(r, 0, hh, { wall: M.sockel, top: M.sockelTop }, { stroke: 'rgba(0,0,0,0)', noTop: true }); this.feldsteinFace(ctx, [r.x, r.y + r.d], [r.x + r.w, r.y + r.d], 0, hh); this.feldsteinFace(ctx, [r.x + r.w, r.y], [r.x + r.w, r.y + r.d], 0, hh); };
+    const zinnen = (r, z0) => { box({ x: r.x - 0.03, y: r.y - 0.03, w: r.w + 0.06, d: r.d + 0.06 }, z0, 0.1, { wall: M.kante, top: M.kante }); for (let u = 0.03; u + 0.22 <= r.w; u += 0.4) { box({ x: r.x + u, y: r.y + r.d - 0.14, w: 0.22, d: 0.14 }, z0 + 0.1, 0.3, { wall: M.ziegel, top: M.kante }, { stroke: 'rgba(0,0,0,0.35)' }); box({ x: r.x + u, y: r.y, w: 0.22, d: 0.14 }, z0 + 0.1, 0.3, { wall: M.ziegel, top: M.kante }, { stroke: 'rgba(0,0,0,0.35)' }); } for (let v = 0.03; v + 0.22 <= r.d; v += 0.4) { box({ x: r.x + r.w - 0.14, y: r.y + v, w: 0.14, d: 0.22 }, z0 + 0.1, 0.3, { wall: M.ziegel, top: M.kante }, { stroke: 'rgba(0,0,0,0.35)' }); box({ x: r.x, y: r.y + v, w: 0.14, d: 0.22 }, z0 + 0.1, 0.3, { wall: M.ziegel, top: M.kante }, { stroke: 'rgba(0,0,0,0.35)' }); } };
+    const dach = (r, z0, rh) => I.pyramid(ctx, r.x + 0.06, r.y + 0.06, z0, r.w - 0.12, r.d - 0.12, rh, winter ? '#e6eaee' : '#574e42');
+    const tw = 0.95, TH = h + 1.1, u0 = -0.55, u1 = 0.45;
+    I.shadow(ctx, R(u0, u1, -pw / 2 - 0.1 - tw, pw / 2 + 0.1 + tw).x, R(u0, u1, -pw / 2 - 0.1 - tw, pw / 2 + 0.1 + tw).y, Math.abs(u1 - u0) * Math.abs(d[0]) + (pw + 0.2 + 2 * tw) * Math.abs(s[0]), Math.abs(u1 - u0) * Math.abs(d[1]) + (pw + 0.2 + 2 * tw) * Math.abs(s[1]), TH, sv.v, sv.a);
+
+    /* Zugbrücke über den Graben: Bohlen auf zwei Balken, Ketten zum Torhaus */
+    const bA = 0.45, bE = sp.moat.d1 + 0.25;
+    const deck = R(bA, bE, -pw / 2 - 0.08, pw / 2 + 0.08);
+    box(deck, 0.02, 0.07, { wall: '#5f452f', top: '#8a6845' }, { stroke: 'rgba(0,0,0,0)' });
+    for (let u = bA + 0.12; u < bE; u += 0.16) I.line(ctx, P(u, -pw / 2 - 0.08, 0.095), P(u, pw / 2 + 0.08, 0.095), 'rgba(40,25,12,0.35)', 0.6);
+    for (const v of [-pw / 2 - 0.02, pw / 2 + 0.02]) I.line(ctx, P(bA, v, 0.1), P(bE, v, 0.1), '#4e3722', 1.6);
+    /* Vorwerk auf dem Außenufer: niedrige Zwingermauer mit zwei Rundtürmchen am Vortor */
+    const vA = bE - 0.1, vE = bE + 1.5, vw = pw / 2 + 1.05, mt = 0.26, mh = 0.8;
+    const vorwerk = [R(vA, vE, -vw - mt, -vw), R(vA, vE, vw, vw + mt), R(vE - mt, vE, -vw, -pw / 2 - 0.15), R(vE - mt, vE, pw / 2 + 0.15, vw)];
+    const teile = vorwerk.map(r => ({ k: r.x + r.w + r.y + r.d, f: () => { box(r, 0, 0.22, { wall: M.sockel, top: M.sockelTop }, { stroke: 'rgba(0,0,0,0)', noTop: true }); brick(r, 0.22, mh - 0.22); box({ x: r.x - 0.02, y: r.y - 0.02, w: r.w + 0.04, d: r.d + 0.04 }, mh, 0.06, { wall: M.kante, top: M.kante }); for (let q = 0.05; q + 0.16 <= Math.max(r.w, r.d); q += 0.34) { const rr = r.w > r.d ? { x: r.x + q, y: r.y, w: 0.16, d: r.d } : { x: r.x, y: r.y + q, w: r.w, d: 0.16 }; box(rr, mh + 0.06, 0.2, { wall: M.ziegel, top: M.kante }, { stroke: 'rgba(0,0,0,0.3)' }); } } }));
+    for (const v of [-pw / 2 - 0.42, pw / 2 + 0.42]) { const c = P(vE - 0.13, v, 0); teile.push({ k: c[0] + c[1] + 0.3, f: () => { I.cylinder(ctx, c[0], c[1], 0, 0.3, 0.22, M.sockel, { noTop: true }); I.cylinder(ctx, c[0], c[1], 0.22, 0.27, 1.05, M.ziegel, { noTop: true }); I.cylinder(ctx, c[0], c[1], 1.27, 0.33, 0.1, M.kante, {}); I.cone(ctx, c[0], c[1], 1.37, 0.34, 0.62, winter ? '#e6eaee' : '#574e42'); } }); }
+    // Torbogen des Vortors: dunkle Öffnung in der Stirnmauer beidseits der Durchfahrt (die Durchfahrt selbst ist frei)
+    teile.sort((a, b) => a.k - b.k); for (const tl of teile) tl.f();
+    if (!pk) { const lp = P(vE, 0, 0.9); this.lamps.push(I.p(lp[0], lp[1], lp[2])); }
+
+    /* Torhaus: zwei Flankentürme, dazwischen der Torbau mit Durchfahrt, Fallgatter, Stadtwappen und Satteldach */
+    const tL = R(u0, u1, -pw / 2 - 0.1 - tw, -pw / 2 - 0.1), tR = R(u0, u1, pw / 2 + 0.1, pw / 2 + 0.1 + tw), mid = R(u0 + 0.05, u1, -pw / 2 - 0.12, pw / 2 + 0.12);
+    const turm = r => { sockel({ x: r.x - 0.05, y: r.y - 0.05, w: r.w + 0.1, d: r.d + 0.1 }, zs); box({ x: r.x - 0.03, y: r.y - 0.03, w: r.w + 0.06, d: r.d + 0.06 }, zs - 0.04, 0.05, { wall: M.kante, top: M.kante }); brick(r, zs, TH - zs); box({ x: r.x - 0.03, y: r.y - 0.03, w: r.w + 0.06, d: r.d + 0.06 }, TH - 0.08, 0.08, { wall: M.kante, top: M.kante }); zinnen(r, TH); dach(r, TH + 0.4, 0.9); };
+    const [nah, fern] = (tL.x + tL.y) > (tR.x + tR.y) ? [tL, tR] : [tR, tL];
+    turm(fern);
+    // Torbau
+    sockel({ x: mid.x - 0.03, y: mid.y - 0.03, w: mid.w + 0.06, d: mid.d + 0.06 }, zs); brick(mid, zs, h + 0.45 - zs);
+    box({ x: mid.x - 0.03, y: mid.y - 0.03, w: mid.w + 0.06, d: mid.d + 0.06 }, h + 0.37, 0.08, { wall: M.kante, top: M.kante });
+    { // Satteldach zwischen den Türmen, First quer zur Durchfahrt
+      const z0 = h + 0.45, rh = 0.55, x0 = mid.x, x1 = mid.x + mid.w, y0 = mid.y, y1 = mid.y + mid.d, col = winter ? '#e6eaee' : '#574e42';
+      if (Math.abs(d[0]) > 0.5) { const mx = (x0 + x1) / 2; I.poly(ctx, [[x0, y0, z0], [x0, y1, z0], [mx, y1, z0 + rh], [mx, y0, z0 + rh]], I.shade(col, 0.86)); I.poly(ctx, [[x1, y0, z0], [x1, y1, z0], [mx, y1, z0 + rh], [mx, y0, z0 + rh]], I.shade(col, 1.0), 'rgba(52,38,22,0.28)'); I.poly(ctx, [[x0, y1, z0], [x1, y1, z0], [mx, y1, z0 + rh]], I.shade(M.ziegel, 0.95), 'rgba(0,0,0,0.25)'); }
+      else { const my = (y0 + y1) / 2; I.poly(ctx, [[x0, y0, z0], [x1, y0, z0], [x1, my, z0 + rh], [x0, my, z0 + rh]], I.shade(col, 0.86)); I.poly(ctx, [[x0, y1, z0], [x1, y1, z0], [x1, my, z0 + rh], [x0, my, z0 + rh]], I.shade(col, 1.0), 'rgba(52,38,22,0.28)'); I.poly(ctx, [[x1, y0, z0], [x1, y1, z0], [x1, my, z0 + rh]], I.shade(M.ziegel, 0.95), 'rgba(0,0,0,0.25)'); }
+    }
+    // Durchfahrt: Bogen auf der Außen- und der Innenseite; nur die dem Betrachter zugewandte ist sichtbar
+    const bogen = (u, tief) => { const pts = [P(u, -pw / 2 + 0.05, 0), P(u, pw / 2 - 0.05, 0)]; for (let k = 0; k <= 6; k++) { const a = Math.PI * k / 6, cv = Math.cos(a) * (pw / 2 - 0.05), cz = Math.sin(a) * (pw / 2 - 0.05); pts.push(P(u, cv, 0.75 + cz)); } I.poly(ctx, pts, tief ? '#2e2521' : 'rgba(255,240,200,0.14)'); };
+    const aussenSichtbar = d[0] + d[1] > 0; bogen(aussenSichtbar ? u1 + 0.003 : u0 - 0.003, true);
+    if (aussenSichtbar) { // Fallgatter im Bogen, Wappen darüber, Ketten der Zugbrücke
+      for (let v = -pw / 2 + 0.16; v < pw / 2 - 0.1; v += 0.16) I.line(ctx, P(u1 + 0.006, v, 0.02), P(u1 + 0.006, v, 1.0), 'rgba(150,140,120,0.7)', 0.9);
+      for (let z = 0.2; z < 1.05; z += 0.2) I.line(ctx, P(u1 + 0.006, -pw / 2 + 0.06, z), P(u1 + 0.006, pw / 2 - 0.06, z), 'rgba(150,140,120,0.7)', 0.9);
+      I.poly(ctx, [P(u1 + 0.006, -0.16, 1.62), P(u1 + 0.006, 0.16, 1.62), P(u1 + 0.006, 0.16, 1.44), P(u1 + 0.006, -0.16, 1.44)], '#c8102e'); I.poly(ctx, [P(u1 + 0.006, -0.16, 1.44), P(u1 + 0.006, 0.16, 1.44), P(u1 + 0.006, 0.16, 1.28), P(u1 + 0.006, -0.16, 1.28)], '#f0ece0');
+      for (const v of [-pw / 2 - 0.02, pw / 2 + 0.02]) { const m = P((u1 + bE) / 2, v, 0.55); I.line(ctx, P(u1, v, 1.55), [m[0], m[1], m[2]], 'rgba(50,45,40,0.85)', 1.1); I.line(ctx, [m[0], m[1], m[2]], P(bE, v, 0.1), 'rgba(50,45,40,0.85)', 1.1); }
+      if (!pk) { const l1 = P(u1 + 0.05, -pw / 2 - 0.35, 0.95), l2 = P(u1 + 0.05, pw / 2 + 0.35, 0.95); this.lamps.push(I.p(...l1), I.p(...l2)); }
+    }
+    turm(nah);
+  },
   drawMole(ctx, sv) {
     const m = HK.MOLE, L = HK.LIGHTHOUSE;
-    I.box(ctx, m.x, m.y0, 0, m.w, m.y1 - m.y0, 0.35, { wall: '#7d766a', top: '#9a9284' });
-    for (let y = m.y0; y < m.y1; y += 0.3) I.line(ctx, [m.x, y, 0.35], [m.x + m.w, y, 0.35], 'rgba(0,0,0,0.15)', 0.5);
-    for (let y = m.y0 + 0.4; y < m.y1; y += 0.8) I.box(ctx, m.x + 0.25, y, 0.35, 0.12, 0.12, 0.18, { wall: '#4e4441', top: '#665b54' });
-    I.cylinder(ctx, L.x, L.y, 0, L.r, L.h, '#8f887a', { brick: true, noTop: true }); I.cylinder(ctx, L.x, L.y, L.h, L.r + 0.08, 0.15, '#686357', {});
-    I.cylinder(ctx, L.x, L.y, L.h + 0.15, L.r * 0.6, 0.35, '#554c46', { noTop: true }); I.cone(ctx, L.x, L.y, L.h + 0.5, L.r * 0.7, 0.45, '#574e42');
-    I.windowR(ctx, L.x - L.r, L.r, L.y - 0.1, 0.9, 0.1, 0.16, 0.26, { arch: true });
-    if (this.light() < 0.8) { const p = I.p(L.x, L.y, L.h + 0.32); const fire = 0.7 + Math.sin(this.time * 9) * 0.3; ctx.fillStyle = `rgba(255,150,40,${fire})`; ctx.beginPath(); ctx.arc(p[0], p[1], 3, 0, 6.28); ctx.fill(); this.lamps.push([p[0], p[1]]); }
+    /* Die Mole ist aus demselben Stein wie die Kaimauer, aus der sie wächst: ihre Flanken laufen
+       durch dieselbe Mauerroutine, bekommen also Quaderlagen, Deckstein, nassen Fuß und Algensaum.
+       Ihre Landkante folgt dem schrägen Uferverlauf, damit sie mit der Mauerkrone zusammenfällt. */
+    const S = HK.Scene, mh = S.QUAI_H;
+    const yA = S.uferY(m.x), yB = S.uferY(m.x + m.w);
+    const kx0 = m.x - 0.28, kx1 = m.x + m.w + 0.28, ky0 = m.y1 - 1.05;
+    const zuf = u => { const r = Math.sin(u * 12.9898) * 43758.5453; return r - Math.floor(r); };
+
+    /* Deck aus Pflastersteinen. Die Landkante verläuft schräg, darum wird jede Reihe auf den
+       Umriss beschnitten; sonst ragten die Platten an der Wurzel über den Rand hinaus. */
+    const rand = x => yA + (yB - yA) * (x - m.x) / m.w;      // Uferlinie über die Breite
+    I.poly(ctx, [[m.x, yA, mh], [m.x + m.w, yB, mh], [m.x + m.w, m.y1, mh], [m.x, m.y1, mh]], '#837d72');
+    const reihen = 3;
+    for (let y = m.y1; y > Math.min(yA, yB); y -= 0.46) {
+      const y2 = y - 0.46;
+      for (let k = 0; k < reihen; k++) {
+        const a = m.x + m.w * k / reihen, b = m.x + m.w * (k + 1) / reihen;
+        const ra = rand(a), rb = rand(b);
+        const ya = Math.max(y2, ra), yb = Math.max(y2, rb);
+        if (ya >= y - 0.02 && yb >= y - 0.02) continue;        // ganz außerhalb
+        const t = zuf(a * 5.1 + y * 7.3 + k * 2.9);
+        I.poly(ctx, [[a, ya, mh], [b, yb, mh], [b, y, mh], [a, y, mh]], I.shade('#8b8479', 0.94 + t * 0.15), 'rgba(40,34,26,0.16)');
+      }
+    }
+    // Flanke zum Wasser: dasselbe Quaderwerk wie an der Kaimauer
+    S.drawQuayWall(ctx, [m.x + m.w, yB], [m.x + m.w, m.y1], [1, 0], m.y1 - yB, true, true, mh);
+
+    /* Molenkopf: die verbreiterte Plattform, auf der der Leuchtturm steht — Deck und zwei Mauerseiten */
+    I.poly(ctx, [[kx0, ky0, mh], [kx1, ky0, mh], [kx1, m.y1, mh], [kx0, m.y1, mh]], '#837d72');
+    for (let y = m.y1; y > ky0 + 0.01; y -= 0.46) {
+      const y2 = Math.max(ky0, y - 0.46);
+      for (let k = 0; k < 4; k++) {
+        const a = kx0 + (kx1 - kx0) * k / 4, b = kx0 + (kx1 - kx0) * (k + 1) / 4;
+        const t = zuf(a * 3.7 + y * 9.1 + k * 1.3);
+        I.poly(ctx, [[a, y2, mh], [b, y2, mh], [b, y, mh], [a, y, mh]], I.shade('#8b8479', 0.95 + t * 0.14), 'rgba(40,34,26,0.16)');
+      }
+    }
+    S.drawQuayWall(ctx, [kx1, ky0], [kx1, m.y1], [1, 0], m.y1 - ky0, true, true, mh);
+    S.drawQuayWall(ctx, [kx0, m.y1], [kx1, m.y1], [0, 1], kx1 - kx0, true, true, mh);
+    /* Der Turm steht auf dem Deck, nicht im Wasser: alle Höhen zählen ab der Molenkrone. Stand der
+       Fuß bei 0, hing er eine Mauerhöhe zu tief und ragte vorn über die Kante hinaus. */
+    const lz = mh;
+    I.cylinder(ctx, L.x, L.y, lz, L.r, L.h, '#8f887a', { brick: true, noTop: true }); I.cylinder(ctx, L.x, L.y, lz + L.h, L.r + 0.08, 0.15, '#686357', {});
+    I.cylinder(ctx, L.x, L.y, lz + L.h + 0.15, L.r * 0.6, 0.35, '#554c46', { noTop: true }); I.cone(ctx, L.x, L.y, lz + L.h + 0.5, L.r * 0.7, 0.45, '#574e42');
+    /* Das Fenster gehört auf den runden Schaft, nicht auf eine gedachte ebene Wand. Ein Wandfenster
+       liegt in der Ebene x = konstant und zeigt darum nach rechts unten; der Schaft zeigt an dieser
+       Stelle aber zum Betrachter, und das Fenster stand schief darauf. Es wird deshalb in
+       Bildkoordinaten auf die zugewandte Rundung gesetzt — so tragen auch die Mauertürme ihre
+       Schießscharten. */
+    {
+      const rx = L.r * I.TW, ry = L.r * I.TH;
+      const M = I.p(L.x, L.y, lz + 0.95);
+      const fx = M[0], fy = M[1] + ry * 0.6;          // Sohlbankhöhe, auf die vordere Rundung gerückt
+      const bw = rx * 0.24, bh = 0.4 * I.ZS;          // halbe Breite und Höhe der Öffnung
+      const bogen = (w, h, dy) => {                   // Öffnung mit halbrundem Sturz
+        ctx.beginPath();
+        ctx.moveTo(fx - w, fy + dy);
+        ctx.lineTo(fx - w, fy + dy - h + w);
+        ctx.arc(fx, fy + dy - h + w, w, Math.PI, 0);
+        ctx.lineTo(fx + w, fy + dy);
+        ctx.closePath();
+      };
+      bogen(bw + 2.1, bh + 2.4, 1.5);                 // Gewände aus hellerem Stein
+      ctx.fillStyle = I.shade('#8f887a', 1.12); ctx.fill();
+      ctx.strokeStyle = 'rgba(42,36,28,0.32)'; ctx.lineWidth = 0.7; ctx.stroke();
+      const nacht = this.light() < 0.8;
+      bogen(bw, bh, 0);                               // die Öffnung selbst
+      ctx.fillStyle = nacht ? 'rgba(232,172,92,0.85)' : '#2b2721'; ctx.fill();
+      ctx.fillStyle = I.shade('#8f887a', 0.9);        // Sohlbank
+      ctx.fillRect(fx - bw - 2.6, fy + 1.4, (bw + 2.6) * 2, 1.7);
+    }
+    if (this.light() < 0.8) { const p = I.p(L.x, L.y, lz + L.h + 0.32); const fire = 0.7 + Math.sin(this.time * 9) * 0.3; ctx.fillStyle = `rgba(255,150,40,${fire})`; ctx.beginPath(); ctx.arc(p[0], p[1], 3, 0, 6.28); ctx.fill(); this.lamps.push([p[0], p[1]]); }
   },
   drawIslet(ctx, season, sv) {
     const o = HK.ISLET, c = I.p(o.x, o.y, 0);
@@ -844,15 +1031,101 @@ Object.assign(HK.Scene, {
     I.line(ctx, W(0, 0, 0.2), W(0, 0, 1.1), '#62472c', 1.5); I.poly(ctx, [W(0, 0, 1.05), W(0.32, 0, 0.45), W(0, 0, 0.35)], own ? '#bfa361' : '#e8e0c8', 'rgba(80,60,30,0.5)', 0.5);
     const p = I.p(...W(-0.15, 0, 0.2)); this.drawPerson(ctx, p[0], p[1] + 3, '#3f6284', 'fisher', 1, false, '#d2aa91', 0, 1, null, null, 0.55);
   },
+  /* Karawanenlager vor dem Landtor. Kein fahrendes Gespann, sondern eine Rast: der Planwagen steht
+     mit stillen Rädern, die Ochsen sind ausgespannt und grasen am Pflock, am Feuer sitzt und steht
+     die Mannschaft, ein Träger räumt Waren vom Wagen auf den Stapel. Alles läuft mit Periode 6 s,
+     weil der Aussehens-Schlüssel des Lagers (siehe buildItems) alle 6 s von vorn zählt. */
   drawCaravan(ctx, x, y, t, sv) {
-    I.shadow(ctx, x - 0.5, y - 0.3, 1.0, 0.6, 0.5, sv.v, sv.a);
-    I.box(ctx, x - 0.5, y - 0.28, 0.2, 0.7, 0.55, 0.25, { wall: '#84623f', top: '#8c6c45' });
-    const arc = []; for (let k = 0; k <= 6; k++) { const a = Math.PI * k / 6; arc.push([x - 0.5, y + Math.cos(a) * 0.3, 0.45 + Math.sin(a) * 0.3]); } I.poly(ctx, arc.concat([[x + 0.2, y - 0.3, 0.45]].concat(arc.slice().reverse().map(q => [x + 0.2, q[1], q[2]]))), '#d9cfb0', 'rgba(0,0,0,0.3)', 0.6);
-    I.poly(ctx, arc.map(q => [x + 0.2, q[1], q[2]]), '#c9bfa0', 'rgba(0,0,0,0.35)', 0.6);
-    for (const [wx, wy] of [[x - 0.4, y + 0.3], [x + 0.1, y + 0.3]]) { const p = I.p(wx, wy, 0.15); ctx.fillStyle = '#474747'; ctx.beginPath(); ctx.ellipse(p[0], p[1], 5, 5, 0, 0, 6.28); ctx.fill(); ctx.strokeStyle = '#8b6a4a'; ctx.lineWidth = 1; for (let i = 0; i < 4; i++) { const a = i * Math.PI / 2 + t; ctx.beginPath(); ctx.moveTo(p[0], p[1]); ctx.lineTo(p[0] + Math.cos(a) * 4, p[1] + Math.sin(a) * 4); ctx.stroke(); } }
-    I.box(ctx, x + 0.35, y - 0.15, 0.1, 0.5, 0.3, 0.3, { wall: '#8b6a4a', top: '#9a7a5a' }); I.box(ctx, x + 0.8, y - 0.1, 0.25, 0.15, 0.2, 0.25, { wall: '#8b6a4a', top: '#9a7a5a' });
-    I.poly(ctx, [[x - 1.1, y + 0.1, 0], [x - 0.6, y + 0.1, 0], [x - 0.85, y + 0.35, 0.5]], '#c8b079'); I.poly(ctx, [[x - 0.6, y + 0.1, 0], [x - 0.6, y + 0.6, 0], [x - 0.85, y + 0.35, 0.5]], '#a9905a');
-    if (this.light() < 0.6) { const p = I.p(x - 1.2, y + 0.4, 0.1); ctx.fillStyle = `rgba(255,160,60,${0.8 + Math.sin(t * 9) * 0.2})`; ctx.beginPath(); ctx.arc(p[0], p[1], 3, 0, 6.28); ctx.fill(); this.lamps.push([p[0], p[1]]); }
+    const pk = this.picking, nacht = this.light() < 0.6;
+    const at = (u, v) => [x + u, y + v];                         // Wagenachse liegt in x
+    const teile = [];                                            // Maler-Reihenfolge nach x+y
+    const stelle = (k, f) => teile.push({ k, f });
+
+    /* --- Planwagen --- */
+    const RH = 0.27, RV = 0.21, bett = RH - 0.03, WL = 1.15, WB = 0.52;
+    const rad = (u, v, R) => this.isoWheel(ctx, x + u, y + v, R, R, 1, 0, 0);   // still: kein Drehwinkel
+    stelle(-0.6, () => {
+      I.shadow(ctx, x - WL / 2, y - WB / 2, WL, WB, 0.7, sv.v, sv.a);
+      rad(-0.36, -0.32, RH); rad(0.38, -0.32, RV);                              // ferne Räder
+      I.line(ctx, [x - 0.36, y - 0.32, RH], [x - 0.36, y + 0.32, RH], '#5e4330', 1.8);
+      I.line(ctx, [x + 0.38, y - 0.32, RV], [x + 0.38, y + 0.32, RV], '#5e4330', 1.6);
+      I.obox(ctx, x, y, bett, 1, 0, WL, WB, 0.09, '#87643b');                    // Wagenbett
+      for (const sv2 of [-1, 1]) I.obox(ctx, x, y + sv2 * (WB / 2 - 0.03), bett + 0.09, 1, 0, WL, 0.06, 0.2, '#8e6d42');
+      for (const su of [-1, 1]) I.obox(ctx, x + su * (WL / 2 - 0.03), y, bett + 0.09, 1, 0, 0.06, WB, 0.22, '#8a6a43');
+      // Plane über Spriegeln: Umriss aus hinterem und vorderem Bogen, dann die Rippen darüber
+      const zs = bett + 0.29, RB = 0.31, bogen = (u) => { const o = []; for (let k = 0; k <= 8; k++) { const a = Math.PI * k / 8; o.push([x + u, y + Math.cos(a) * RB, zs + Math.sin(a) * RB]); } return o; };
+      const hinten = bogen(-WL / 2 + 0.02), vorn = bogen(WL / 2 - 0.02);
+      I.poly(ctx, hinten.concat(vorn.slice().reverse()), '#d8ceae', 'rgba(60,45,25,0.35)', 0.7);
+      I.poly(ctx, vorn.concat([[vorn[8][0], vorn[8][1], zs], [vorn[0][0], vorn[0][1], zs]]), '#c7bc9c', 'rgba(60,45,25,0.4)', 0.7);
+      for (const u of [-0.36, -0.12, 0.12, 0.36]) { const b = bogen(u); ctx.strokeStyle = 'rgba(70,52,30,0.35)'; ctx.lineWidth = 0.8; ctx.beginPath(); for (let k = 0; k <= 5; k++) { const q = I.p(...b[k]); k ? ctx.lineTo(q[0], q[1]) : ctx.moveTo(q[0], q[1]); } ctx.stroke(); }
+      // Vorderer Einstieg: dunkle Öffnung, Plane seitlich aufgebunden
+      const oe = []; for (let k = 1; k <= 7; k++) { const a = Math.PI * k / 8; oe.push([vorn[0][0] + 0.005, y + Math.cos(a) * RB * 0.62, zs + Math.sin(a) * RB * 0.62]); }
+      I.poly(ctx, oe.concat([[oe[6][0], oe[6][1], zs + 0.02], [oe[0][0], oe[0][1], zs + 0.02]]), '#3a2f24');
+      I.line(ctx, [vorn[0][0], y + RB * 0.62, zs + 0.02], [vorn[0][0], y + RB * 0.9, zs + 0.2], '#b9ae90', 2.2);
+      rad(-0.36, 0.32, RH); rad(0.38, 0.32, RV);                                 // nahe Räder
+      // Deichsel abgelegt: vom Vorderwagen zum Boden
+      for (const v of [-0.09, 0.09]) I.line(ctx, [x + WL / 2 - 0.05, y + v, bett], [x + WL / 2 + 0.42, y + v * 0.4, 0.03], '#6f5236', 1.7);
+      I.line(ctx, [x + WL / 2 + 0.42, y - 0.06, 0.03], [x + WL / 2 + 0.42, y + 0.06, 0.03], '#6f5236', 1.7);
+      if (nacht) { const lp = I.p(vorn[0][0], y + RB, zs + 0.05); ctx.fillStyle = `rgba(255,190,90,${0.75 + Math.sin(t * 6.283) * 0.1})`; ctx.beginPath(); ctx.arc(lp[0], lp[1], 2.4, 0, 6.28); ctx.fill(); this.lamps.push([lp[0], lp[1]]); }
+    });
+
+    /* --- Ochsen, ausgespannt: grasen mit gesenktem Kopf, Schwanz schlägt --- */
+    const ochse = (ox, oy, ph, k) => stelle(k, () => {
+      if (!pk) { const sp = I.p(ox, oy, 0); ctx.fillStyle = 'rgba(0,0,0,0.22)'; ctx.beginPath(); ctx.ellipse(sp[0], sp[1] + 1, 15, 5, 0, 0, 6.28); ctx.fill(); }
+      for (const [lu, lv] of [[-0.17, -0.09], [-0.17, 0.09], [0.15, -0.09], [0.15, 0.09]]) I.line(ctx, [ox + lu, oy + lv, 0], [ox + lu, oy + lv, 0.2], '#5a3d2c', 2);
+      I.obox(ctx, ox, oy, 0.18, 1, 0, 0.5, 0.27, 0.28, '#7a5443');
+      I.obox(ctx, ox - 0.1, oy, 0.44, 1, 0, 0.3, 0.2, 0.05, '#6e4a3b');                 // Widerrist
+      const kx = ox + 0.34, kz = 0.1 + Math.abs(Math.sin(t * 1.0472 + ph)) * 0.05;     // Kopf gesenkt, kaut
+      I.line(ctx, [ox + 0.22, oy, 0.4], [kx - 0.02, oy, kz + 0.16], '#74503f', 5);        // Hals
+      I.obox(ctx, kx, oy, kz, 1, 0, 0.2, 0.15, 0.17, '#6f4a3a');
+      I.obox(ctx, kx + 0.08, oy, kz, 1, 0, 0.07, 0.12, 0.09, '#9c8676');                 // helles Maul
+      for (const hv of [-1, 1]) I.line(ctx, [kx - 0.04, oy + hv * 0.06, kz + 0.17], [kx - 0.02, oy + hv * 0.13, kz + 0.27], '#e6dcc4', 1.5);
+      const sw = Math.sin(t * 3.1416 + ph) * 0.06;
+      I.line(ctx, [ox - 0.25, oy, 0.4], [ox - 0.33, oy + sw, 0.14], '#4e3324', 1.3);
+    });
+    ochse(x + 0.6, y + 0.8, 0, 1.4); ochse(x + 1.0, y + 1.0, 1.7, 2.0);
+    stelle(2.1, () => {                                                             // Pflock mit Stricken
+      I.line(ctx, [x + 0.85, y + 1.28, 0], [x + 0.85, y + 1.28, 0.28], '#5e4330', 2.2);
+      I.line(ctx, [x + 0.85, y + 1.28, 0.24], [x + 0.92, y + 0.82, 0.14], 'rgba(120,100,70,0.8)', 0.8);
+      I.line(ctx, [x + 0.85, y + 1.28, 0.24], [x + 1.32, y + 1.02, 0.14], 'rgba(120,100,70,0.8)', 0.8);
+    });
+
+    /* --- Lagerfeuer mit Steinring, Flammen, Rauch --- */
+    const fx = x - 0.35, fy = y + 1.0;
+    stelle(0.65, () => {
+      const fp = I.p(fx, fy, 0);
+      if (!pk) { ctx.fillStyle = 'rgba(40,30,20,0.35)'; ctx.beginPath(); ctx.ellipse(fp[0], fp[1], 9, 4, 0, 0, 6.28); ctx.fill(); }
+      for (let k = 0; k < 7; k++) { const a = k / 7 * 6.283, q = I.p(fx + Math.cos(a) * 0.14, fy + Math.sin(a) * 0.14, 0); ctx.fillStyle = k % 2 ? '#6e6a62' : '#7d786e'; ctx.beginPath(); ctx.ellipse(q[0], q[1], 2.2, 1.5, 0, 0, 6.28); ctx.fill(); }
+      I.line(ctx, [fx - 0.09, fy - 0.05, 0.02], [fx + 0.09, fy + 0.04, 0.05], '#4f3620', 2.2);
+      I.line(ctx, [fx + 0.07, fy - 0.07, 0.02], [fx - 0.08, fy + 0.07, 0.05], '#5a3f26', 2.2);
+      if (!pk) {
+        const f1 = 0.75 + Math.sin(t * 12.566) * 0.2, f2 = 0.7 + Math.sin(t * 18.85 + 1) * 0.25;
+        const zunge = (dx, h, w, col) => { ctx.fillStyle = col; ctx.beginPath(); ctx.moveTo(fp[0] + dx - w, fp[1] - 1); ctx.quadraticCurveTo(fp[0] + dx - w * 0.3, fp[1] - h * 0.55, fp[0] + dx, fp[1] - h); ctx.quadraticCurveTo(fp[0] + dx + w * 0.3, fp[1] - h * 0.55, fp[0] + dx + w, fp[1] - 1); ctx.closePath(); ctx.fill(); };
+        zunge(-1.5, 9 * f1, 3.2, 'rgba(255,120,30,0.85)'); zunge(1.5, 8 * f2, 2.8, 'rgba(255,150,40,0.85)'); zunge(0, 5.5 * f1, 1.8, 'rgba(255,225,120,0.9)');
+        for (let k = 0; k < 3; k++) { const a = ((t * 0.5 + k / 3) % 1); ctx.fillStyle = `rgba(150,150,150,${0.28 * (1 - a)})`; ctx.beginPath(); ctx.arc(fp[0] + Math.sin(a * 6 + k) * 2.5, fp[1] - 10 - a * 22, 1.8 + a * 3.5, 0, 6.28); ctx.fill(); }
+        if (nacht) { ctx.fillStyle = `rgba(255,150,50,${0.55 + Math.sin(t * 12.566) * 0.15})`; ctx.beginPath(); ctx.ellipse(fp[0], fp[1] - 4, 5, 7, 0, 0, 6.28); ctx.fill(); this.lamps.push([fp[0], fp[1] - 3]); }
+      }
+    });
+
+    /* --- Mannschaft --- */
+    stelle(0.5, () => {                                                             // sitzt am Feuer, ein Klotz davor
+      const sp = I.p(x - 0.65, y + 1.15, 0);
+      this.drawPerson(ctx, sp[0], sp[1] - 2, '#6f5a3e', 'merchant', 1, false, '#d2aa91', 0, 1, null, null, 0.8);
+      I.obox(ctx, x - 0.63, y + 1.23, 0, 0.8, 0.6, 0.26, 0.09, 0.1, '#6a4b30');
+    });
+    stelle(1.65, () => { const sp = I.p(x + 0.4, y + 1.25, 0); this.drawPerson(ctx, sp[0], sp[1], '#7b5f47', 'citizen', 1, false, '#dcc3aa', 0, -1, null, { hat: true }, 0.88); });
+    // Träger: von der Wagenseite zum Stapel am Heck mit Sack, leer zurück. Hin und zurück in 6 s.
+    { const p = (t / 3) % 2, u = p < 1 ? p : 2 - p, hin = p < 1;
+      const px = x + 0.1 - u * 0.9, py = y + 0.42 + u * 0.08;
+      stelle(px - x + py - y, () => { const sp = I.p(px, py, 0); this.drawPerson(ctx, sp[0], sp[1], '#5e5a4a', 'citizen', 1, false, '#d2aa91', t * 6.283, hin ? -1 : 1, null, hin ? { items: [{ good: 'wool', kind: 'sack' }] } : null, 0.88); }); }
+    stelle(-0.45, () => {                                                           // Stapel hinter dem Wagen
+      this.drawCargo(ctx, x - 1.0, y + 0.5, 0, { good: 'wine', kind: 'barrel' });
+      this.drawCargo(ctx, x - 0.85, y + 0.33, 0, { good: 'spices', kind: 'crate' });
+      this.drawCargo(ctx, x - 1.08, y + 0.3, 0, { good: 'wool', kind: 'sack' });
+    });
+
+    teile.sort((a, b) => a.k - b.k);
+    for (const tl of teile) tl.f();
   },
   /* Ein Karren, frei gedreht: Bett zwischen zwei Speichenrädern, Deichsel, Zieher davor.
      Die Ausrichtung kommt als Winkel, damit der Karren beim Abbiegen mitdreht statt zu springen. */

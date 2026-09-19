@@ -6,7 +6,29 @@ HK.Iso = {
   path(ctx, pts) { ctx.beginPath(); pts.forEach((q, i) => { const s = this.p(q[0], q[1], q[2]); i ? ctx.lineTo(s[0], s[1]) : ctx.moveTo(s[0], s[1]); }); ctx.closePath(); },
   poly(ctx, pts, fill, stroke, lw) { this.path(ctx, pts); if (fill) { ctx.fillStyle = fill; ctx.fill(); } if (stroke) { ctx.strokeStyle = stroke; ctx.lineWidth = lw || 0.8; ctx.stroke(); } },
   line(ctx, a, b, stroke, lw) { const A = this.p(a[0], a[1], a[2]), B = this.p(b[0], b[1], b[2]); ctx.strokeStyle = stroke; ctx.lineWidth = lw || 0.8; ctx.beginPath(); ctx.moveTo(A[0], A[1]); ctx.lineTo(B[0], B[1]); ctx.stroke(); },
-  shade(hex, f) { if (hex[0] !== '#') return hex; const n = parseInt(hex.slice(1), 16); const r = HK.clamp(((n >> 16) & 255) * f, 0, 255) | 0, g = HK.clamp(((n >> 8) & 255) * f, 0, 255) | 0, b = HK.clamp((n & 255) * f, 0, 255) | 0; return `rgb(${r},${g},${b})`; },
+  /* Aufgehellte oder abgedunkelte Farbe. Die Zeichenkette wird gemerkt: dieselbe Wand entsteht in jedem Bild neu,
+     und das Bauen und Auswerten der Farbangabe kostet mehr als das Füllen der Fläche. */
+  _shades: new Map(),
+  shade(hex, f) {
+    if (hex[0] !== '#') return hex;
+    const q = Math.round(f * 200);
+    const key = hex + ':' + q;
+    let v = this._shades.get(key);
+    if (v === undefined) {
+      const n = parseInt(hex.slice(1), 16), s = q / 200;
+      const r = HK.clamp(((n >> 16) & 255) * s, 0, 255) | 0, g = HK.clamp(((n >> 8) & 255) * s, 0, 255) | 0, b = HK.clamp((n & 255) * s, 0, 255) | 0;
+      v = `rgb(${r},${g},${b})`;
+      this._shades.set(key, v);
+    }
+    return v;
+  },
+  /* Mehrere Striche derselben Farbe als ein Pfad: ein Strichbefehl statt einem je Linie */
+  lines(ctx, segs, stroke, lw) {
+    if (!segs.length) return;
+    ctx.strokeStyle = stroke; ctx.lineWidth = lw || 0.8; ctx.beginPath();
+    for (const [a, b] of segs) { const A = this.p(a[0], a[1], a[2]), B = this.p(b[0], b[1], b[2]); ctx.moveTo(A[0], A[1]); ctx.lineTo(B[0], B[1]); }
+    ctx.stroke();
+  },
   /* Quader mit freier Ausrichtung in der Bodenebene: Mittelpunkt, Richtung, Länge, Breite, Höhe.
      Die vier Seiten werden nach Tiefe sortiert gezeichnet, darum stimmt jede Drehung. */
   obox(ctx, cx, cy, cz, dx, dy, L, Wd, H, col) {
@@ -26,6 +48,9 @@ HK.Iso = {
   /* Schatten eines Quaders auf dem Boden (konvexe Hülle von Grundriss und verschobenem Grundriss) */
   shadow(ctx, x, y, w, d, h, vec, alpha) {
     if (HK.Scene && HK.Scene.picking) return;
+    // Wird die Geometrie eines Gebäudes für später abgelegt, darf der Schlagschatten nicht mit hinein:
+    // er wandert mit der Sonne. Er wird stattdessen aufgezeichnet und in jedem Bild neu gezogen.
+    if (HK.Scene && HK.Scene.schattenFang) { HK.Scene.schattenFang.push(x, y, w, d, h); return; }
     const pts = [[x, y, 0], [x + w, y, 0], [x + w, y + d, 0], [x, y + d, 0]].map(q => this.p(q[0], q[1], 0));
     const sh = [[x, y, 0], [x + w, y, 0], [x + w, y + d, 0], [x, y + d, 0]].map(q => this.p(q[0] + vec[0] * h, q[1] + vec[1] * h, 0));
     const hull = this.hull(pts.concat(sh));
@@ -73,11 +98,13 @@ HK.Iso = {
   roofLines(ctx, quad, rows, dark) {
     // Ziegelreihen: Linien zwischen den beiden Seitenkanten des Dachvierecks (First → Traufe)
     const A = quad[0], B = quad[1], C = quad[2], D = quad[3];
-    ctx.strokeStyle = dark || 'rgba(0,0,0,0.28)'; ctx.lineWidth = 0.7;
-    for (let i = 1; i < rows; i++) { const t = i / rows; const a = [A[0] + (D[0] - A[0]) * t, A[1] + (D[1] - A[1]) * t, A[2] + (D[2] - A[2]) * t], b = [B[0] + (C[0] - B[0]) * t, B[1] + (C[1] - B[1]) * t, B[2] + (C[2] - B[2]) * t]; this.line(ctx, a, b, ctx.strokeStyle, 0.7); }
+    const quer = [], laengs = [];
+    for (let i = 1; i < rows; i++) { const t = i / rows; quer.push([[A[0] + (D[0] - A[0]) * t, A[1] + (D[1] - A[1]) * t, A[2] + (D[2] - A[2]) * t], [B[0] + (C[0] - B[0]) * t, B[1] + (C[1] - B[1]) * t, B[2] + (C[2] - B[2]) * t]]); }
+    this.lines(ctx, quer, dark || 'rgba(0,0,0,0.28)', 0.7);
     const ridgeLen = Math.hypot(...[0, 1].map(k => this.p(B[0], B[1], B[2])[k] - this.p(A[0], A[1], A[2])[k]));
     const n = Math.max(4, Math.round(ridgeLen / 6));
-    for (let i = 1; i < n; i++) { const t = i / n; const a = [A[0] + (B[0] - A[0]) * t, A[1] + (B[1] - A[1]) * t, A[2] + (B[2] - A[2]) * t], b = [D[0] + (C[0] - D[0]) * t, D[1] + (C[1] - D[1]) * t, D[2] + (C[2] - D[2]) * t]; this.line(ctx, a, b, 'rgba(0,0,0,0.10)', 0.6); }
+    for (let i = 1; i < n; i++) { const t = i / n; laengs.push([[A[0] + (B[0] - A[0]) * t, A[1] + (B[1] - A[1]) * t, A[2] + (B[2] - A[2]) * t], [D[0] + (C[0] - D[0]) * t, D[1] + (C[1] - D[1]) * t, D[2] + (C[2] - D[2]) * t]]); }
+    this.lines(ctx, laengs, 'rgba(0,0,0,0.10)', 0.6);
   },
   /* Walmdach / Zeltdach als Pyramide */
   pyramid(ctx, x, y, z, w, d, rh, col) {
