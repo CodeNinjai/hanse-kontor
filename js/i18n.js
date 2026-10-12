@@ -102,7 +102,7 @@ HK.I18N = {
     dailyIncome: 'Ø Tageseinnahmen', chart: 'Reinvermögen im Verlauf', noLog: 'Noch nichts geschehen.', activeEvents: 'Zurzeit in der Stadt', personsTitle: 'Wichtige Leute',
     legend: 'Klicke auf Gebäude, Schiffe, Karawanen und Passanten. Mausrad zoomt, Ziehen verschiebt die Karte.', timeOfDay: 'Tageszeit', night: 'Nacht', morning: 'Morgen', noon: 'Mittag', evening: 'Abend', wClear: 'Klarer Himmel', wCloudy: 'Bedeckt', wRain: 'Regen', wSnow: 'Schnee',
     /* Neue Viertel */
-    needCraftGuild: 'Dafür musst du der Zunft angehören.', needThreeVentures: 'Der Meistertitel setzt drei eigene Betriebe voraus.', storageInUse: 'Der Speicher ist noch belegt – erst das Lager leeren.', fenceFull: 'Der Hehler nimmt heute nichts mehr ab.', noShipsHere: 'Es liegt kein fremdes Schiff im Hafen.',
+    needCraftGuild: 'Dafür musst du der Zunft angehören.', needThreeVentures: 'Der Meistertitel setzt drei eigene Betriebe voraus.', storageInUse: 'Der Speicher wird für Waren oder erwartete Lieferungen benötigt.', fenceFull: 'Der Hehler nimmt heute nichts mehr ab.', noShipsHere: 'Es liegt kein fremdes Schiff im Hafen.',
     craftJoined: 'Die Zunft hat dich aufgenommen.', ventureBought: '{venture} gehört jetzt dir.', masterTitleLog: 'Die Zunft ernennt dich zum Ältermann.', relicDonated: 'Das Kloster stellt deine Reliquie im Chor auf. Ganz Sundhaven pilgert.', hospitalEndowedLog: 'Du bist Stifter des Heilig-Geist-Spitals.', schoolEndowedLog: 'Die Lateinschule trägt nun deinen Namen.', berthBuilt: 'Der Hafen hat jetzt {n} Liegeplätze.', watchEnded: 'Die Hafenwache ist wieder nüchtern und wachsam.',
     src_ventures: 'Betriebe', src_storage: 'Speichervermietung',
     ventures: 'Betriebe', vEffect_plain: 'Ein solider Betrieb mit stetigen Einnahmen.', vEffect_dive: 'Schmuggler, Hehler und Matrosen: hier wird Geld gemacht, das keiner sehen soll.', vEffect_feed: 'Versorgt die Stadt – hebt den Wohlstand und verdient in Hungersnöten doppelt.', vEffect_cooper: 'Fässer für Brauerei und Räucherei: deine Werkstätten erzeugen je 1 Last mehr.', vEffect_ships: 'Tauwerk und Segel: Reparaturen deiner Koggen werden 20 % billiger, mit beidem fahren sie einen Tag schneller.', vEffect_smoke: 'Räuchert täglich bis zu 6 Last Fisch aus deinem Lager zu Räucherfisch.', vEffect_stink: 'Stinkt zum Himmel, zahlt aber gut. Kostet täglich etwas Ruf.', vEffect_cloth: 'Gefärbtes Tuch bringt bei Schiffen und Karawanen 10 % mehr.',
@@ -236,8 +236,9 @@ HK.I18N = {
     successionHead: 'Ein neuer Herr im Kontor', successionText: 'Der alte Kaufmann ist tot. {heir} ({trait}) übernimmt das Kontor in der {gen}. Generation. Ruf, Einfluss und Wohlwollen müssen neu erworben werden; Besitz und Titel bleiben der Familie.', succession: '{old} ist gestorben. {heir} ({trait}) führt das Kontor weiter.', diedNoHeir: '{name} ist ohne Erben gestorben. Die Chronik wird geschlossen.',
     ep_generation: 'Das Kontor ging in die nächste Generation über.', ep_children: 'Die Kinder werden das Erbe verwalten.',
     helpTitle: 'Wie man Herr von Sundhaven wird',
-    helpText: `<p><b>Das Spiel:</b> Du bist Kaufmann in Sundhaven. Klicke auf Gebäude, Schiffe, Karawanen und Passanten, um zu handeln, zu verhandeln und zu intrigieren. Die Zeit läuft in Tagen; mit den Knöpfen oben regelst du das Tempo.</p>
+    helpText: `<p><b>Neu hier?</b> Die Einführungsmission „Erste Schritte“ liegt unter Aufträge & Missionen. Sie begleitet neun Schritte und wandert nach Abschluss ins Archiv. Fragezeichen öffnen passende Erklärungen. Im Fenster jedes Schiffs zeigt die Spalte „Bester Gegenpart“, wer eine Ware anderswo teurer abnimmt oder billiger hergibt — grün zeigt die geschätzte Handelsspanne je Last.</p><p><b>Das Spiel:</b> Du bist Kaufmann in Sundhaven. Klicke auf Gebäude, Schiffe, Karawanen und Passanten, um zu handeln, zu verhandeln und zu intrigieren. Die Zeit läuft in Tagen; mit den Knöpfen unter der Karte regelst du das Tempo.</p>
 <p><b>Handel:</b> Schiffe und Karawanen bringen Waren billig und suchen andere teuer. Kaufe ihre Ware, verkaufe sie auf dem Markt an die Bürger – oder liefere Marktware an die Schiffe. Der Zoll frisst einen Teil; ein wohlgesonnener Zöllner oder nächtlicher Schmuggel hilft.</p>
+<p><b>Kontor & Lagerhaus:</b> Im Kontor verwaltest du Finanzen, Faktor und Geschäfte. Das Lagerhaus zeigt Waren, Qualität, Lagerplatz, Lieferungen und Ausbau. Zwei Schaltflächen verbinden beide Ansichten.</p>
 <p><b>Geld verdienen:</b> Handel, eigene Kogge auf Fahrt, Werkstätten (Gildelizenz nötig), Mietshäuser, Marktstände, Fischerboote, Geldverleih, Taverne, Badehaus, Zollpacht, Ämter, Würfelspiel und Lieferungen an die Kirche.</p>
 <p><b>Macht:</b> Im Rathaus sitzen sechs Ratsherren. Geschenke heben ihr Wohlwollen, Einfluss stellt Anträge zu Zoll, Marktgebühr, Wucherverbot, Stapelrecht, Badehausverbot und Monopolen. Mit Ruf und Freunden im Rat wirst du Ratsherr und Bürgermeister.</p>
 <p><b>Kirche:</b> Spenden, Stiftungen und Lieferungen heben deine Frömmigkeit. Der Pfarrer predigt für dich – oder gegen deine Konkurrenten. Ablässe tilgen Verdacht.</p>
@@ -367,7 +368,7 @@ HK.I18N = {
     dailyIncome: 'Avg. daily income', chart: 'Net worth over time', noLog: 'Nothing has happened yet.', activeEvents: 'Currently in town', personsTitle: 'Important people',
     legend: 'Click on buildings, ships, caravans and passers-by. Scroll to zoom, drag to move the map.', timeOfDay: 'Time of day', night: 'Night', morning: 'Morning', noon: 'Noon', evening: 'Evening', wClear: 'Clear sky', wCloudy: 'Overcast', wRain: 'Rain', wSnow: 'Snow',
     /* New quarters */
-    needCraftGuild: 'You must be a member of the craft guild.', needThreeVentures: 'The title requires three businesses of your own.', storageInUse: 'The store is still in use – empty your warehouse first.', fenceFull: 'The fence takes no more today.', noShipsHere: 'No foreign ship is in port.',
+    needCraftGuild: 'You must be a member of the craft guild.', needThreeVentures: 'The title requires three businesses of your own.', storageInUse: 'This store is needed for stock or expected deliveries.', fenceFull: 'The fence takes no more today.', noShipsHere: 'No foreign ship is in port.',
     craftJoined: 'The craft guild has admitted you.', ventureBought: '{venture} is now yours.', masterTitleLog: 'The guild names you alderman.', relicDonated: 'The abbey enshrines your relic. All of Sundhaven comes to pray.', hospitalEndowedLog: 'You are patron of the Holy Ghost hospital.', schoolEndowedLog: 'The Latin school now bears your name.', berthBuilt: 'The harbour now has {n} berths.', watchEnded: 'The harbour watch is sober and alert again.',
     src_ventures: 'Businesses', src_storage: 'Storage rent',
     ventures: 'Businesses', vEffect_plain: 'A solid business with steady income.', vEffect_dive: 'Smugglers, fences and sailors: money is made here that nobody should see.', vEffect_feed: 'Feeds the town – raises prosperity and earns double during famines.', vEffect_cooper: 'Barrels for brewery and smokehouse: your workshops produce 1 last more each.', vEffect_ships: 'Rope and sails: repairs of your cogs are 20 % cheaper; with both, voyages take a day less.', vEffect_smoke: 'Smokes up to 6 lasts of fish from your warehouse per day.', vEffect_stink: 'Stinks to high heaven but pays well. Costs a little reputation daily.', vEffect_cloth: 'Dyed cloth fetches 10 % more from ships and caravans.',
@@ -501,8 +502,9 @@ HK.I18N = {
     successionHead: 'A new master at the kontor', successionText: 'The old merchant is dead. {heir} ({trait}) takes over the kontor in the {gen}. generation. Reputation, influence and goodwill must be earned anew; holdings and titles stay with the family.', succession: '{old} has died. {heir} ({trait}) carries on the kontor.', diedNoHeir: '{name} died without an heir. The chronicle is closed.',
     ep_generation: 'The kontor passed to the next generation.', ep_children: 'The children will manage the inheritance.',
     helpTitle: 'How to become Lord of Sundhaven',
-    helpText: `<p><b>The game:</b> You are a merchant in Sundhaven. Click on buildings, ships, caravans and passers-by to trade, negotiate and scheme. Time passes in days; the buttons at the top set the pace.</p>
+    helpText: `<p><b>New here?</b> The “First steps” introductory mission is under Orders & missions. It guides nine steps and moves to the completed archive afterwards. Question marks open contextual explanations. In every ship's window the “Best counterpart” column shows who takes a good for more or gives it for less elsewhere — green shows the estimated trade spread per last.</p><p><b>The game:</b> You are a merchant in Sundhaven. Click on buildings, ships, caravans and passers-by to trade, negotiate and scheme. Time passes in days; the buttons below the map set the pace.</p>
 <p><b>Trade:</b> Ships and caravans bring goods cheaply and pay dearly for others. Buy their cargo and sell it at the market to the townspeople – or deliver market goods to the ships. Customs takes a cut; a friendly customs officer or smuggling at night helps.</p>
+<p><b>Office & warehouse:</b> The office manages finances, your factor and businesses. The warehouse shows goods, quality, space, deliveries and expansion. Two buttons connect both views.</p>
 <p><b>Making money:</b> trade, your own cog on voyages, workshops (guild licence required), rental houses, market stalls, fishing boats, money lending, tavern, bathhouse, tax farm, offices, dice and deliveries to the church.</p>
 <p><b>Power:</b> Six councillors sit in the town hall. Gifts raise their goodwill; influence lets you table motions on tariffs, market fees, usury, staple rights, the bathhouse and monopolies. With reputation and friends on the council you become councillor and mayor.</p>
 <p><b>Church:</b> Donations, endowments and deliveries raise your piety. The priest preaches for you – or against your rivals. Indulgences erase suspicion.</p>
@@ -570,3 +572,18 @@ HK.monthOf = function (day) {
   base.setUTCDate(base.getUTCDate() + day);
   return base.getUTCMonth();
 };
+
+Object.assign(HK.I18N.de, {
+  hudHelp_money: 'Kasse · Dein verfügbares Geld in Mark.',
+  hudHelp_rep: 'Ruf · Dein Ansehen in der Stadt, von 0 bis 100.',
+  hudHelp_influence: 'Einfluss · Dein politischer Handlungsspielraum. Hat keine feste Obergrenze.',
+  hudHelp_piety: 'Frömmigkeit · Dein religiöses Ansehen, von 0 bis 100.',
+  hudHelp_suspicion: 'Verdacht · Wie verdächtig deine Geschäfte sind, von 0 bis 100. Weniger ist besser; ab 50 wird die Anzeige hervorgehoben.',
+});
+Object.assign(HK.I18N.en, {
+  hudHelp_money: 'Treasury · Your available money in marks.',
+  hudHelp_rep: 'Reputation · Your standing in town, from 0 to 100.',
+  hudHelp_influence: 'Influence · Your political resources. There is no fixed upper limit.',
+  hudHelp_piety: 'Piety · Your religious standing, from 0 to 100.',
+  hudHelp_suspicion: 'Suspicion · How suspicious your dealings are, from 0 to 100. Lower is better; the indicator is highlighted at 50 or above.',
+});

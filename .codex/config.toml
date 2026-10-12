@@ -1,0 +1,10 @@
+# Projektbezogene Codex-Konfiguration für Hanse-Kontor.
+# Wird nur geladen, wenn dieses Projekt in Codex als vertrauenswürdig gilt.
+model = "gpt-6-astra"
+model_reasoning_effort = "medium"
+
+[agents]
+enabled = true
+default_subagent_model = "gpt-6-luna"
+default_subagent_reasoning_effort = "medium"
+max_concurrent_threads_per_session = 1

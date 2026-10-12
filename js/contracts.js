@@ -3,9 +3,9 @@
 'use strict';
 
 HK.CONTRACT_GIVERS = {
-  council:       { faction: 'patrizier', goods: ['grain', 'salt', 'timber', 'fish'], premium: [1.1, 1.25], panel: 'townhall' },
-  guild:         { faction: 'kaufleute', goods: ['cloth', 'iron', 'wool', 'tools'], premium: [1.1, 1.22], panel: 'guild' },
-  abbey:         { faction: 'kirche',    goods: ['wax', 'wine', 'beer', 'smokedfish'], premium: [1.15, 1.3], panel: 'monastery' },
+  council:       { faction: 'patrizier', goods: ['grain', 'salt', 'timber', 'fish', 'bricks', 'pitch', 'stone', 'dressedstone', 'flour'], premium: [1.1, 1.25], panel: 'townhall' },
+  guild:         { faction: 'kaufleute', goods: ['cloth', 'iron', 'wool', 'tools', 'hemp', 'flax', 'rope', 'canvas', 'hides', 'cattle'], premium: [1.1, 1.22], panel: 'guild' },
+  abbey:         { faction: 'kirche',    goods: ['wax', 'wine', 'beer', 'smokedfish', 'honey', 'cheese', 'milk', 'meat'], premium: [1.15, 1.3], panel: 'monastery' },
   dive:          { faction: 'zuenfte',   goods: ['spices', 'furs', 'wine', 'cloth'], premium: [1.15, 1.3], panel: 'dive', shady: true },
   harbourmaster: { faction: 'kaufleute', voyage: true, panel: 'harbourmaster' },
 };
@@ -19,6 +19,7 @@ HK.makeContract = function (st, giverId) {
   return c;
 };
 HK.refreshContracts = function (st) {
+  if (HK.introStage?.(st) < 2) { HK.introSync?.(st); return; }
   const C = st.contracts; C.offers = C.offers.filter(c => c.expires > st.day);
   const givers = Object.keys(HK.CONTRACT_GIVERS).filter(id => !C.offers.some(c => c.giver === id) && !C.active.some(c => c.giver === id));
   while (C.offers.length < 3 && givers.length) { const id = givers.splice(Math.floor(Math.random() * givers.length), 1)[0]; if (id === 'harbourmaster' && !st.ownShips.length) continue; C.offers.push(HK.makeContract(st, id)); }

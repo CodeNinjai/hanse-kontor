@@ -12,11 +12,12 @@ HK.migrateHooks.push(st => { if (!st.treaties) st.treaties = {}; if (!st.bills) 
 /* ---------- Handelsverträge ---------- */
 HK.hasTreaty = (st, city) => !!(st.treaties && st.treaties[city] && st.treaties[city].until > st.day);
 HK.signTreaty = function (st, city) {
-  const o = HK.ORIGIN[city]; if (!o || !o.sea) return { ok: false };
+  const o = HK.ORIGIN[city]; if (st.gameOver || !o || !o.sea) return { ok: false };
   if (HK.hasTreaty(st, city)) return { ok: false };
   if (st.rank < 1) return { ok: false, msg: 'needRankTrader' };
-  if (st.money < HK.CONST.TREATY_COST) return { ok: false, msg: 'notEnoughMoney' };
-  HK.book(st, 'politics', -HK.CONST.TREATY_COST); st.treaties[city] = { until: st.day + HK.CONST.TREATY_DAYS };
+  const cost = HK.treatyCost?.(st, city) ?? HK.CONST.TREATY_COST;
+  if (st.money < cost) return { ok: false, msg: 'notEnoughMoney' };
+  HK.book(st, 'politics', -cost); st.treaties[city] = { until: st.day + HK.CONST.TREATY_DAYS };
   HK.fac(st, 'kaufleute', 3); st.influence += 2;
   HK.log(st, 'treatySigned', { city: HK.name(o) }, 'good');
   return { ok: true };

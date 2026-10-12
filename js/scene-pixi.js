@@ -44,17 +44,19 @@ HK.PixiScene = {
     // Die Mischart gehört an den Filter, nicht an das Sprite: ein gefiltertes Sprite wird erst in eine
     // Zwischentextur gezeichnet, und dabei ginge ein 'add' am Sprite verloren — die schwarze Silhouette
     // läge dann ganz normal über der Stadt.
-    this.emA.filters = [new PIXI.BlurFilter({ strength: 6, quality: 3, blendMode: 'add', resolution: 0.5 })];
-    this.emB.filters = [new PIXI.BlurFilter({ strength: 1.5, quality: 2, blendMode: 'add', resolution: 1 })];
+    this.emA.filters = [new PIXI.BlurFilter({ strength: 3.5, quality: 3, blendMode: 'add', resolution: 0.5 })];
+    this.emB.filters = [new PIXI.BlurFilter({ strength: 0.9, quality: 2, blendMode: 'add', resolution: 1 })];
     this.lampenLage = C(); this.lampenVorrat = []; this.lampen = [];
     this.lg.glanz.addChild(this.emA, this.emB, this.lampenLage);
     this.app.stage.addChild(this.bild);
 
     this.lg.luft.blendMode = 'normal';
-    this.lg.korn.alpha = 0.04;
+    this.lg.korn.alpha = 0.012;
 
     this.cache = new Map();                // Schlüssel -> { g, schatten, marke }
     this.gestalten = new Map();            // Aussehen einer bewegten Figur -> fertige Geometrie
+    this.animiert = new Map();             // bewegte Schiffe: ein Grafikobjekt je Schiff
+    this.emMasken = new Map();             // bewegte Objekte verdecken nachts das Fensterlicht
     this.figuren = new Map();              // Aussehen + laufende Nummer -> dauerhaftes Grafikobjekt
     this.figurenBenutzt = [];
     this.frei = [];                        // Vorrat für bewegte Objekte
@@ -82,8 +84,15 @@ HK.PixiScene = {
       if (e.verl) for (const v of e.verl) v.destroy();
       if (e.emVerl) for (const v of e.emVerl) v.destroy();
       if (e.g) e.g.destroy(); if (e.gEm) e.gEm.destroy();
+      e.flagEm?.destroy(); e.flagG?.destroy();
     }
     this.cache.clear();
+    for (const e of this.animiert.values()) {
+      this.destroyAnimated(e);
+    }
+    this.animiert.clear();
+    for (const g of this.emMasken.values()) g.destroy({ children: true });
+    this.emMasken.clear();
     for (const g of this.gestalten.values()) { if (g._verl) for (const v of g._verl) v.destroy(); g.destroy(); }
     this.gestalten.clear();
     for (const g of this.figuren.values()) { g.unload(); g.destroy(); }
@@ -94,7 +103,10 @@ HK.PixiScene = {
     this.texturen.clear();
     for (const v of HK.Gfx._bleibend) v.destroy();
     HK.Gfx._bleibend.length = 0;
+    if (this._kVerl) for (const v of this._kVerl) v.destroy();
+    this._kVerl = null; this._kSeason = null;
     this._kFest = null; this._kGischt = null; this._stege = null;
+    this._schattenWerte = null; this._schattenLicht = null;
     this._wGrund = null; this._wOv = null; this._wellen = null;
     this.lg.kueste.removeChildren(); this.lg.wasser.removeChildren(); this.lg.objekte.removeChildren();
     this.emObjekte.removeChildren();
@@ -110,6 +122,11 @@ HK.PixiScene = {
     try { this.app.destroy(false, { children: true, texture: true }); } catch (e) { /* beim Abbau ist alles erlaubt */ }
     this.app = null;
   },
+  destroyAnimated(e) {
+    e.g.destroy({ children: true });
+    for (const v of e.verl) v.destroy();
+    for (const texture of e.textures || []) texture.destroy(true);
+  },
 
   /* Eine Leinwand als Textur, die beim Ändern des Inhalts aufgefrischt wird */
   tex(canvas, frisch) {
@@ -124,7 +141,7 @@ HK.PixiScene = {
   },
 
   /* Kleine Bildschirmebene über den vorhandenen Canvas-Code zeichnen und hochladen.
-     So bleiben Dunst, Lichtton und Vignette farblich genau das, was sie vorher waren. */
+     Kleine Texturen halten Farbverläufe unabhängig von der Fenstergröße günstig. */
   hilfsLeinwand(name, w, h) {
     this._hl = this._hl || {};
     let c = this._hl[name];
@@ -181,16 +198,9 @@ HK.PixiScene = {
       this._wGrund = new PIXI.Sprite(); this._wOv = new PIXI.Sprite(); this._wellen = new PIXI.Graphics();
       this.lg.wasser.addChild(this._wGrund, this._wOv, this._wellen);
     }
-    const marke = P.far.map(v => v | 0).join() + '|' + P.near.map(v => v | 0).join();
-    const c = this.hilfsLeinwand('wgrund', 96, 96);
-    if (marke !== this._wMarke) {
-      this._wMarke = marke;
-      const g = c.getContext('2d');
-      const gr = g.createLinearGradient(0, 0, 96 * 0.3, 96);
-      gr.addColorStop(0, S.rgb(P.far)); gr.addColorStop(1, S.rgb(P.near));
-      g.fillStyle = gr; g.fillRect(0, 0, 96, 96);
-      this.setzeSprite(this._wGrund, c, MW, MH, true);
-    } else { this._wGrund.width = MW; this._wGrund.height = MH; }
+    // Der Grundton kommt durchgehend aus offeneSee. Ein zweiter Verlauf in
+    // Weltkoordinaten erzeugt beim Zoomen sichtbare rechteckige Kartenränder.
+    this._wGrund.visible = false;
     this.setzeSprite(this._wOv, S.waterOverlay(), MW, MH, false);
 
     // Wellenkämme
@@ -217,7 +227,13 @@ HK.PixiScene = {
     if (!this._kFest) {
       this._kFest = new PIXI.Graphics(); this._kGischt = new PIXI.Graphics();
       this.lg.kueste.addChild(this._kFest, this._kGischt);
+    }
+    if (this._kSeason !== S.season()) {
+      this._kSeason = S.season(); this._kFest.clear();
+      if (this._kVerl) for (const v of this._kVerl) v.destroy();
+      this._kVerl = [];
       const pc = new HK.Gfx.PixiCtx(this._kFest.context);
+      pc.sammler = this._kVerl;
       const gischtAus = S.gischtAus; S.gischtAus = true;
       S.drawCoast(pc, S.palette(), 0);
       S.gischtAus = gischtAus;
@@ -226,7 +242,7 @@ HK.PixiScene = {
     for (const [A, B, n, , len] of S.coastEdges()) {
       for (let k = 0; k < len; k += 0.25) {
         const f = k / len; if (((k * 13) | 0) % 3) continue;
-        const q = HK.Iso.p(A[0] + (B[0] - A[0]) * f + n[0] * 0.3, A[1] + (B[1] - A[1]) * f + n[1] * 0.3, 0);
+        const q = HK.Iso.p(A[0] + (B[0] - A[0]) * f + n[0] * 0.3, A[1] + (B[1] - A[1]) * f + n[1] * 0.3, S.WATER_Z);
         g.rect(q[0] - 2 + Math.sin(t * 3 + k * 5), q[1], 3, 1);
       }
     }
@@ -250,18 +266,21 @@ HK.PixiScene = {
     // aufgefangen und in jedem Bild neu gezogen. Einzig der Baum zeichnet seinen selbst — und der liest
     // ohnehin die Uhr, weil er schwankt, bekommt also gleich eine Zeitstufe.
     const zeitStufe = Math.round(S.time * 8);
-    let haushalt = this.BAUHAUSHALT;          // so viele Auffrischungen je Bild, damit kein Ruckler entsteht
+    const frame = this.frameNr = (this.frameNr || 0) + 1;
     const lage = this.lg.objekte;
 
-    // Steg gehört zur Karte, nicht zu den Objekten
-    if (!this._stege) {
+    // Der feste Steg gehört zur Karte. Seine detaillierten Bohlen und Träger
+    // einmal aufbauen; nur Kräne und Ladung brauchen laufende Aktualisierung.
+    const neueStege = !this._stege;
+    if (neueStege) {
       this._stege = new PIXI.Graphics();
       this.lg.kueste.addChild(this._stege);
     }
     tick('vorbereitung');
-    const sg = this._stege; sg.clear();
-    const spc = new HK.Gfx.PixiCtx(sg.context); spc.fluechtig = true;
-    for (const d of S.docks()) S.drawPier(spc, d.pier, t);
+    if (neueStege) {
+      const spc = new HK.Gfx.PixiCtx(this._stege.context); spc.fluechtig = true;
+      for (const d of S.docks()) S.drawPier(spc, d.pier, t);
+    }
     tick('stege');
 
     for (const g of this.benutzt) { this.frei.push(g); g.visible = false; }
@@ -273,20 +292,49 @@ HK.PixiScene = {
     const schatten = [], lampen = [];
     let i = 0, eI = 0;
     const kinder = [], emKinder = [];
-    const liste = S.buildItems(null, st, season, t);
+    const animiertBenutzt = new Set();
+    const liste = S.buildItems(null, st, season, t, vr);
+    // Refresh the oldest visible shapes first. Taking the first twelve in draw
+    // order every frame starves later flags and trees on slower computers.
+    const auffrischen = new Set(liste.filter(it => {
+      const e = it.c && this.cache.get(it.c);
+      return e && (!it.box || S.inView(it.viewBox || it.box, vr)) && e.marke !== (e.zeit ? marke + '|' + zeitStufe : marke);
+    }).sort((a, b) => (this.cache.get(a.c).frame || 0) - (this.cache.get(b.c).frame || 0)).slice(0, this.BAUHAUSHALT).map(it => it.c));
     tick('liste');
     M.neuRuhend = 0; M.neuGestalt = 0; M.neuBewegt = 0;
     for (const it of liste) {
-      if (it.box && !S.inView(it.box, vr)) continue;
-      let g;
-      if (it.c) {
+      if (it.box && !S.inView(it.viewBox || it.box, vr)) continue;
+      let g, flagEntry;
+      if (it.r) {
+        // Keep one local shape per ship. Refresh its animation at ten frames per
+        // second while its position follows the simulation in every frame.
+        animiertBenutzt.add(it.r);
+        let e = this.animiert.get(it.r);
+        const revision = marke + '|' + it.v;
+        if (it.animal) {
+          e = this.animalGraphic(e, it);
+          this.animiert.set(it.r, e);
+        } else if (!e || e.marke !== revision) {
+          const gr = e ? e.g : new PIXI.Graphics();
+          if (e) { gr.clear(); for (const v of e.verl) v.destroy(); }
+          const verl = [], pc = new HK.Gfx.PixiCtx(gr.context); pc.sammler = verl;
+          pc.setTransform(1, 0, 0, 1, -it.ap[0], -it.ap[1]);
+          const saved = S.lamps; S.lamps = [];
+          it.f(pc);
+          const offsets = S.lamps.map(p => [p[0] - it.ap[0], p[1] - it.ap[1], p[2]]);
+          S.lamps = saved;
+          e = { g: gr, verl, marke: revision, lampen: offsets };
+          this.animiert.set(it.r, e); M.neuBewegt++;
+        }
+        g = e.g; g.position.set(it.ap[0], it.ap[1]); g.rotation = it.angle || 0;
+        for (const p of e.lampen) lampen.push([p[0] + it.ap[0], p[1] + it.ap[1], p[2]]);
+      } else if (it.c) {
         let e = this.cache.get(it.c);
-        const soll = e && e.zeit ? marke + '|' + zeitStufe : marke;
+        let neuGezeichnet = false;
         // Was noch nie gezeichnet wurde, muss sofort entstehen. Alles Übrige wartet, bis das Budget
         // dieses Bildes es zulässt: sonst baut sich nach jeder Zustandsänderung die halbe Stadt in
         // einem einzigen Bild neu, und das sieht man als Ruckler.
-        if (!e || (e.marke !== soll && haushalt > 0)) {
-          haushalt--;
+        if (!e || auffrischen.has(it.c) || e.revision !== it.v) {
           // Das Grafikobjekt bleibt bestehen und wird nur geleert. Es wegzuwerfen und neu anzulegen
           // hieße, für jede Auffrischung neue Puffer auf der Grafikkarte anzufordern — bei den
           // Objekten, die die Uhr lesen, achtmal je Sekunde, und der Speicher wächst mit.
@@ -299,33 +347,51 @@ HK.PixiScene = {
           // Nur wer sie liest, braucht später eine Zeitstufe im Schlüssel — alle anderen bleiben für immer liegen.
           const echteZeit = S.time; let liestZeit = false;
           Object.defineProperty(S, 'time', { configurable: true, get() { liestZeit = true; return echteZeit; }, set(v) { } });
-          const lampenVorher = S.lamps; S.lamps = [];
-          it.f(pc);
-          const lampen = S.lamps; S.lamps = lampenVorher;
-          delete S.time; S.time = echteZeit;
+          const lampenVorher = S.lamps, captureVorher = S.capturePennants;
+          const flags = []; S.lamps = []; S.capturePennants = flags;
+          let lampen;
+          try { it.f(pc); lampen = S.lamps; }
+          finally { S.lamps = lampenVorher; S.capturePennants = captureVorher; delete S.time; S.time = echteZeit; }
           const eAlt = e;
-          e = { g: gr, verl, schatten: S.schattenFang, lampen, marke: liestZeit ? marke + '|' + zeitStufe : marke, zeit: liestZeit,
+          e = { g: gr, verl, schatten: S.schattenFang, lampen, marke: liestZeit ? marke + '|' + zeitStufe : marke, zeit: liestZeit, frame, revision: it.v,
+                flags, flagG:eAlt?.flagG, flagEm:eAlt?.flagEm, flagFrame:-1,
                 gEm: eAlt ? eAlt.gEm : null, emVerl: eAlt ? eAlt.emVerl : null, emMarke: null };
           S.schattenFang = null;
           this.cache.set(it.c, e);
+          neuGezeichnet = true;
           M.neuRuhend++;
         }
-        g = e.g;
+        g = e.g; flagEntry = e;
+        // Detaillierte, unbewegte Häuser als fertiges Bild wiederverwenden.
+        // Beim Heranzoomen bleibt die Vektorgeometrie erhalten; die Textur
+        // wird nur genutzt, wenn sie mindestens die Bildschirmauflösung hat.
+        const aufloesung = Math.ceil(S.cam.z * S.RS);
+        const raster = it.c.startsWith('b') && !e.zeit && aufloesung <= 2 && g.context.instructions.length > 64;
+        if (raster) {
+          if (!g.isCachedAsTexture || e.rasterAufloesung !== aufloesung) {
+            g.cacheAsTexture({ resolution: aufloesung, antialias: true });
+            e.rasterAufloesung = aufloesung;
+          } else if (neuGezeichnet) g.updateCacheTexture();
+        } else if (g.isCachedAsTexture) g.cacheAsTexture(false);
         for (let q = 0; q < e.schatten.length; q += 5) schatten.push(e.schatten[q], e.schatten[q + 1], e.schatten[q + 2], e.schatten[q + 3], e.schatten[q + 4]);
         for (const l of e.lampen) lampen.push(l);
         // Nachts zusätzlich die Silhouette mit den leuchtenden Fenstern — nur einmal, dann liegt auch sie
         if (S.nightK > 0 && !this.OHNE_EM) {
-          if (!e.gEm || e.emMarke !== e.marke) {
+          const emMarke = e.marke + '|' + (e.revision ?? '');
+          if (!e.gEm || e.emMarke !== emMarke) {
             const ge = e.gEm || new PIXI.Graphics();
             if (e.gEm) { ge.context.clear(); if (e.emVerl) for (const v of e.emVerl) v.destroy(); }
             e.emVerl = [];
             const pe = new HK.Gfx.PixiCtx(ge.context); pe.sammler = e.emVerl;
             pe.schwarz = true;
-            const emVorher = S.em; S.em = pe;
+            const emVorher = S.em, lampenVorher = S.lamps; S.em = pe; S.lamps = [];
             S.schattenFang = [];               // Schlagschatten gehören nicht in die Emissionsebene
-            it.f(pe);
-            S.schattenFang = null; S.em = emVorher;
-            e.gEm = ge; e.emMarke = e.marke;
+            // Die Lichtquellen stehen bereits in e.lampen. Die Silhouette
+            // darf sie nicht bei jeder Auffrischung ein zweites Mal anmelden.
+            const captureVorher=S.capturePennants; S.capturePennants=[];
+            try { it.f(pe); }
+            finally { S.capturePennants=captureVorher; S.schattenFang = null; S.em = emVorher; S.lamps = lampenVorher; }
+            e.gEm = ge; e.emMarke = emMarke;
           }
           emKinder[eI++] = e.gEm;
         }
@@ -338,7 +404,10 @@ HK.PixiScene = {
           gc._verl = [];
           const pc = new HK.Gfx.PixiCtx(gc); pc.sammler = gc._verl;
           pc.setTransform(1, 0, 0, 1, -it.ap[0], -it.ap[1]);
+          const saved = S.lamps; S.lamps = [];
           it.f(pc);
+          gc._lampen = S.lamps.map(p => [p[0] - it.ap[0], p[1] - it.ap[1], p[2]]);
+          S.lamps = saved;
           this.gestalten.set(it.s, gc); M.neuGestalt++;
         } else {
           // Nach hinten stellen: eine Map behält die Einfügereihenfolge, und nur wenn wir sie beim
@@ -354,6 +423,7 @@ HK.PixiScene = {
         if (!g) { g = this.figurenFrei.pop() || new PIXI.Graphics(gc); g.context = gc; this.figuren.set(fs, g); }
         else if (g.context !== gc) g.context = gc;
         g.position.set(it.ap[0], it.ap[1]);
+        for (const p of gc._lampen || []) lampen.push([p[0] + it.ap[0], p[1] + it.ap[1], p[2]]);
         this.figurenBenutzt.push(fs);
       } else {
         g = this.frei.pop() || new PIXI.Graphics();
@@ -367,25 +437,70 @@ HK.PixiScene = {
       }
       g.visible = true;
       kinder[i++] = g;
+      // A waving pennant must not rebuild thousands of bricks, roof tiles and
+      // facade polygons. Its small graphic stays attached to the parent's depth.
+      if (flagEntry?.flags?.length) {
+        const e=flagEntry,phase=Math.floor(t*30);
+        if(!e.flagG)e.flagG=new PIXI.Graphics();
+        if(e.flagFrame!==phase){
+          e.flagG.clear();const pc=new HK.Gfx.PixiCtx(e.flagG.context);pc.fluechtig=true;
+          for(const args of e.flags)S.pennant(pc,...args,phase/30);
+          e.flagFrame=phase;
+        }
+        kinder[i++]=e.flagG;
+        if(S.nightK>0&&!this.OHNE_EM){
+          if(!e.flagEm){e.flagEm=new PIXI.Graphics(e.flagG.context);e.flagEm.tint=0x000000;}
+          emKinder[eI++]=e.flagEm;
+        }
+      }
+      if (!it.c && S.nightK > 0 && !this.OHNE_EM) {
+        // Dieselbe Geometrie als schwarze Silhouette teilen. Auch Personen,
+        // Wagen und Schiffe müssen die dahinter liegenden Fenster verdecken.
+        let mask = this.emMasken.get(g);
+        if (g.animalLayers) { mask = this.animalMask(g, mask); this.emMasken.set(g, mask); }
+        else if (!mask) { mask = new PIXI.Graphics(g.context); mask.tint = 0x000000; this.emMasken.set(g, mask); }
+        else if (mask.context !== g.context) mask.context = g.context;
+        mask.position.copyFrom(g.position); mask.rotation = g.rotation;
+        emKinder[eI++] = mask;
+      }
     }
+    for (const [id, e] of this.animiert) if (!animiertBenutzt.has(id)) {
+      this.destroyAnimated(e); this.animiert.delete(id);
+    }
+    for (const [source, mask] of this.emMasken) if (source.destroyed) { mask.destroy({ children: true }); this.emMasken.delete(source); }
+    lampen.push(...S.lamps);
     tick('durchlauf');
     // Reihenfolge setzen
-    lage.removeChildren();
-    for (let q = 0; q < i; q++) lage.addChild(kinder[q]);
-    this.emObjekte.removeChildren();
-    for (let q = 0; q < eI; q++) this.emObjekte.addChild(emKinder[q]);
+    this.ordneKinder(lage, kinder);
+    this.ordneKinder(this.emObjekte, emKinder);
     this.lampen = lampen;
     tick('einhaengen');
 
     // Schlagschatten aller ruhenden Objekte in einem Zug, mit dem Sonnenstand dieses Bildes
-    const sg2 = this.lg.schatten; sg2.clear();
-    const pcs = new HK.Gfx.PixiCtx(sg2.context); pcs.fluechtig = true;
-    for (let q = 0; q < schatten.length; q += 5) {
-      HK.Iso.shadow(pcs, schatten[q], schatten[q + 1], schatten[q + 2], schatten[q + 3], schatten[q + 4], sv.v, sv.a);
+    const licht = sv.v.map(v => Math.round(v * 64)).join(',') + '|' + Math.round(sv.a * 100);
+    const vorher = this._schattenWerte;
+    if (this._schattenLicht !== licht || !vorher || vorher.length !== schatten.length || schatten.some((v, q) => v !== vorher[q])) {
+      const sg2 = this.lg.schatten; sg2.clear();
+      const pcs = new HK.Gfx.PixiCtx(sg2.context); pcs.fluechtig = true;
+      for (let q = 0; q < schatten.length; q += 5) {
+        HK.Iso.shadow(pcs, schatten[q], schatten[q + 1], schatten[q + 2], schatten[q + 3], schatten[q + 4], sv.v, sv.a);
+      }
+      this._schattenWerte = schatten; this._schattenLicht = licht;
     }
     M.schattenZahl = schatten.length / 5;
     this.aufraeumen();
     tick('schatten');
+  },
+  // Nur neue, verschwundene oder versetzte Kinder anfassen. Die bisherige
+  // komplette Neueinhängung zwang Pixi, auch unveränderte Häuser neu zu ordnen.
+  ordneKinder(lage, kinder) {
+    const behalten = new Set(kinder);
+    for (let q = lage.children.length - 1; q >= 0; q--) if (!behalten.has(lage.children[q])) lage.removeChildAt(q);
+    for (let q = 0; q < kinder.length; q++) {
+      const g = kinder[q];
+      if (lage.children[q] === g) continue;
+      if (g.parent === lage) lage.setChildIndex(g, q); else lage.addChildAt(g, q);
+    }
   },
 
   /* Rauch, Möwen und der Auswahlrahmen */
@@ -393,7 +508,6 @@ HK.PixiScene = {
     const S = HK.Scene;
     const g = this.lg.vordergrund; g.clear();
     const pc = new HK.Gfx.PixiCtx(g.context); pc.fluechtig = true;
-    for (const s of S.smoke) { pc.fillStyle = `rgba(215,215,220,${0.32 * (1 - s.age / 4.5)})`; pc.beginPath(); pc.arc(s.x, s.y, 1.5 + s.age * 2, 0, 6.28); pc.fill(); }
     pc.strokeStyle = 'rgba(255,255,255,0.9)'; pc.lineWidth = 1.1;
     for (const gu of S.gulls) { const x = gu.x + Math.cos(gu.a) * gu.r, y = gu.y + Math.sin(gu.a) * gu.r * 0.5, f = Math.sin(t * 8 + gu.a) * 2; pc.beginPath(); pc.moveTo(x - 4, y); pc.quadraticCurveTo(x - 2, y - 1.5 - f, x, y); pc.quadraticCurveTo(x + 2, y - 1.5 - f, x + 4, y); pc.stroke(); }
     const hb = S.hover && S.hover.building, sb = S.selected && HK.BUILDING[S.selected];
@@ -401,7 +515,6 @@ HK.PixiScene = {
     if (hb && hb !== sb && hb.kind !== 'water') S.outline(pc, hb, 'rgba(255,255,255,0.85)', 1.2 / S.cam.z);
   },
 
-  /* Dunst, Lichtton, Wetter, Vignette, Korn */
   /* Dunst, Lichtton, Wetter, Vignette, Korn.
      Diese Ebenen sind großflächig und glatt — sie ändern sich über die Bildbreite kaum oder gar nicht.
      Darum entstehen sie in winzigen Zwischenbildern und werden aufgezogen: Ein Farbverlauf, der nur nach
@@ -425,20 +538,11 @@ HK.PixiScene = {
     this.lg.dunst.width = W; this.lg.dunst.height = H;
     this.lg.dunst.blendMode = 'multiply';
 
-    // Streulicht bei trübem Wetter: eine einzige Farbe
-    const hebung = 0.045 * (k - 1);
-    this.lg.hebung.visible = hebung > 0.002;
-    if (this.lg.hebung.visible) {
-      if (!this._hebungFertig) {
-        const hc = this.hilfsLeinwand('hebung', 4, 4), hg = hc.getContext('2d');
-        hg.fillStyle = '#716c5b'; hg.fillRect(0, 0, 4, 4);
-        this.setzeSprite(this.lg.hebung, hc, W, H, true); this._hebungFertig = true;
-      }
-      this.lg.hebung.width = W; this.lg.hebung.height = H;
-      this.lg.hebung.blendMode = 'screen'; this.lg.hebung.alpha = hebung;
-    }
+    // Keep blacks intact: weather changes illumination, never a screen-blended lift.
+    this.lg.hebung.visible = false;
 
-    // Tageslicht-Ton und Morgen-/Abendrot: flache Fläche plus waagerechter Verlauf
+    // Warm low sun and cool night illumination multiply the scene below.
+    // Emissive windows and lamps are composited afterwards and keep their warmth.
     const st = S.sunT();
     const lm = P.tint.map(v => Math.round(v * 100) / 100).join() + '|' + (st === null ? 'x' : st.toFixed(3));
     if (lm !== this._luftMarke) {
@@ -448,13 +552,14 @@ HK.PixiScene = {
       if (P.tint[3] > 0.005) { lg.fillStyle = S.rgb(P.tint, P.tint[3]); lg.fillRect(0, 0, 256, 8); }
       if (st !== null && Math.sin(st * Math.PI) < 0.45) {
         const g2 = lg.createLinearGradient(st < 0.5 ? 0 : 256, 0, st < 0.5 ? 256 : 0, 0);
-        g2.addColorStop(0, `rgba(255,190,110,${0.14 * (1 - Math.sin(st * Math.PI) / 0.45)})`);
+        g2.addColorStop(0, `rgba(255,190,110,${0.06 * HK.clamp(Math.sin(st * Math.PI) / .12, 0, 1) * (1 - Math.sin(st * Math.PI) / 0.45)})`);
         g2.addColorStop(1, 'rgba(255,190,110,0)');
         lg.fillStyle = g2; lg.fillRect(0, 0, 256, 8);
       }
       this.setzeSprite(this.lg.luft, lc, W, H, true);
     }
     this.lg.luft.width = W; this.lg.luft.height = H;
+    this.lg.luft.blendMode = 'multiply';
 
     // Wetter
     const wg = this.lg.wetter; wg.clear();
@@ -469,7 +574,7 @@ HK.PixiScene = {
       vg2.clearRect(0, 0, vw, vh);
       vg2.setTransform(vw / W, 0, 0, vh / H, 0, 0);
       const rg = vg2.createRadialGradient(W / 2, H / 2, H * 0.45, W / 2, H / 2, H * 0.95);
-      rg.addColorStop(0, 'rgba(0,0,0,0)'); rg.addColorStop(1, 'rgba(20,10,0,0.4)');
+      rg.addColorStop(0, 'rgba(0,0,0,0)'); rg.addColorStop(1, 'rgba(8,13,20,0.24)');
       vg2.fillStyle = rg; vg2.fillRect(0, 0, W, H);
       this.setzeSprite(this.lg.vignette, vc, W, H, true);
     }
@@ -482,6 +587,7 @@ HK.PixiScene = {
       this.setzeSprite(this.lg.korn, kc, W, H, true); this._kornFertig = true;
     }
     this.lg.korn.width = W; this.lg.korn.height = H;
+    this.lg.korn.alpha = .006 + .008 * P.amb;
   },
 
   /* Der Schein der Fenster und Laternen. Die Emissionsebene entsteht in kleiner Auflösung; die
@@ -512,17 +618,18 @@ HK.PixiScene = {
     this.weltEm.scale.set(S.cam.z * EM);
     this.weltEm.position.set(-S.cam.x * S.cam.z * EM, -S.cam.y * S.cam.z * EM);
     this.app.renderer.render({ container: this.weltEm, target: this.emRT, clear: true });
-    this.emA.width = W; this.emA.height = H; this.emA.alpha = 0.55 * k;
-    this.emB.width = W; this.emB.height = H; this.emB.alpha = 0.8 * k;
+    this.emA.width = W; this.emA.height = H; this.emA.alpha = 0.24 * k;
+    this.emB.width = W; this.emB.height = H; this.emB.alpha = 0.48 * k;
 
-    const tex = this.lampenTextur(), cz = S.cam.z, r = 40 * cz;
+    const tex = this.lampenTextur(), cz = S.cam.z, r = 25 * cz;
     let q = 0;
-    for (const [lx, ly] of this.lampen) {
+    for (const [lx, ly, role] of this.lampen) {
+      const strength = S.lampGlow(lx, ly, role); if (strength <= 0) continue;
       const x = (lx - S.cam.x) * cz, y = (ly - S.cam.y) * cz;
       if (x < -r || y < -r || x > W + r || y > H + r) continue;
       let sp = this.lampenVorrat[q];
       if (!sp) { sp = this.lampenVorrat[q] = new PIXI.Sprite(tex); sp.blendMode = 'add'; this.lampenLage.addChild(sp); }
-      sp.visible = true; sp.alpha = k; sp.width = r * 2; sp.height = r * 2; sp.position.set(x - r, y - r);
+      sp.visible = true; sp.alpha = k * strength; sp.width = r * 2; sp.height = r * 2; sp.position.set(x - r, y - r);
       q++;
     }
     for (let j = q; j < this.lampenVorrat.length; j++) this.lampenVorrat[j].visible = false;

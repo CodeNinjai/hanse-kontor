@@ -133,7 +133,7 @@ HK.Gfx.PixiCtx = class {
     // die Lichter dahinter verdecken. Nur die leuchtenden Fenster kommen farbig durch (siehe emit).
     if (this.schwarz) return { color: 0x000000, alpha: 1 };
     if (typeof v === 'string') { const c = HK.Gfx.farbe(v); return { color: c.color, alpha: c.alpha * this.globalAlpha }; }
-    if (v && v._pixiFill) return v._pixiFill(this.fluechtig, this.sammler); // Verlauf
+    if (v && v._pixiFill) return { ...v._pixiFill(this.fluechtig, this.sammler), alpha: this.globalAlpha }; // Verlauf
     if (v && v._quelle) return this._muster(v);          // Musterfüllung
     return { color: 0xffffff, alpha: this.globalAlpha };
   }

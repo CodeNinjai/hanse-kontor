@@ -1,0 +1,64 @@
+/* Handel → Preise & Verlauf */
+#side .preis-werkzeug { display:flex; flex-wrap:wrap; align-items:center; gap:8px 14px; margin:4px 0 12px; }
+#side .preis-zeiten { display:inline-flex; align-items:center; gap:4px; }
+#side .preis-zeiten small { color:var(--muted,#a69c81); margin-right:4px; }
+#side .preis-legende { display:inline-flex; align-items:center; gap:5px; font-size:11px; color:var(--muted,#a69c81); flex-wrap:wrap; }
+#side .preis-legende i, #side .preis-punkt { display:inline-block; width:7px; height:7px; border-radius:50%; flex:none; }
+#side .preis-legende i:not(:first-child) { margin-left:6px; }
+#side .d-shortage { background:var(--red); } #side .d-surplus { background:var(--green); } #side .d-normalDemand { background:var(--muted,#a69c81); opacity:.7; }
+#side .preis-punkt { margin-right:6px; vertical-align:1px; }
+
+#side .preis-tabelle { container-type:inline-size; }
+#side table.preis-liste { width:100%; table-layout:auto; }
+#side table.preis-liste th { white-space:nowrap; }
+#side .preis-sort { all:unset; cursor:pointer; font:inherit; color:inherit; text-transform:inherit; letter-spacing:inherit; }
+#side .preis-sort:hover, #side .preis-sort.aktiv { color:var(--gold); }
+#side .preis-sort:focus-visible { outline:1px solid var(--gold); }
+#side tr.preis-zeile { cursor:pointer; }
+#side tr.preis-zeile:hover td { background:#ffffff06; }
+#side tr.preis-zeile.gewaehlt td { background:#dab77c12; }
+#side tr.preis-zeile.offen td { border-bottom-color:transparent; }
+#side .preis-ware { all:unset; display:inline-flex; align-items:center; gap:6px; cursor:pointer; font-weight:600; white-space:nowrap; }
+#side .preis-ware:focus-visible { outline:1px solid var(--gold); outline-offset:2px; }
+#side .preis-pfeil { width:9px; color:var(--gold); font-size:11px; }
+#side .menu-art.preis-symbol { width:26px; height:19px; flex:none; }
+#side .preis-trenn, #side .preis-schwach { color:var(--muted,#a69c81); font-weight:normal; }
+#side .k-markt { white-space:nowrap; }
+#side .k-besucher { font-size:11.5px; }
+#side .k-besucher .rat { white-space:normal; }
+
+#side .preis-lage { display:inline-flex; align-items:center; gap:5px; white-space:nowrap; }
+#side .preis-lage small { color:var(--muted,#a69c81); font-size:11px; }
+#side .lage-balken { position:relative; display:inline-block; width:46px; height:4px; border-radius:2px; background:linear-gradient(90deg,#b1ce9f55,#ffffff22 50%,#eca39455); }
+#side .lage-balken i { position:absolute; top:-3px; width:2px; height:10px; margin-left:-1px; background:var(--gold); border-radius:1px; }
+
+#side .preis-funke { display:block; width:64px; height:18px; }
+#side .preis-funke path { fill:none; stroke-width:1.6; stroke-linejoin:round; stroke-linecap:round; stroke:var(--muted,#a69c81); }
+#side .preis-funke circle { fill:var(--gold); }
+#side .preis-funke.steigt path { stroke:var(--red); } #side .preis-funke.faellt path { stroke:var(--green); }
+#side .preis-trend { display:block; white-space:nowrap; font-size:10.5px; line-height:1.1; }
+#side .preis-trend.steigt { color:var(--red); } #side .preis-trend.faellt { color:var(--green); } #side .preis-trend.ruhig { color:var(--muted,#a69c81); }
+
+#side tr.preis-detail > td { padding:4px 8px 16px 30px; background:#dab77c0a; }
+#side .preis-details .market-details { margin:8px 0 10px; }
+#side .preis-kurve { width:100%; max-width:560px; height:auto; display:block; }
+#side .preis-kurve .achse { fill:none; stroke:#8b805f; }
+#side .preis-kurve text { fill:var(--muted,#a69c81); font:10px Georgia,serif; }
+#side .preis-kurve .bes-angebot { fill:var(--gold); fill-opacity:.45; stroke:none; }
+#side .preis-kurve .bes-gebot { fill:var(--green); fill-opacity:.45; stroke:none; }
+#side .preis-kurve .heute-kauf { fill:#947744; } #side .preis-kurve .heute-verk { fill:#567465; }
+#side .preis-spannen { font-size:12px; line-height:1.55; margin:8px 0; overflow-wrap:anywhere; }
+#side .preis-info { cursor:help; color:var(--muted,#a69c81); }
+#side table.preis-beob td, #side table.preis-beob th { font-size:12px; }
+#side tr.visitor-price-row.alt td { opacity:.62; }
+
+/* Schmale Seitenleiste: die Zusatzspalten wandern in die Aufklappung */
+@container (max-width: 820px) { #side .preis-liste .k-heute { display:none; } }
+@container (max-width: 640px) { #side .preis-liste .k-lage { display:none; } }
+@container (max-width: 540px) { #side .preis-liste .k-besucher, #side .preis-liste .k-vorrat { display:none; } #side tr.preis-detail > td { padding-left:8px; } }
+@container (max-width: 420px) { #side .preis-liste .k-trend, #side .menu-art.preis-symbol { display:none; } }
+#side table.preis-beob { width:100%; }
+#side table.preis-beob .preis-unter { display:block; color:var(--muted,#a69c81); font-size:10.5px; overflow-wrap:anywhere; }
+#side table.preis-liste td.k-trend { width:66px; }
+/* Die alte Kärtchen-Regel für .visitor-price-row (handbook.css) gilt nicht für die Tabellenzeile */
+#side tr.visitor-price-row { display:table-row; padding:0; border-top:0; }

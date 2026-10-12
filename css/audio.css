@@ -1,0 +1,14 @@
+.audio-controls { display: flex; align-items: center; gap: 5px; margin-left: auto; }
+.audio-controls button { min-height: 34px; padding: 5px 9px; background: #ffffff04; border: 1px solid #ffffff26; color: var(--ink-soft); font-size: 12px; }
+.audio-controls #btn-audio-mute { font-size: 20px; min-width: 35px; padding: 1px 7px; }
+.audio-controls #btn-audio-mute[aria-pressed=true] { opacity: .65; }
+.audio-controls button:hover { color: var(--gold); border-color: var(--gold); }
+.audio-sliders { display: grid; gap: 20px; margin: 25px 0; }
+.audio-sliders label { display: grid; grid-template-columns: minmax(0,1fr) auto; gap: 8px; font-size: 13px; }
+.audio-sliders output { color: var(--gold); font-variant-numeric: tabular-nums; }
+.audio-sliders input { grid-column: 1 / -1; width: 100%; accent-color: var(--gold); cursor: pointer; }
+#audio-status { font-size: 12px; color: var(--ink-soft); line-height: 1.6; min-height: 2em; }
+@media (max-width: 700px) { .scene-toolbar { flex-wrap: wrap; gap: 7px; } .audio-controls { margin-left: 0; } }
+.music-credits { margin-top:20px; padding-top:12px; border-top:1px solid #c8ad7930; color:var(--ink-soft); font-size:12px; line-height:1.7; }
+.music-credits summary { cursor:pointer; color:var(--gold); }
+.music-credits a { color:var(--gold); }

@@ -1,0 +1,85 @@
+/* NODE_PATH=/tmp/hanse-browser/node_modules node tools/handelsvorhaben-browser-test.cjs */
+'use strict';
+const { chromium } = require('playwright'), assert = require('node:assert/strict'), fs = require('node:fs');
+const shots = '/tmp/hanse-map-audit'; fs.mkdirSync(shots, { recursive: true });
+(async () => {
+  const browser = await chromium.launch({ headless: true, args: ['--no-sandbox', '--enable-unsafe-swiftshader'] });
+  try {
+    const page = await browser.newPage({ viewport: { width: 1600, height: 1050 }, locale: 'de-DE' }), errors = [];
+    page.on('pageerror', e => errors.push(e.message));
+    await page.addInitScript(() => { let seed = 42; Math.random = () => ((seed = (Math.imul(seed, 1664525) + 1013904223) >>> 0) / 4294967296); });
+    await page.goto(process.env.HK_URL || 'http://localhost:8778/');
+    await page.waitForFunction(() => HK.PixiScene.bereit);
+    await page.locator('#new-game-form button[type=submit]').click();
+    await page.evaluate(() => { HK.loop = () => {}; HK.UI.lehrgangAktion('zu'); HK.state.speed = 0; });
+    assert(await page.locator('#tabs [data-tab=planning]').count(), 'Planung ist über die Navigation nicht erreichbar');
+    assert.equal(await page.locator('.trade-teaser, .planning-link').count(), 0, 'Vorhaben-Werbung belegt den Aktionsbereich');
+    await page.locator('#tabs [data-tab=missions]').click();
+    assert.equal(await page.locator('.mission-card[data-contract]').count(), 2);
+    await page.locator('#tabs [data-tab=planning]').click();
+    assert(await page.locator('.trade-news-card').filter({ hasText: 'Fastenzeit' }).count(), 'Bestehender Festkalender fehlt');
+    const id = await page.evaluate(() => HK.state.contracts.offers.find(c => c.tradeTitle === 'grain').id);
+    await page.locator('#tabs [data-tab=missions]').click();
+    await page.locator(`[data-contract="${id}"] [data-action=acceptcontract]`).click();
+    await page.locator('#tabs [data-tab=planning]').click();
+    assert.equal(await page.evaluate(() => HK.state.contracts.active[0].deadline), 5);
+    assert(await page.locator('.plan-risk').isVisible(), 'Risiko einer verspäteten Beschaffung wird verschwiegen');
+    await page.locator('.trade-plan-card.committed').screenshot({ path: shots + '/trade-promise-choices.png' });
+    await page.locator('[data-action=tradeinfo]').click();
+    assert(await page.locator('.trade-news-card').filter({ hasText: '65 % Verlässlichkeit' }).count());
+    const before = await page.evaluate(() => ({ money: HK.state.money, free: HK.whFree(HK.state) }));
+    await page.locator('[data-action=tradeadvance][data-qty="18"]').click();
+    const advance = await page.evaluate(() => HK.state.tradePlanning.advances[0]);
+    assert.equal(await page.evaluate(() => HK.state.money), before.money - advance.cost);
+    assert.equal(await page.evaluate(() => HK.whFree(HK.state)), before.free - 18);
+    assert.equal(await page.evaluate(() => HK.state.warehouse.stock.grain || 0), 0);
+    assert.match(await page.locator('.plan-in-transit').textContent(), /18 Last/);
+    await page.locator('.trade-plan-card.committed').screenshot({ path: shots + '/trade-promise-prepaid.png' });
+    await page.evaluate(() => {
+      HK.state = HK.deserialize(HK.serialize(HK.state));
+      const inc = HK.state.incoming.find(i => i.id === HK.state.tradePlanning.advances[0].incomingId);
+      inc.delayResolved = true; HK.state.incoming = [inc]; HK.state.caravans = [];
+      window.oldSchedule = HK.scheduleArrival; window.oldEvent = HK.triggerEvent; HK.scheduleArrival = () => {}; HK.triggerEvent = () => {};
+      for (let i = 0; i < 4; i++) HK.tick(HK.state);
+      HK.UI.renderAll();
+    });
+    assert.equal(await page.evaluate(() => HK.state.tradePlanning.advances[0].status), 'delivered');
+    assert.equal(await page.evaluate(() => HK.state.warehouse.stock.grain), 18);
+    const unreserved = await page.evaluate(() => {
+      const caravan = HK.state.caravans[0];
+      return caravan.cargo.grain.qty + HK.state.tradePlanning.competition.filter(c => c.good === 'grain' && c.day === HK.state.day && c.visitor === caravan.name).reduce((q, c) => q + c.qty, 0);
+    });
+    assert.equal(unreserved, 6, 'Konkurrenz greift auf reservierte Waren zu');
+    const money = await page.evaluate(() => HK.state.money), reward = await page.evaluate(() => HK.state.contracts.active[0].reward);
+    await page.locator('#tabs [data-tab=missions]').click();
+    await page.locator(`[data-contract="${id}"] [data-action=delivercontract]`).click();
+    assert.equal(await page.evaluate(() => HK.state.money), money + reward);
+    assert.equal(await page.evaluate(() => HK.state.warehouse.stock.grain || 0), 0);
+    assert.equal(await page.evaluate(() => HK.state.contracts.done), 1);
+    await page.evaluate(() => {
+      HK.state.ships = []; HK.dockShip(HK.state, 'luebeck');
+      HK.state.ships[0].cargo = { salt: { qty: 30, price: 40 } };
+      HK.UI.inputs.qty = 10; HK.UI.inputs.qtyAll = false; HK.UI.inputs.smuggle = false;
+      HK.Scene.snapShips();
+    });
+    await page.locator('#city-links [data-place=harbour]').click();
+    assert(await page.locator('.rival-intent').count(), 'Geplante Konkurrenzkäufe fehlen');
+    const bulkBefore = await page.evaluate(() => ({ money: HK.state.money, salt: HK.state.warehouse.stock.salt, quote: HK.quoteBulkTrade(HK.state, HK.state.ships[0], 'salt', 10) }));
+    await page.locator('[data-action=tradebulk][data-good=salt]').click();
+    assert.equal(await page.evaluate(() => HK.state.money), bulkBefore.money - bulkBefore.quote.cost);
+    assert.equal(await page.evaluate(() => HK.state.warehouse.stock.salt), bulkBefore.salt + 10);
+    assert.equal(await page.locator('[data-action=tradebulk][data-good=salt]').count(), 0, 'Rabatt wiederholbar');
+    await page.evaluate(() => { HK.tick(HK.state); HK.UI.renderAll(); });
+    assert(await page.evaluate(() => HK.state.ships[0].cargo.salt.qty < 20), 'Konkurrenz verbraucht keine realen Waren');
+    await page.locator('#tabs [data-tab=planning]').click();
+    assert(await page.locator('.log').textContent().then(text => text.includes('kaufte')), 'Konkurrenz bleibt anonym');
+    await page.locator('#side .lang-btn[data-lang=en]').click();
+    assert.equal(await page.locator('#sidebar h2').textContent(), 'Trading ventures');
+    assert.match(await page.locator('#tabs [data-tab=planning]').textContent(), /Planning/);
+    await page.setViewportSize({ width: 390, height: 844 });
+    assert(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), 'Planung läuft auf Mobilgeräten über');
+    await page.screenshot({ path: shots + '/trade-planning-mobile.png', fullPage: true });
+    assert.deepEqual(errors, []);
+    console.log(JSON.stringify({ result: 'PASS', contract: 'fulfilled', advance: 'delivered once after save/load', bulk: 'discounted once', competition: 'real stock', languages: 2, mobile: true, errors }));
+  } finally { await browser.close(); }
+})().catch(e => { console.error(e); process.exitCode = 1; });

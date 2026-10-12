@@ -83,7 +83,7 @@ HK.Iso = {
       if (o.gableFill) { this.poly(ctx, [[x + w, y, z], [x + w, y + d, z], [x + w, ym, z + rh]], this.shade(o.gableFill, L.right), 'rgba(52,38,22,0.28)'); this.poly(ctx, [[x, y, z], [x, y + d, z], [x, ym, z + rh]], this.shade(o.gableFill, L.left)); }
       const front = [[x - ov, ym, z + rh], [x + w + ov, ym, z + rh], [x + w + ov, y + d + ov, z - ov * 0.5], [x - ov, y + d + ov, z - ov * 0.5]];
       this.poly(ctx, front, this.shade(col, L.roofL), 'rgba(52,38,22,0.28)');
-      this.roofLines(ctx, front, o.rows || 7, o.tileDark);
+      this.roofLines(ctx, front, o.rows || 7, o.tileDark, o.material);
       this.line(ctx, [x - ov, ym, z + rh], [x + w + ov, ym, z + rh], this.shade(col, 0.5), 1.6);
     } else {
       const xm = x + w / 2;
@@ -91,7 +91,7 @@ HK.Iso = {
       if (o.gableFill) { this.poly(ctx, [[x, y + d, z], [x + w, y + d, z], [xm, y + d, z + rh]], this.shade(o.gableFill, L.left), 'rgba(52,38,22,0.28)'); }
       const right = [[xm, y - ov, z + rh], [x + w + ov, y - ov, z - ov * 0.5], [x + w + ov, y + d + ov, z - ov * 0.5], [xm, y + d + ov, z + rh]];
       this.poly(ctx, right, this.shade(col, L.roofR), 'rgba(52,38,22,0.28)');
-      this.roofLines(ctx, right, o.rows || 7, o.tileDark);
+      this.roofLines(ctx, right, o.rows || 7, o.tileDark, o.material);
       this.line(ctx, [xm, y - ov, z + rh], [xm, y + d + ov, z + rh], this.shade(col, 0.5), 1.6);
     }
   },
@@ -136,13 +136,20 @@ HK.Iso = {
   window3(ctx, a, b, c, d, o) {
     o = o || {};
     const pts = [a, b, c, d];
+    const shape = o.arch ? [a, b, c, [(c[0] + d[0]) / 2, (c[1] + d[1]) / 2, c[2] + (o.archRise ?? (c[2] - b[2]) * 0.35)], d] : pts;
     // Rahmen
     const ex = (q, k) => [q[0] + (q[0] - (a[0] + b[0] + c[0] + d[0]) / 4) * k, q[1] + (q[1] - (a[1] + b[1] + c[1] + d[1]) / 4) * k, q[2] + (q[2] - (a[2] + b[2] + c[2] + d[2]) / 4) * k];
-    this.poly(ctx, pts.map(q => ex(q, 0.16)), o.frame || '#775f47');
-    const S = HK.Scene, lit = S && S.nightK && !S.picking && !S.emitOff && (((a[0] * 7.3 + a[1] * 5.1 + a[2] * 3.7) * 10) | 0) % 5 !== 0;
-    const pane = lit ? '#d2a563' : '#3d3730', shape = o.arch ? [a, b, c, [(c[0] + d[0]) / 2, (c[1] + d[1]) / 2, c[2] + (c[2] - b[2]) * 0.35], d] : pts;
+    this.poly(ctx, (o.archRise !== undefined ? shape : pts).map(q => ex(q, 0.16)), o.frame || '#775f47');
+    const S = HK.Scene, glow = S?.windowLight(a);
+    const pane = glow ? this.shade(glow.color, .65 + glow.brightness * .35) : '#34483d';
     this.poly(ctx, shape, pane);
-    if (lit) S.emit(shape, `rgba(255,${160 + ((a[0] * 13) | 0) % 30},${60 + ((a[1] * 17) | 0) % 30},${0.85 * S.nightK})`);
+    if (glow) S.emit(shape, `rgba(255,${glow.green},${glow.blue},${glow.brightness * S.nightK})`);
+    if (o.curtains && !S.picking) {
+      const at = (u, v) => a.map((value, k) => value + (b[k] - value) * u + (d[k] - value) * v);
+      const n = S.lightNoise(a[0] + a[2] * 3, a[1]), col = ['#b4a486', '#8b775e', '#9e9d83'][Math.floor(n * 3)];
+      this.poly(ctx, [at(0, .08), at(.18, .18), at(.27, .97), at(0, .97)], col);
+      this.poly(ctx, [at(.82, .18), at(1, .08), at(1, .97), at(.73, .97)], this.shade(col, .86));
+    }
     // Glasreflex und Kreuz
     this.poly(ctx, [a, b, [b[0], b[1], b[2] + (c[2] - b[2]) * 0.42], [a[0], a[1], a[2] + (d[2] - a[2]) * 0.42]], 'rgba(150,170,180,0.13)');
     const mid = [(a[0] + b[0]) / 2, (a[1] + b[1]) / 2, a[2]], midT = [(c[0] + d[0]) / 2, (c[1] + d[1]) / 2, c[2]];

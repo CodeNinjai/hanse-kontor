@@ -10,7 +10,7 @@ HK.facAvg = st => st.factions ? HK.FACTION_IDS.reduce((a, f) => a + st.factions[
 /* ---------- Titel: sechs Wege ---------- */
 HK.TITLES = [
   { id: 'merchant', name: { de: 'Handelsfürst', en: 'Merchant prince' }, conds: st => [
-    ['cond_worth', HK.netWorth(st), 600000], ['cond_volume', st.stats.volume, 1000000], ['cond_monopoly', HK.law(st, 'monopoly') !== 'none' && st.town.monopolyHolder === 'player' ? 1 : 0, 1], ['cond_storages', st.storages.filter(s => s.owner === 'player').length, 2], ['cond_kontor', Object.keys(st.kontors || {}).length, 2]] },
+    ['cond_worth', HK.netWorth(st), 450000], ['cond_volume', st.stats.volume, 1000000], ['cond_monopoly', HK.law(st, 'monopoly') !== 'none' && st.town.monopolyHolder === 'player' ? 1 : 0, 1], ['cond_storages', st.storages.filter(s => s.owner === 'player').length, 2], ['cond_kontor', Object.keys(st.kontors || {}).length, 2]] },
   { id: 'mayor', name: { de: 'Bürgermeister auf Lebenszeit', en: 'Mayor for life' }, conds: st => [
     ['cond_mayorYears', st.seat === 'mayor' && st.mayorSince !== undefined ? Math.floor((st.day - st.mayorSince) / 365) : 0, 3], ['cond_loyalCouncil', HK.councillors().filter(c => st.persons[c.id].loyalty >= 70).length, 3], ['cond_staple', HK.law(st, 'staple') ? 1 : 0, 1], ['cond_factionsHigh', HK.FACTION_IDS.filter(f => st.factions[f] >= 60).length, 2], ['cond_projects', HK.PROJECTS.filter(p => st.town.projects[p.id]).length, 2]] },
   { id: 'shipowner', name: { de: 'Reeder der Hanse', en: 'Shipowner of the Hanse' }, conds: st => [

@@ -1,0 +1,242 @@
+/* Room for decisions. Layout responds to the actual panel width, including stacked tablet views. */
+#side {
+  width:clamp(520px,42vw,760px); max-width:50%; flex:0 0 auto;
+  container:action-panel / inline-size;
+  --panel-gap:24px;
+  background:#142b25;
+}
+#side .sidebar-chapter { padding:14px var(--panel-gap); border-bottom:1px solid var(--line); background:linear-gradient(110deg,#c5a56e0d,transparent); }
+#side .sidebar-chapter>div { min-width:0; }
+#side .hud-rank { margin-top:5px; font-size:12px; letter-spacing:0; line-height:1.5; }
+#side .chapter-mark { display:grid; place-items:center; width:38px; height:38px; flex:none; border:1px solid #c5a56e40; border-radius:50%; color:var(--gold); background:#c5a56e08; font-size:20px; }
+.menu-group-label { padding:8px var(--panel-gap) 6px; color:#a6baad; font-size:10px; letter-spacing:1.4px; text-transform:uppercase; }
+.books-label { border-top:1px solid var(--line); }
+#side #city-links { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:9px; padding:0 var(--panel-gap) 12px; }
+#side #city-links button { min-height:78px; padding:6px; gap:3px; border-radius:9px; font-size:13px; font-weight:500; color:var(--ink-soft); background:linear-gradient(145deg,#ffffff08,#ffffff02); }
+#side #city-links .nav-picture { width:76px; height:46px; opacity:1; }
+#side #city-links button.active { color:var(--gold); background:radial-gradient(ellipse at 50% 0,#c5a56e29,transparent 90%),#253b2c; border-color:#c5a56e99; box-shadow:inset 0 -2px var(--gold); }
+#side #tabs { gap:8px; padding:0 var(--panel-gap) 16px; border-bottom:1px solid var(--line); }
+#side #tabs button { display:flex; justify-content:flex-start; align-items:center; gap:9px; min-height:48px; padding:9px 10px; border:1px solid #ffffff14; border-radius:7px; background:#ffffff03; font-size:12px; line-height:1.35; color:var(--ink-soft); text-align:left; overflow-wrap:anywhere; }
+#side #tabs .menu-symbol { width:26px; height:26px; min-width:26px; padding:3px; color:#a3b6a3; background:#ffffff04; border-radius:4px; }
+#side #tabs button.active { color:var(--gold); background:#c5a56e13; border-color:#c5a56e77; box-shadow:inset 3px 0 var(--gold); }
+#side #tabs button.active .menu-symbol { color:var(--gold); background:#c5a56e14; }
+#side #tabs button:hover { background:#ffffff08; border-color:#c5a56e70; }
+#side .badge { flex:none; padding:1px 5px; font-size:10px; }
+#side #sidebar { padding:24px var(--panel-gap) 32px; background:radial-gradient(ellipse at 10% 0,#81915d08,transparent 70%); scrollbar-gutter:stable; }
+#side #sidebar>section:not(.tradebox):not(.salt-story), #side .chapter-card {
+  padding:18px; margin-bottom:18px; border:1px solid #ffffff12; border-radius:10px; background:#ffffff03;
+}
+#side #sidebar>section>h3:first-child { margin-top:0; }
+#side #sidebar h3 { font-size:11px; letter-spacing:1.2px; }
+#side #sidebar p { line-height:1.75; }
+#side .panel-head, #side .work-heading { padding:0 0 20px; margin-bottom:20px; border-bottom:1px solid var(--line); }
+#side .panel-picture { width:90px; height:70px; }
+#side .illustrated-head h2, #side .work-heading h2 { font:30px/1.2 Georgia,serif; }
+#side .panel-head .meta, #side .work-heading p { font-size:12px; line-height:1.6; margin-top:5px; }
+#side .work-heading>.menu-symbol { width:49px; height:49px; padding:7px; border:1px solid #c5a56e40; border-radius:9px; background:#c5a56e0d; }
+#side button.small { font-size:12px; padding:8px 11px; min-height:34px; }
+#side .work-filters { gap:6px; margin:15px 0; }
+#side .work-filters button { padding:7px 10px; font-size:11px; min-height:32px; }
+#side .work-summary { gap:10px; }
+#side .work-summary>span { padding:13px 12px; font-size:11px; background:linear-gradient(145deg,#ffffff05,transparent); }
+#side .work-summary strong { font-size:28px; }
+#side .tradebox { padding:20px; border-radius:11px; }
+#side .selected-good-picture { width:125px; height:91px; }
+#side #sidebar .trade-title h3 { font:29px Georgia,serif; letter-spacing:0; }
+#side .tradebox .qty-row { padding:10px 0; border-top:1px solid var(--line); border-bottom:1px solid var(--line); }
+#side .trade-availability { margin:14px 0; font-size:11px; }
+#side .trade-availability>span { padding:9px 10px; }
+#side .trade-availability strong { font:22px Georgia,serif; color:var(--gold); }
+#side .trade-actions button { padding:13px 12px; font-size:13px; border-radius:6px; }
+#side .trade-note { font-size:11px; line-height:1.6; }
+#side .goods-grid { gap:9px; }
+#side .goods-grid .commodity { padding:11px 6px; border-radius:9px; }
+#side .commodity-art .menu-art { width:86px; height:61px; }
+#side .goods-grid .commodity-name { min-height:30px; font-size:12px; }
+#side .goods-grid .commodity-prices { font-size:18px; gap:7px; margin-top:8px; }
+#side .goods-grid .commodity-prices small { font-size:10px; }
+#side .goods-legend { font-size:11px; margin-top:12px; }
+#side .trade-teaser { padding:12px; gap:12px; border-radius:9px; }
+#side .trade-teaser .menu-art { width:62px; height:46px; }
+#side .trade-teaser b, #side .plan-heading b { font-size:14px; }
+#side .trade-teaser small { font-size:11px; margin-top:4px; }
+#side .visitor-goods, #side .warehouse-goods { gap:12px; }
+#side .visitor-good { padding:15px; border-radius:9px; }
+#side .visitor-good-head { gap:9px; }
+#side .visitor-good-head .menu-art { width:68px; height:52px; }
+#side .visitor-good-head b, #side .warehouse-good b { font-size:13px; }
+#side .visitor-good small, #side .warehouse-good small { font-size:11px; }
+#side .visitor-good-price>strong { font-size:27px; }
+#side .warehouse-good { padding:14px; gap:10px; border-radius:9px; }
+#side .warehouse-good .menu-art { width:72px; height:53px; }
+#side .captain-card { padding:15px; border-radius:9px; }
+#side .captain-card .person-picture { width:76px; height:70px; }
+#side .person { padding:14px 0; gap:12px; font-size:13px; }
+#side .person .person-picture { width:48px; height:48px; }
+#side .person .who small { font-size:11px; }
+#side .mission-card { padding:18px; margin:14px 0; border-radius:10px; }
+#side .mission-card small, #side .trade-plan-card small, #side .trade-news-card small, #side .trade-supply small { font-size:11px; }
+#side .mission-card p, #side .mission-steps, #side .plan-stock { font-size:13px; }
+#side .mission-card .plan-heading .menu-art, #side .trade-plan-card .plan-heading .menu-art { width:66px; height:50px; }
+#side .mission-terms { background:#ffffff04; padding:12px; border-radius:6px; margin:14px 0; gap:6px; font-size:13px; }
+#side .mission-card progress, #side .trade-plan-card progress { height:7px; accent-color:var(--gold); }
+#side .mission-list { display:grid; gap:12px; }
+#side .mission-list .mission-card { margin:0; display:flex; flex-direction:column; }
+#side .mission-list .mission-card>button:last-child { margin-top:auto; }
+#side .trade-plan-card { padding:18px; gap:12px; border-radius:10px; }
+#side .plan-terms { gap:12px; background:#ffffff04; padding:12px; border-radius:6px; }
+#side .plan-terms span { font-size:11px; }
+#side .plan-terms strong { font-size:21px; }
+#side .procurement-options { display:grid; grid-template-columns:repeat(auto-fit,minmax(min(220px,100%),1fr)); gap:12px; }
+#side .procurement-option { padding:13px; border:1px solid var(--line); border-radius:7px; align-content:start; }
+#side .procurement-option button { margin-top:5px; }
+#side .trade-supplies, #side .trade-news { gap:12px; }
+#side .trade-supply, #side .trade-news-card { padding:15px; border-radius:9px; }
+#side .post-list { gap:11px; }
+#side .post-envelope { padding:16px; gap:13px; border-radius:10px; align-items:center; }
+#side .post-envelope .person-picture { width:49px; height:49px; }
+#side .post-envelope b { font-size:14px; }
+#side .post-envelope small { font-size:11px; }
+#side .post-letter { padding:25px; border-radius:11px; background:radial-gradient(ellipse at 100% 0,#c5a56e19,transparent 65%),#21332a; }
+#side .post-letter-top .person-picture { width:60px; height:60px; }
+#side .post-letter-top small, #side .post-outgoing small { font-size:11px; }
+#side #sidebar .post-letter h3 { font:24px/1.4 Georgia,serif; letter-spacing:0; }
+#side .post-letter p { font:16px/1.85 Georgia,serif; }
+#side .post-reply-option>small { font-size:11px; }
+#side .post-replies button { padding:11px 14px; }
+#side .journal-entry { padding:15px 17px; }
+#side .journal-entry p { font-size:13px; }
+#side .journal-kind, #side .journal-entry>small { font-size:11px; }
+#side .journal-search { font-size:12px; }
+#side .journal-notepad textarea { font-size:13px; padding:14px; }
+#side .salt-story { padding:20px; border-radius:10px; }
+#side .salt-story p { font-size:13px; }
+#side .salt-story small { font-size:11px; }
+#side .salt-people>div { padding:12px; }
+#side .salt-people svg { width:58px; height:58px; }
+#side .salt-people b { font-size:12px; }
+#side .menu { padding:12px var(--panel-gap); background:#11261f; gap:10px; }
+#side .menu button { font-size:11px; }
+@container action-panel (min-width:600px) {
+  #sidebar .mission-list, #sidebar .trade-supplies, #sidebar .trade-news { grid-template-columns:repeat(2,minmax(0,1fr)); }
+}
+@container action-panel (max-width:450px) {
+  #side #city-links .nav-picture { width:64px; height:45px; }
+  #side #city-links button { min-height:78px; font-size:12px; }
+  #side #tabs { grid-template-columns:repeat(2,minmax(0,1fr)); }
+  #side #tabs button { padding:8px; gap:7px; font-size:12px; }
+  #side #tabs .menu-symbol { width:24px; height:24px; min-width:24px; }
+  #side #sidebar .tradebox, #side #sidebar .post-letter { padding:15px; }
+  #side #sidebar .selected-good-picture { width:95px; height:70px; }
+  #side #sidebar .commodity-art .menu-art { width:68px; height:49px; }
+  #side #sidebar .visitor-good { padding:11px; }
+  #side #sidebar .visitor-good-head { flex-wrap:wrap; }
+  #side #sidebar .warehouse-good { flex-direction:column; align-items:flex-start; }
+  #side #sidebar .salt-people>div { padding:8px 4px; }
+}
+@media(max-width:1100px) and (min-width:901px) {
+  #side { --panel-gap:18px; }
+  .scene-toolbar { flex-wrap:wrap; gap:7px; }
+  .district-control { flex:1; }
+  #zoom-ctl { gap:4px; }
+  #zoom-ctl button { padding:6px 8px; }
+  .timebar { flex-wrap:wrap; }
+}
+@media(max-width:900px) {
+  #side { width:100%; max-width:none; --panel-gap:22px; }
+  #side #sidebar { scrollbar-gutter:auto; }
+}
+@media(max-width:560px) {
+  #side { --panel-gap:16px; }
+  #side .sidebar-chapter { padding-top:17px; }
+  #side #tabs { gap:7px; }
+  #side #sidebar { padding-top:20px; }
+  #side .illustrated-head h2, #side .work-heading h2 { font-size:27px; }
+  #side .goods-grid { gap:7px; }
+  #side .goods-grid .commodity { padding:9px 4px; }
+  #side .goods-grid .commodity-prices { font-size:17px; }
+  #side #sidebar>section:not(.tradebox):not(.salt-story) { padding:15px; }
+}
+
+/* Explanations are disclosed on demand; each question belongs to its heading. */
+#side .context-heading { display:flex; align-items:center; justify-content:space-between; gap:12px; position:relative; min-width:0; margin-bottom:12px; }
+#side .context-heading>h2, #side .context-heading>h3 { margin:0; min-width:0; }
+#side .panel-head>div, #side .work-heading>div { flex:1; min-width:0; }
+#side .panel-head .context-heading, #side .work-heading .context-heading { margin-bottom:0; }
+#side .context-help { flex:0 0 30px; width:30px; position:static; }
+#side .context-help>summary { display:flex; align-items:center; justify-content:center; list-style:none; width:30px; height:30px; padding:0; margin:0; cursor:pointer; border:1px solid #d5b47860; border-radius:50%; color:var(--gold); background:#ffffff06; font:600 15px/1 Georgia,serif; }
+#side .context-help>summary::-webkit-details-marker { display:none; }
+#side .context-help>summary::before { content:none; }
+#side .context-help>summary>span { margin:0; }
+#side .context-help>summary:hover, #side .context-help[open]>summary { background:#d5b47824; border-color:var(--gold); }
+#side .context-help>summary:focus-visible { outline:2px solid var(--gold); outline-offset:3px; }
+#side .context-help-body { position:absolute; right:0; top:calc(100% + 8px); z-index:20; width:min(360px,calc(100vw - 64px)); max-height:240px; overflow:auto; padding:16px; color:var(--ink); background:#213e34; border:1px solid #d5b47860; border-radius:8px; box-shadow:0 10px 26px #0008; font:13px/1.65 system-ui,sans-serif; text-transform:none; letter-spacing:normal; }
+#side .goods-list-head { position:relative; }
+#side .goods-list-head>span:nth-child(2) { margin-left:auto; }
+#side #sidebar .context-heading>h3 { font-size:12px; }
+#side .intro-mission { margin-bottom:18px; }
+#side .intro-mission .menu-symbol { width:48px; height:48px; }
+#side .intro-mission .intro-next { font-size:13px; }
+#side .intro-task { padding:15px 0; }
+#side #sidebar .intro-task>h3 { font:21px/1.3 Georgia,serif; text-transform:none; letter-spacing:normal; color:var(--gold); }
+#side .intro-task>p { font-size:14px; line-height:1.65; }
+#side .intro-task>small { display:block; margin:10px 0; color:var(--gold); }
+#side .intro-steps { list-style:none; margin:8px 0 0; padding:0; }
+#side .intro-steps>li { display:flex; align-items:center; gap:12px; padding:11px 8px; border-top:1px solid var(--line); color:var(--ink-soft); font-size:13px; }
+#side .intro-steps>li>span { width:26px; flex:0 0 26px; text-align:center; }
+#side .intro-steps>li>div { display:grid; gap:4px; }
+#side .intro-steps .done { color:#a8c9a4; }
+#side .intro-steps .current { color:var(--gold); background:#d5b4780c; border-radius:6px; }
+
+/* Office administration and warehouse logistics have distinct, related views. */
+#side .business-switch { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; margin:0 0 20px; }
+#side .business-switch button { display:flex; align-items:center; justify-content:flex-start; gap:9px; min-width:0; padding:9px 11px; border-radius:8px; color:var(--ink-soft); background:#ffffff04; border:1px solid var(--line); font-size:13px; }
+#side .business-switch .menu-art { flex:none; width:48px; height:36px; }
+#side .business-switch button.active { background:#c5a56e15; color:var(--gold); border-color:#c5a56e88; box-shadow:inset 0 -2px var(--gold); }
+#side .business-summary { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:10px; margin:10px 0 18px; }
+#side .business-summary>div { min-width:0; padding:12px 10px; border:1px solid var(--line); border-radius:8px; background:#ffffff04; }
+#side .business-summary>div>small { display:block; color:var(--ink-soft); font-size:11px; line-height:1.45; min-height:32px; }
+#side .business-summary strong { display:block; color:var(--gold); font:25px/1.3 Georgia,serif; overflow-wrap:anywhere; }
+#side .business-summary strong.neg { color:#e29481; }
+#side .business-summary strong>small { font:10px system-ui,sans-serif; color:var(--ink-soft); }
+#side .warehouse-capacity .business-summary { margin-bottom:12px; }
+#side .warehouse-space-bar { display:flex; height:8px; border-radius:8px; overflow:hidden; background:#071a17; }
+#side .warehouse-space-bar>.stored { background:#a1b9a1; }
+#side .warehouse-space-bar>.reserved { background:repeating-linear-gradient(110deg,#b89655,#b89655 5px,#ddbf79 5px,#ddbf79 8px); }
+#side .warehouse-good { text-align:left; color:var(--ink); cursor:pointer; }
+#side .warehouse-good:hover { background:#c5a56e12; border-color:#c5a56e77; }
+#side .warehouse-good:focus-visible { outline:2px solid var(--gold); outline-offset:3px; }
+#side .warehouse-good .quality-badge { margin-top:5px; }
+#side .warehouse-delivery-list { display:grid; gap:12px; margin:14px 0; }
+#side .warehouse-delivery { display:flex; align-items:flex-start; gap:12px; padding:13px; border:1px solid var(--line); border-radius:8px; background:#ffffff03; }
+#side .warehouse-delivery>.menu-art { flex:none; width:62px; height:50px; }
+#side .warehouse-delivery>div { min-width:0; display:grid; gap:6px; }
+#side .warehouse-delivery b { font-size:13px; }
+#side .warehouse-delivery small { color:var(--ink-soft); font-size:11px; line-height:1.5; }
+#side .warehouse-delivery button { justify-self:start; margin-top:4px; }
+#side .business-portfolio>summary, #side .warehouse-stores>summary { padding:12px 0; color:var(--gold); font-size:12px; cursor:pointer; }
+#side .business-assets { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:9px; margin:7px 0 15px; }
+#side .business-assets button { min-width:0; text-align:left; overflow-wrap:anywhere; }
+#side .business-assets small { display:block; font-size:10px; margin-top:4px; color:var(--ink-soft); }
+@container action-panel (max-width:450px) {
+  #side .business-switch button { gap:6px; padding:7px; font-size:12px; }
+  #side .business-switch .menu-art { width:37px; height:31px; }
+  #side .business-summary { gap:6px; }
+  #side .business-summary>div { padding:10px 8px; }
+  #side .business-summary strong { font-size:22px; }
+  #side .business-summary>div>small { font-size:10px; }
+  #side .business-assets { grid-template-columns:1fr; }
+}
+.goods-filter { display:block; width:100%; margin:0 0 14px; min-height:42px; }
+.rural-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:12px; }
+.rural-site { display:flex; flex-direction:column; align-items:flex-start; gap:8px; padding:16px; text-align:left; }
+.rural-site .menu-art { width:86px; height:64px; }
+.rural-recipe { display:flex; flex-wrap:wrap; align-items:center; gap:12px; margin:18px 0; }
+.rural-recipe span { display:flex; flex-direction:column; align-items:center; max-width:105px; }
+.rural-recipe .menu-art { width:80px; height:60px; }
+.rural-crops { margin-top:20px; }
+.rural-crops h3 { display:flex; justify-content:space-between; align-items:center; }
+.rural-stock-row { display:flex; gap:12px; align-items:center; padding:12px 0; border-bottom:1px solid var(--line); }
+.rural-stock-row .menu-art { width:80px; height:60px; flex:none; }
+.rural-stock-row>div { display:flex; flex-direction:column; gap:6px; min-width:0; }
+.rural-entry .menu-symbol { width:25px; height:25px; vertical-align:middle; margin-right:10px; }

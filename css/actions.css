@@ -1,0 +1,193 @@
+/* Shared action layout across places, trade and personal books. */
+#side #sidebar>section:not(.tradebox):not(.salt-story):not(.post-letter):not(.warehouse-expansion) {
+  padding:0 0 18px; margin:0 0 20px; border:0; border-bottom:1px solid #b9c5a51c; border-radius:0; background:none;
+}
+#side #sidebar>section>h3:first-child,
+#side #sidebar>section>.context-heading:first-child h3 {
+  margin:0 0 12px; padding:0; border:0; color:#c8b78d; font-size:10px; letter-spacing:1.5px;
+}
+#side #sidebar>section>.context-heading:first-child { border:0; padding:0; margin:0 0 12px; }
+#side #sidebar>section>.context-heading:first-child h3 { margin:0; }
+#side #sidebar>section>p.hint { margin:8px 0 12px; font-size:11px; color:#a8bba9; }
+#side #sidebar .btn-row { align-items:center; gap:8px; }
+#side #sidebar .btn-row>button, #side #sidebar .btn-row>.work-back { margin:0; }
+#side #sidebar button.small { border-radius:6px; line-height:1.35; white-space:normal; }
+#side #sidebar button:focus-visible, #side #sidebar [role=button]:focus-visible { outline:2px solid #e4c17e; outline-offset:3px; }
+#side #sidebar .location-actions { display:flex; justify-content:space-between; align-items:center; margin:0 0 18px; gap:8px; }
+#side #sidebar .location-actions .work-back { padding:7px 0; min-height:34px; border-color:transparent; background:none; color:#b9c8b5; text-align:left; }
+#side #sidebar .location-actions .work-back:hover { color:#ecd3a0; }
+#side #sidebar button.map-action { display:inline-flex; align-items:center; justify-content:center; flex:none; gap:6px; min-height:34px; padding:6px 10px; border-radius:18px; border-color:#c6b17b55; background:#c6b17b0a; color:#dec38a; font-size:11px; }
+#side #sidebar .map-action .menu-symbol { width:19px; height:19px; flex:none; }
+#side #sidebar button.map-action:hover { background:#c6b17b1c; border-color:#e3c88d; }
+#side #sidebar .decision-card, #side #sidebar .decision-row {
+  border:1px solid #c8ac6e35; border-radius:9px; background:radial-gradient(ellipse at 0 0,#c8a66512,transparent 75%),#ffffff02;
+}
+#side #sidebar .decision-card { display:grid; grid-template-columns:70px minmax(0,1fr) minmax(100px,auto); gap:12px; align-items:center; padding:14px; margin:12px 0; width:100%; min-width:0; }
+#side #sidebar .btn-row>.decision-card { flex:1 1 100%; margin:0; }
+#side #sidebar .decision-card>.menu-art { width:70px; height:64px; filter:drop-shadow(0 4px 4px #061b1740); }
+#side #sidebar .decision-copy { min-width:0; display:grid; gap:6px; }
+#side #sidebar .decision-copy>b { color:#e3d9b8; font:17px/1.3 Georgia,serif; }
+#side #sidebar .decision-copy>small { color:#b6c2ab; font:11px/1.5 system-ui,sans-serif; }
+#side #sidebar .decision-purchase { display:grid; justify-items:stretch; align-content:center; gap:7px; max-width:180px; min-width:100px; text-align:right; }
+#side #sidebar .decision-price { color:#e9d7a9; font:22px/1.2 Georgia,serif; white-space:nowrap; }
+#side #sidebar .decision-price>small { display:inline; color:#b9c4ac; font:10px system-ui,sans-serif; }
+#side #sidebar button.decision-commit { margin:0; min-height:34px; padding:7px 12px; border:1px solid #d4b377; border-radius:6px; background:#d7b77a; color:#21352a; font-size:12px; font-weight:600; }
+#side #sidebar button.decision-commit:hover:not(:disabled) { background:#edcf95; }
+#side #sidebar button.decision-commit:disabled { opacity:1; background:#d7b77a09; border-color:#d7b77a30; color:#a9b6a4; }
+#side #sidebar .decision-reason { display:block; margin:0; color:#d9b686; font:10px/1.5 system-ui,sans-serif; }
+#side #sidebar table.action-table { display:block; width:100%; border:0; margin:12px 0; }
+#side #sidebar table.action-table>tbody { display:grid; gap:9px; }
+#side #sidebar table.action-table tr { display:grid; grid-template-columns:minmax(0,1fr) auto; gap:12px; align-items:center; padding:13px; border:1px solid #b9c5a521; border-radius:8px; background:#ffffff03; }
+#side #sidebar table.action-table tr.three-cells { grid-template-columns:minmax(0,1fr) auto auto; }
+#side #sidebar table.action-table td { display:block; min-width:0; padding:0; border:0; white-space:normal; font-size:12px; }
+#side #sidebar table.action-table td>button { margin:3px 0; }
+#side #sidebar .choice-main { display:flex; align-items:center; gap:10px; }
+#side #sidebar .choice-main>.menu-art { flex:none; width:64px; height:52px; }
+#side #sidebar .choice-copy { min-width:0; line-height:1.6; color:#d3d7bc; }
+#side #sidebar .choice-copy b { font-size:13px; color:#e5dcbe; }
+#side #sidebar .choice-copy small { color:#b3c1aa; font-size:10px; }
+#side #sidebar .business-assets>button:not(.warehouse-store) { display:flex; flex-wrap:wrap; align-items:center; gap:8px; padding:10px; border-color:#b9c5a525; border-radius:8px; background:#ffffff03; }
+#side #sidebar .business-assets>button:not(.warehouse-store)>.menu-art { width:42px; height:34px; flex:none; }
+#side #sidebar .business-assets>button:not(.warehouse-store)>small { flex-basis:100%; }
+#side #sidebar .business-summary { gap:0; margin:0 0 16px; }
+#side #sidebar .business-summary>div { padding:0 12px; border:0; border-left:1px solid #b9c5a51c; border-radius:0; background:none; }
+#side #sidebar .business-summary>div:first-child { border-left:0; padding-left:0; }
+#side #sidebar .office-ledger td { padding-top:9px; padding-bottom:9px; }
+#side #sidebar .rural-grid { grid-template-columns:repeat(2,minmax(0,1fr)); gap:9px; margin-bottom:20px; }
+#side #sidebar .rural-site { min-width:0; position:relative; padding:13px; gap:7px; background:linear-gradient(125deg,#bba77510,transparent); border:1px solid #b9c5a528; border-radius:9px; }
+#side #sidebar .rural-site .menu-art { width:76px; height:58px; }
+#side #sidebar .rural-site b { font:16px/1.3 Georgia,serif; color:#e3d8b8; }
+#side #sidebar .rural-site small { font-size:10px; color:#afc0aa; line-height:1.5; }
+#side #sidebar .rural-site:hover { background:#c6ae7714; border-color:#c6ae7780; }
+#side #sidebar .rural-recipe { padding:12px; margin:12px 0; gap:12px; border-radius:8px; background:#ffffff04; }
+#side #sidebar .rural-recipe .menu-art { width:68px; height:50px; }
+#side #sidebar .rural-stock-row { padding:12px 0; margin:0; border:0; border-bottom:1px solid #b9c5a51c; border-radius:0; background:none; }
+#side #sidebar .rural-crops { margin-top:16px; }
+#side #sidebar .rural-crops button { margin:4px 5px 0 0; }
+#side #sidebar .card[data-action=selown] { position:relative; padding:14px 14px 14px 96px; min-height:91px; border-radius:9px; border-color:#b9c5a530; background:linear-gradient(120deg,#9cad8010,transparent); }
+#side #sidebar .card[data-action=selown].selected { border-color:#d2b27480; background:linear-gradient(120deg,#c5a76f1c,transparent); }
+#side #sidebar .fleet-picture { position:absolute; left:12px; top:16px; width:72px; height:58px; }
+#side #sidebar :is(.trade-plan-card,.trade-supply,.trade-news-card,.mission-card,.post-preview) { border-radius:9px; border-color:#b9c5a52a; background:linear-gradient(130deg,#b4aa7709,#ffffff02); }
+#side #sidebar :is(.trade-plan-card,.trade-supply,.mission-card)>button { align-self:flex-start; }
+
+/* One reading order and one width for every kind of venture. */
+#side #sidebar .mission-list { display:grid; grid-template-columns:minmax(0,1fr); gap:16px; }
+#side #sidebar .mission-list>.mission-card { width:100%; min-width:0; margin:0; padding:20px; border-left:3px solid #8a9b8460; }
+#side #sidebar .mission-card.active { border-left-color:#c7ab72; }
+#side #sidebar .mission-card.done { border-left-color:#8aa57c; }
+#side #sidebar .mission-card.failed { border-left-color:#c58c77; }
+.mission-heading { display:flex; align-items:center; gap:14px; margin-bottom:14px; }
+.mission-heading>.menu-art { flex:0 0 66px; width:66px; height:54px; }
+.mission-heading>div { flex:1; min-width:0; }
+.mission-meta { display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:6px; margin-bottom:7px; }
+#side .mission-meta>small { text-transform:uppercase; letter-spacing:1.3px; font-size:9px; color:var(--gold); }
+.mission-meta .tag { margin:0; }
+#side .mission-title { display:block; font:22px/1.3 Georgia,serif; color:var(--ink); margin-bottom:4px; }
+.mission-heading>div>small { color:var(--ink-soft); }
+#side .mission-card .mission-terms { margin:0 0 14px; padding:10px 12px; }
+#side .mission-card .mission-progress p { margin:0 0 6px; }
+#side .mission-card .mission-next { padding:10px 0 0; margin:10px 0 14px; border-top:1px solid var(--line); }
+#side .mission-next>small { color:var(--ink-soft); font-size:10px; margin-bottom:3px; }
+.mission-actions { display:flex; align-items:center; flex-wrap:wrap; gap:8px; }
+#side .mission-card .mission-actions>button { margin:0; }
+.mission-actions>small { flex-basis:100%; }
+.mission-history { margin:0 0 14px; padding:0; border:0; background:none; }
+.mission-history summary { font-size:12px; color:var(--ink-soft); cursor:pointer; }
+@media(max-width:560px) {
+  #side #sidebar .mission-list>.mission-card { padding:14px; }
+  .mission-heading { gap:9px; }
+  .mission-heading>.menu-art { flex-basis:48px; width:48px; height:44px; }
+  #side .mission-title { font-size:19px; }
+  .mission-actions>button { max-width:100%; }
+}
+#side #sidebar .trade-supply { display:flex; flex-direction:column; gap:8px; }
+#side #sidebar .trade-supply>button { margin-top:auto; }
+#side #sidebar .mission-terms { padding:10px 0; background:none; border-top:1px solid #b9c5a51a; border-bottom:1px solid #b9c5a51a; border-radius:0; }
+#side #sidebar .work-summary>span { border:0; border-radius:0; background:none; border-right:1px solid #b9c5a51c; padding:6px 12px; }
+#side #sidebar .work-summary>span:last-child { border-right:0; }
+#side #sidebar .work-filters button { border-radius:18px; padding:6px 11px; }
+#side #sidebar .law-card { gap:12px; border-bottom-color:#b9c5a51c; }
+#side #sidebar .person { padding:12px 0; border-bottom-color:#b9c5a51c; }
+#side #sidebar .log>li { padding:10px 0; border-bottom-color:#b9c5a51c; }
+@container action-panel (max-width:560px) {
+  #side #sidebar .decision-card { grid-template-columns:58px minmax(0,1fr); gap:10px; padding:12px; }
+  #side #sidebar .decision-card>.menu-art { width:58px; height:50px; }
+  #side #sidebar .decision-card>.decision-purchase { grid-column:1/-1; grid-template-columns:1fr 1fr; align-items:center; text-align:left; max-width:none; }
+  #side #sidebar .decision-card .decision-reason { grid-column:1/-1; }
+  #side #sidebar table.action-table tr, #side #sidebar table.action-table tr.three-cells { grid-template-columns:minmax(0,1fr) auto; }
+  #side #sidebar table.action-table tr>td:first-child { grid-column:1/-1; }
+  #side #sidebar table.action-table tr>td:last-child { grid-column:2; text-align:right; }
+  #side #sidebar table.action-table .decision-row>td:last-child { grid-column:1/-1; }
+  #side #sidebar .decision-row .decision-purchase { grid-template-columns:1fr 1fr; align-items:center; text-align:left; max-width:none; }
+  #side #sidebar .decision-row .decision-reason { grid-column:1/-1; }
+  #side #sidebar .choice-main>.menu-art { width:52px; height:44px; }
+}
+@container action-panel (max-width:390px) {
+  #side #sidebar .location-actions .work-back { font-size:11px; }
+  #side #sidebar .rural-site { padding:10px; }
+  #side #sidebar .rural-site b { font-size:14px; }
+  #side #sidebar .action-heading { padding:13px 12px; gap:10px; }
+  #side #sidebar .action-heading .panel-picture { width:60px; height:54px; flex:none; }
+  #side #sidebar .action-heading h2 { font-size:24px; }
+}
+#side #sidebar .choice-detail { display:block; margin-top:5px; color:#d9c594; }
+#side #sidebar .decision-row .decision-purchase { margin-bottom:8px; }
+#side #sidebar .office-factor:has([data-decision=hirefactor])>small { display:none; }
+#side #sidebar .rural-stock-row>div { flex:1; }
+#side #sidebar .rural-stock-row>.menu-art { width:64px; height:50px; }
+#side #sidebar .rural-order-offer { display:flex; align-items:center; justify-content:space-between; gap:12px; margin-top:6px; }
+#side #sidebar .rural-order-price { display:grid; gap:4px; }
+#side #sidebar .rural-order-price>b { color:#e4c890; font:22px Georgia,serif; }
+#side #sidebar .rural-order-price>b small { font:10px system-ui,sans-serif; }
+#side #sidebar .rural-order-price>small { font-size:10px; color:#aebbab; }
+#side #sidebar .rural-order-offer>button { flex:none; }
+@container action-panel (max-width:450px) {
+  #side #sidebar .rural-order-offer { flex-wrap:wrap; gap:9px; }
+  #side #sidebar .rural-order-offer>button { margin-left:auto; }
+}
+
+/* Compact, shared timing for construction and repairs. */
+.work-duration { display: block; margin-top: .45rem; color: var(--muted, #b5c2b3); line-height: 1.5; white-space: normal; }
+.work-orders { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr)); gap: 1rem; }
+.work-order { min-width: 0; display: grid; gap: .7rem; padding: 1rem; border: 1px solid rgba(212,181,116,.24); border-radius: 12px; margin-bottom: .8rem; }
+.work-order .plan-heading { margin: 0; }
+.work-order .plan-heading > div { min-width: 0; }
+.work-order .plan-heading small { display: block; }
+.work-order progress { width: 100%; height: .5rem; accent-color: #d5b77b; }
+.work-order button { justify-self: start; max-width: 100%; white-space: normal; }
+
+/* One shared ship catalogue, including coastal fishing boats. */
+#side #sidebar .ship-yard-summary { display:flex; flex-wrap:wrap; gap:8px 20px; margin:12px 0 20px; color:#aebbab; font-size:12px; }
+#side #sidebar .ship-yard-summary b { color:#e5d5b0; margin-left:5px; }
+#side #sidebar .ship-yard-summary small { color:#d5b77b; }
+#side #sidebar .ship-build-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:14px; }
+#side #sidebar .ship-build-card { display:flex; flex-direction:column; min-width:0; padding:20px; border:1px solid #d5b77b30; border-radius:14px; background:linear-gradient(135deg,#d5b77b09,transparent 75%); }
+#side #sidebar .ship-build-heading { display:flex; align-items:center; gap:14px; }
+#side #sidebar .ship-build-heading>.menu-art { width:100px; height:78px; flex:none; }
+#side #sidebar .ship-build-heading>div { min-width:0; }
+#side #sidebar .ship-purpose { color:#c2b180; font-size:10px; letter-spacing:.12em; text-transform:uppercase; }
+#side #sidebar .ship-build-heading h4 { margin:4px 0 0; font:26px Georgia,serif; color:#eee4ce; overflow-wrap:anywhere; }
+#side #sidebar .ship-build-description { color:#b8c4b5; font-size:14px; line-height:1.6; margin:12px 0 18px; }
+#side #sidebar .ship-build-facts { display:grid; grid-template-columns:1fr 1fr; gap:12px; margin:auto 0 12px; }
+#side #sidebar .ship-build-facts div { border-left:2px solid #d5b77b40; padding-left:12px; min-width:0; }
+#side #sidebar .ship-build-facts dt { font-size:11px; color:#aebbab; }
+#side #sidebar .ship-build-facts dd { margin:5px 0 0; color:#ede0bf; font-size:17px; }
+#side #sidebar .ship-build-preparation { font-size:12px; color:#aebbab; line-height:1.6; margin:0 0 16px; min-height:3.2em; }
+#side #sidebar .ship-build-footer { display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:12px; border-top:1px solid #b9c5a51a; padding-top:14px; }
+#side #sidebar .ship-build-price { display:grid; gap:3px; }
+#side #sidebar .ship-build-price>small { color:#aebbab; font-size:10px; }
+#side #sidebar .ship-build-price strong { font:26px Georgia,serif; color:#e4c890; }
+#side #sidebar .ship-build-price strong small { font:11px system-ui,sans-serif; color:#b5c2ac; }
+#side #sidebar .ship-build-footer button { margin:0; min-width:92px; }
+#side #sidebar .ship-build-footer button:disabled { background:transparent; color:#aebbab; border-color:#d5b77b30; opacity:1; }
+#side #sidebar .ship-build-reason { min-height:1.6em; margin-top:10px; font-size:11px; color:#d9b574; }
+#side #sidebar .ship-yard-orders { margin-top:24px; }
+@container action-panel (max-width:650px) {
+ #side #sidebar .ship-build-grid { grid-template-columns:minmax(0,1fr); }
+}
+@container action-panel (max-width:390px) {
+ #side #sidebar .ship-build-card { padding:14px; }
+ #side #sidebar .ship-build-heading>.menu-art { width:76px; height:64px; }
+ #side #sidebar .ship-build-heading h4 { font-size:23px; }
+ #side #sidebar .ship-build-facts dd { font-size:15px; }
+}

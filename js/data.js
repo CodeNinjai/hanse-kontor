@@ -19,8 +19,31 @@ HK.GOODS = [
   { id: 'spices',     name: { de: 'Gewürze',      en: 'Spices' },       base: 420, cons: 0.6, prod: 0 },
   { id: 'finecloth',  name: { de: 'Feintuch',     en: 'Fine cloth' },   base: 260, cons: 0.8, prod: 0 },
   { id: 'leather',    name: { de: 'Leder',        en: 'Leather' },      base: 90,  cons: 1.2, prod: 0.5 },
+  { id: 'hemp',       name: { de: 'Hanf',         en: 'Hemp' },         base: 40,  cons: 4,   prod: 2 },
+  { id: 'flax',       name: { de: 'Flachs',        en: 'Flax' },         base: 38,  cons: 3,   prod: 1.5 },
+  { id: 'pitch',      name: { de: 'Pech',          en: 'Pitch' },        base: 75,  cons: 2,   prod: 0.3 },
+  { id: 'bricks',     name: { de: 'Backsteine',    en: 'Bricks' },       base: 35,  cons: 6,   prod: 3 },
+  { id: 'honey',      name: { de: 'Honig',         en: 'Honey' },        base: 95,  cons: 1.5, prod: 0.4 },
+  { id: 'cheese',     name: { de: 'Käse',          en: 'Cheese' },       base: 55,  cons: 5,   prod: 2 },
+  { id: 'rope',       name: { de: 'Seile',         en: 'Rope' },         base: 130, cons: 2,   prod: 0.4 },
+  { id: 'canvas',     name: { de: 'Segeltuch',     en: 'Sailcloth' },    base: 190, cons: 1.5, prod: 0.2 },
+  { id: 'flour',      name: { de: 'Mehl', en: 'Flour' }, base: 45, cons: 10, prod: 0 },
+  { id: 'cattle',     name: { de: 'Vieh', en: 'Livestock' }, base: 160, cons: 1.5, prod: 0 },
+  { id: 'milk',       name: { de: 'Milch', en: 'Milk' }, base: 28, cons: 6, prod: 0 },
+  { id: 'meat',       name: { de: 'Fleisch', en: 'Meat' }, base: 70, cons: 4, prod: 0 },
+  { id: 'hides',      name: { de: 'Rohhäute', en: 'Raw hides' }, base: 42, cons: 2, prod: 0 },
+  { id: 'stone',      name: { de: 'Bruchstein', en: 'Rough stone' }, base: 28, cons: 5, prod: 0 },
+  { id: 'dressedstone', name: { de: 'Werkstein', en: 'Dressed stone' }, base: 80, cons: 2, prod: 0 },
 ];
 HK.GOOD = {}; HK.GOODS.forEach(g => HK.GOOD[g.id] = g);
+HK.GOOD_GROUPS = {
+  food: ['grain', 'fish', 'smokedfish', 'beer', 'cheese', 'honey', 'salt', 'flour', 'cattle', 'milk', 'meat'],
+  materials: ['timber', 'iron', 'tools', 'bricks', 'leather', 'hides', 'stone', 'dressedstone'],
+  maritime: ['pitch', 'rope', 'canvas'],
+  textiles: ['wool', 'cloth', 'hemp', 'flax', 'finecloth'],
+  luxury: ['wine', 'wax', 'furs', 'spices'],
+};
+for (const [group, ids] of Object.entries(HK.GOOD_GROUPS)) for (const id of ids) HK.GOOD[id].group = group;
 
 /* Herkunftsorte der Schiffe und Karawanen: was sie günstig bringen (sell) und was sie suchen (want) */
 HK.ORIGINS = [
@@ -35,6 +58,25 @@ HK.ORIGINS = [
   { id: 'umland',    name: { de: 'Umland', en: 'Countryside' }, sea: false, days: 2, sell: { grain: 0.65, wool: 0.7, timber: 0.75 },  want: { salt: 1.5, tools: 1.6, cloth: 1.5, beer: 1.3 } },
 ];
 HK.ORIGIN = {}; HK.ORIGINS.forEach(o => HK.ORIGIN[o.id] = o);
+// Supply profiles are game balance: each new good has suppliers and export buyers.
+const extraTrade = {
+  luebeck:   { sell: { bricks: .72, rope: .78, canvas: .82 }, want: { hemp: 1.5, flax: 1.45, pitch: 1.5, honey: 1.35 } },
+  bruegge:   { sell: { canvas: .7 }, want: { flax: 1.6, hemp: 1.4, honey: 1.5, cheese: 1.35 } },
+  bergen:    { sell: { pitch: .7 }, want: { rope: 1.6, canvas: 1.65, cheese: 1.5, bricks: 1.35 } },
+  danzig:    { sell: { hemp: .65, flax: .7, pitch: .68 }, want: { rope: 1.5, canvas: 1.5, bricks: 1.3 } },
+  riga:      { sell: { hemp: .7, pitch: .65, honey: .75 }, want: { canvas: 1.6, rope: 1.4, cheese: 1.4 } },
+  stockholm: { sell: { pitch: .72 }, want: { rope: 1.55, canvas: 1.6, honey: 1.45, bricks: 1.5 } },
+  london:    { sell: { rope: .8, canvas: .78 }, want: { flax: 1.5, hemp: 1.45, pitch: 1.45, honey: 1.4 } },
+  koeln:     { sell: { bricks: .75, cheese: .8 }, want: { hemp: 1.4, flax: 1.4, honey: 1.45 } },
+  umland:    { sell: { hemp: .75, flax: .65, honey: .7, cheese: .65 }, want: { bricks: 1.35, rope: 1.4 } },
+};
+for (const [id, trade] of Object.entries(extraTrade)) {
+  Object.assign(HK.ORIGIN[id].sell, trade.sell); Object.assign(HK.ORIGIN[id].want, trade.want);
+}
+Object.assign(HK.ORIGIN.umland.sell, { flour:.8, cattle:.8, milk:.75, meat:.85, hides:.75, stone:.8 });
+Object.assign(HK.ORIGIN.koeln.sell, { dressedstone:.8 });
+Object.assign(HK.ORIGIN.luebeck.want, { flour:1.35, cattle:1.3, meat:1.4, hides:1.4, stone:1.3, dressedstone:1.4 });
+Object.assign(HK.ORIGIN.umland.want, { milk:1.25 });
 
 HK.SHIP_NAMES = ['Maria', 'Adler', 'Sankt Nikolaus', 'Bunte Kuh', 'Löwe', 'Greif', 'Fortuna', 'Sankt Anna', 'Seehund', 'Roter Löwe', 'Katharina', 'Pelikan', 'Schwan', 'Morgenstern', 'Sankt Georg', 'Einhorn', 'Falke', 'Ursula', 'Hansa', 'Delphin', 'Sankt Jakob', 'Engel'];
 HK.CAPTAIN_NAMES = ['Hinrich Vos', 'Klaus Störtebeker', 'Jorgen Lund', 'Piet van Dyck', 'Arnd Sasse', 'Olaf Sjöberg', 'Wilkin Stade', 'Reyner Bock', 'Gerd Molenaar', 'Henning Kalsow', 'Magnus Ravn', 'Thomas Ashby'];
@@ -59,6 +101,8 @@ HK.WORKSHOPS = [
   { id: 'weaver',     name: { de: 'Weberei',     en: 'Weavery' },    out: 'cloth',      qty: 1, inp: { wool: 3 },             cost: 12000, wage: 25, license: 2500 },
   { id: 'smithy',     name: { de: 'Schmiede',    en: 'Smithy' },     out: 'tools',      qty: 1, inp: { iron: 1 },             cost: 11000, wage: 20, license: 2000 },
   { id: 'saltworks',  name: { de: 'Salzsiederei', en: 'Saltworks' }, out: 'salt',       qty: 2, inp: { timber: 2 },           cost: 14000, wage: 20, license: 3000 },
+  { id: 'ropemaker', name: { de: 'Seilerwerkstatt', en: 'Rope workshop' }, out: 'rope', qty: 2, inp: { hemp: 3 }, cost: 8000, wage: 18, license: 1400 },
+  { id: 'sailweaver', name: { de: 'Segeltuchweberei', en: 'Sailcloth weavery' }, out: 'canvas', qty: 1, inp: { flax: 3 }, cost: 10000, wage: 22, license: 1800 },
 ];
 HK.WORKSHOP = {}; HK.WORKSHOPS.forEach(w => HK.WORKSHOP[w.id] = w);
 
@@ -66,13 +110,13 @@ HK.WORKSHOP = {}; HK.WORKSHOPS.forEach(w => HK.WORKSHOP[w.id] = w);
    craft: braucht Zunftmitgliedschaft; inp: Ware, deren Knappheit in der Stadt die Einnahmen drückt */
 HK.VENTURES = [
   { id: 'dive',      name: { de: 'Spelunke „Zum Nassen Hund“', en: 'The Wet Dog dive' }, cost: 6000,  income: 13, craft: false, effect: 'dive' },
-  { id: 'bakery',    name: { de: 'Bäckerei',        en: 'Bakery' },        cost: 5000,  income: 11, craft: true, inp: 'grain', effect: 'feed' },
+  { id: 'bakery',    name: { de: 'Bäckerei',        en: 'Bakery' },        cost: 5000,  income: 11, craft: true, inp: 'flour', effect: 'feed' },
   { id: 'butcher',   name: { de: 'Fleischerei',     en: 'Butcher' },       cost: 5500,  income: 12, craft: true, effect: 'feed' },
   { id: 'cooper',    name: { de: 'Böttcherei',      en: 'Cooperage' },     cost: 6500,  income: 14, craft: true, inp: 'timber', effect: 'cooper' },
   { id: 'ropewalk',  name: { de: 'Seilerei',        en: 'Ropewalk' },      cost: 7000,  income: 15, craft: true, effect: 'ships' },
   { id: 'sailmaker', name: { de: 'Segelmacherei',   en: 'Sailmaker' },     cost: 8000,  income: 18, craft: true, inp: 'cloth', effect: 'ships' },
   { id: 'smokery',   name: { de: 'Fischräucherei',  en: 'Fish smokery' },  cost: 7500,  income: 10, craft: true, inp: 'fish', effect: 'smoke' },
-  { id: 'tannery',   name: { de: 'Gerberei',        en: 'Tannery' },       cost: 6000,  income: 18, craft: true, effect: 'stink' },
+  { id: 'tannery',   name: { de: 'Gerberei',        en: 'Tannery' },       cost: 6000,  income: 18, craft: true, inp: 'hides', effect: 'stink' },
   { id: 'potter',    name: { de: 'Töpferei',        en: 'Pottery' },       cost: 3500,  income: 8, craft: true },
   { id: 'dyer',      name: { de: 'Färberei',        en: 'Dye works' },     cost: 9000,  income: 20, craft: true, inp: 'cloth', effect: 'cloth' },
   { id: 'stables',   name: { de: 'Marstall',        en: 'Stables' },       cost: 8500,  income: 18, craft: false, effect: 'caravans' },

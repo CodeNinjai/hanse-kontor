@@ -1,0 +1,56 @@
+/* Illustrated, quiet status indicators: no animated counters or flashing alerts. */
+.hud-stats { gap: 7px; min-width: 0; }
+.hud-stats .stat { --stat-color: #98b295; display: flex; align-items: center; gap: 8px; min-width: 102px; padding: 10px 12px; border: 1px solid #b5c2a519; border-radius: 9px; background: linear-gradient(135deg, #b4c49c09, #ffffff02); }
+.hud-stats .stat.cash { --stat-color: #dcbc7e; min-width: 176px; border-color: #dcbc7e35; background: linear-gradient(120deg, #bc945518, #bc945505); }
+.hud-stats .stat[data-stat=influence] { --stat-color: #c58f70; }
+.hud-stats .stat[data-stat=piety] { --stat-color: #cfc5a0; }
+.hud-stats .stat.susp { --stat-color: #92aaa0; }
+.hud-stats .stat.susp.high { --stat-color: #d18b76; border-color: #d18b7655; background: #ac574510; }
+.stat-art { display: flex; flex: 0 0 34px; width: 34px; }
+.stat-art svg { width: 100%; height: 38px; filter: drop-shadow(0 2px 2px #0003); }
+.stat-reading { display: grid; gap: 3px; min-width: 0; flex: 1; }
+.hud-stats .stat small { letter-spacing: 1px; font-size: 8px; white-space: nowrap; }
+.hud-stats .stat b, .hud-stats .hud-money { font-size: 23px; line-height: 1.1; white-space: nowrap; }
+.hud-stats .stat:not(.cash) b { color: #e2ddc8; }
+.hud-stats .stat.susp.high b { color: var(--red); }
+.stat-meter { display: block; height: 3px; background: #ffffff0c; border-radius: 2px; overflow: hidden; }
+.stat-meter i { display: block; height: 100%; width: var(--value, 0%); background: var(--stat-color); border-radius: inherit; }
+/* Labels, values and meters get separate rows. The illustration belongs to
+   the value row, including cards without a meter such as influence and cash. */
+@media (min-width: 601px) {
+  .hud-stats .stat { display: grid; grid-template-columns: 34px minmax(0, 1fr); grid-template-rows: auto 38px 3px; gap: 3px 8px; }
+  .hud-stats .stat-reading { display: contents; }
+  .hud-stats .stat-art { grid-column: 1; grid-row: 2; align-self: center; }
+  .hud-stats .stat-reading>small { grid-column: 2; grid-row: 1; }
+  .hud-stats .stat-reading>b, .hud-stats .stat-reading>.hud-money { grid-column: 2; grid-row: 2; align-self: center; }
+  .hud-stats .stat-meter { grid-column: 2; grid-row: 3; }
+}
+@media (max-width: 1450px) and (min-width: 901px) {
+  #hud { gap: 14px; padding-left: 20px; padding-right: 20px; }
+  .hud-left { gap: 9px; }
+  .brand-seal { width: 36px; height: 42px; font-size: 29px; }
+  .logo { font-size: 18px; letter-spacing: 1.5px; }
+  .brand-text small { letter-spacing: 1px; }
+  .hud-stats .stat { min-width: 86px; padding: 8px; grid-template-columns: 27px minmax(0, 1fr); gap: 3px 5px; }
+  .hud-stats .stat.cash { min-width: 152px; }
+  .stat-art { flex-basis: 27px; width: 27px; }
+  .hud-stats .stat b, .hud-stats .hud-money { font-size: 20px; }
+}
+@media (max-width: 1150px) {
+  #hud { flex-wrap: wrap; }
+  .hud-left { margin-right: auto; }
+  .hud-stats { order: 3; width: 100%; margin: 0; display: grid; grid-template-columns: minmax(164px, 1.5fr) repeat(4, minmax(0, 1fr)); }
+  .hud-stats .stat, .hud-stats .stat.cash { min-width: 0; }
+}
+@media (max-width: 600px) {
+  .hud-stats { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; }
+  .hud-stats .stat { padding: 7px 5px; gap: 5px; flex-direction: column; align-items: stretch; }
+  .hud-stats .stat.cash { grid-column: 1 / -1; flex-direction: row; align-items: center; padding: 7px 12px; gap: 10px; }
+  .hud-stats .cash .stat-reading { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+  .hud-stats .stat:not(.cash) .stat-art { display: none; }
+  .hud-stats .stat-art { flex-basis: 29px; width: 29px; }
+  .stat-art svg { height: 28px; }
+  .hud-stats .stat small { font-size: 8px; letter-spacing: 0; }
+  .hud-stats .stat b, .hud-stats .hud-money { font-size: 20px; }
+  .hud-stats .stat:not(.cash) .stat-reading { text-align: center; }
+}

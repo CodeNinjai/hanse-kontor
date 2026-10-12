@@ -95,5 +95,6 @@ HK.tickHooks.push(st => {
     else { HK.book(st, 'counterfeit', c.amount); st.stats.smuggled += c.amount * 0.1; st.suspicion = HK.clamp(st.suspicion + 4, 0, 100); HK.log(st, 'counterfeitDone', { amount: HK.fmt(c.amount) }, 'info'); }
   }
   // Gerberei: Leder aus den Häuten der Stadt
-  if (HK.hasVenture(st, 'tannery')) { const q = Math.min(2 * st.ventures.tannery.level, HK.whFree(st)); if (q > 0) HK.addStock(st.warehouse.stock, 'leather', q); }
+  // In the full game, leather is produced from hides and salt by landwirtschaft.js.
+  if (!HK.ruralDay && HK.hasVenture(st, 'tannery')) { const q = Math.min(2 * st.ventures.tannery.level, HK.whFree(st)); if (q > 0) HK.addStock(st.warehouse.stock, 'leather', q); }
 });

@@ -1,0 +1,17 @@
+.handbook{max-height:70vh;overflow:auto;padding:2px 6px 12px 0}.handbook label{display:block}.handbook input{display:block;width:100%;box-sizing:border-box;margin:8px 0 16px}.handbook .work-filters{flex-wrap:wrap;gap:6px}.handbook-results{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(230px,100%),1fr));gap:10px;margin:18px 0}.handbook-results button{text-align:left;padding:14px 16px;display:flex;flex-direction:column;gap:6px;min-width:0}.handbook-results small,.handbook-article>small{color:var(--muted,#b1c1b3)}.handbook-article{margin:18px 0;padding:20px;border:1px solid #d9b87833;border-radius:12px;line-height:1.7}.handbook-article h3{margin-top:4px}.context-help.unread-help>summary{position:relative}.context-help.unread-help>summary:after{content:'';position:absolute;right:0;top:0;width:6px;height:6px;border-radius:50%;background:#dbb878;box-shadow:0 0 0 2px #19312a}.context-help-body [data-action=handbook]{display:block;margin-top:14px}.handbook .btn-row{flex-wrap:wrap;margin-top:18px}
+.middle-paths{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin:16px 0}.middle-paths button{display:flex;align-items:center;text-align:left;gap:10px;padding:12px;min-width:0}.middle-paths svg{width:56px;height:56px;flex:none}.achievement-list{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(220px,100%),1fr));gap:12px;margin-top:14px}.achievement-list article{padding:14px;border:1px solid #d9b87833;border-radius:10px}.achievement-list small{display:block;margin-top:6px}.factor-report-row{display:block;padding:16px 0;border-top:1px solid #d9b87833}.factor-report-row button{display:block;margin-top:8px}.visitor-price-row{display:flex;justify-content:space-between;gap:14px;padding:12px 0;border-top:1px solid #d9b87822}.visitor-price-row small,.visitor-price-row strong{display:block}.visitor-price-row>span:last-child{text-align:right}.factor-report-link{margin:12px 0}@media(max-width:450px){.middle-paths{grid-template-columns:1fr}}
+
+.weather-now { display:flex; align-items:center; gap:1rem; margin-bottom:.7rem; }
+.weather-now > span { font-size:2.6rem; color:var(--gold); }
+.weather-now small { display:block; }
+
+.delivery-result{display:flex;justify-content:space-between;gap:1rem;padding:.8rem 0;flex-wrap:wrap}.delivery-result strong{font-size:1.25rem}.delivery-calculation{margin-bottom:1rem}.delivery-calculation dl{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:.6rem}.delivery-calculation dd{margin:0;text-align:right}.delivery-calculation small{display:block;margin:.5rem 0}
+
+/* Shared illustrated cards for real cargo opportunities and the cloth chapter. */
+.cloth-choices,.cloth-sources{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,260px),1fr));gap:14px;margin:18px 0}
+.opportunity-card small,.cloth-story small,.cloth-choices small{display:block;line-height:1.55}
+.opportunity-card details,.cloth-story>details{margin:12px 0;color:var(--muted)}
+.opportunity-card button,.cloth-choices button{white-space:normal}
+.cloth-story>.mission-card{margin:16px 0}
+.cloth-choices .positive{font-size:.9rem;line-height:1.5}
+.cloth-story .cloth-sources:empty{display:none}

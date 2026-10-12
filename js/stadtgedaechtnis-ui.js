@@ -1,0 +1,17 @@
+'use strict';
+Object.assign(HK.UI,{
+ petitionMissionCard(p,status){return `<article class="mission-card ${status}" data-petition="${p.id}">${this.missionHeader('story',this.postText('petitionTitle',{name:p.name}),HK.t('petitionDeadline',{date:HK.fmtDate(p.due)}),HK.MenuArt.good(p.good),status)}<p>${HK.t('petition_'+p.type)}</p>${status==='available'?this.missionNext(`${p.qty} ${HK.t('unitLast')} ${HK.goodName(p.good)}`):`<small>${HK.t('petitionResolved',{choice:HK.t('petition_'+p.choice)})}</small>`}<div class="btn-row"><button class="small" data-action="petitionopen" data-id="${p.id}">${HK.t('missionOpen')}</button><button class="small" data-action="citizenopen" data-id="${p.person}">${this.esc(p.name)}</button></div></article>`;},
+ memoryPanel(person=null){const rows=(HK.state.memory?.deeds||[]).filter(d=>!person||d.person===person).slice(-8).reverse();return rows.length?`<details class="memory-panel"><summary>${HK.t('memoryTitle')}</summary>${rows.map(d=>`<p><small>${HK.fmtDate(d.day)} · ${this.esc(d.author)}</small><br>${this.postText('deed_'+d.type,d.vars)}</p>`).join('')}</details>`:'';},
+});
+{
+ const records=HK.UI.missionRecords;HK.UI.missionRecords=function(){return records.call(this).concat((HK.state.memory?.petitions||[]).map(p=>({kind:'petition',status:p.status,value:p})));};
+ const letter=HK.UI.postLetterBody;HK.UI.postLetterBody=function(m){if(['petition','petitionThanks'].includes(m.type)){const p=HK.state.memory.petitions.find(p=>p.id===m.ref.petition);if(!p)return HK.t('postGone');if(m.type==='petition')return HK.t('petition_'+p.type)+' '+this.postText('petition_body',{...p,good:HK.goodName(p.good),date:HK.fmtDate(p.due)});const f=p.follow;return this.postText(f.kind==='arrival'?'petitionThanks_arrival':'petitionThanks_intro',{name:p.name,contact:f.name,origin:f.origin?HK.name(HK.ORIGIN[f.origin]):'',date:HK.fmtDate(f.eta??p.finished)})+' '+HK.t('petitionSupport');}return letter.call(this,m);};
+ const citizen=HK.UI.panel_citizen;HK.UI.panel_citizen=function(){const p=HK.state.population.people[this.citizen],speech=p?.memorySpeech;return citizen.call(this)+(speech?`<section><p>${this.postText(speech.key,speech.vars)}</p></section>`:'')+this.memoryPanel(this.citizen);};
+ const townhall=HK.UI.panel_townhall;HK.UI.panel_townhall=function(){const list=HK.memorySupport(HK.state),objections=HK.memoryObjections(HK.state);return townhall.call(this)+(objections.length>=2?`<section><p>${HK.t('memoryObjection')}</p>${objections.map(d=>`<small>${HK.fmtDate(d.day)} · ${this.postText('deed_'+d.type,d.vars)}</small>`).join('')}</section>`:'')+(list.length?`<section><p>${HK.t('petitionSupport')}</p><ul>${list.map(p=>`<li>${this.esc(p.name)} · ${HK.fmtDate(p.finished)}</li>`).join('')}</ul></section>`:'');};
+ const chronicle=HK.UI.showChronicle;HK.UI.showChronicle=function(){chronicle.call(this);const decorate=()=>this.$('modal').querySelector('.modal-actions')?.insertAdjacentHTML('beforebegin',this.memoryPanel());decorate();const redraw=this.modalRender;this.modalRender=()=>{redraw();decorate();};};
+ const action=HK.UI.action;HK.UI.action=function(d){
+  if(d.action==='petitionopen'){const m=HK.state.post.messages.find(m=>m.type==='petition'&&m.ref.petition===+d.id);if(m){this.postSelected=m.id;HK.postRead(HK.state,m.id);this.postMode='letters';this.setTab('mail');}return;}
+  if(d.action==='citizentalk'){const p=HK.state.population.people[d.id],speech=HK.memoryConversation(HK.state,d.id);if(p)p.memorySpeech=speech;}
+  return action.call(this,d);
+ };
+}

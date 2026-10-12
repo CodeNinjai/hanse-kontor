@@ -5,50 +5,84 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Hanse-Kontor</title>
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='15' fill='%23c8a24a'/%3E%3Cpath d='M8 22h16l-2 4H10zM16 6v14M16 8l7 6h-7z' stroke='%23402a10' stroke-width='2' fill='%23402a10'/%3E%3C/svg%3E">
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=EB+Garamond:ital,wght@0,400;0,600;1,400&display=swap">
   <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/haven.css">
+  <link rel="stylesheet" href="css/menu.css">
+  <link rel="stylesheet" href="css/handelsvorhaben.css">
+  <link rel="stylesheet" href="css/audio.css">
+  <link rel="stylesheet" href="css/salzgeschichte.css">
+  <link rel="stylesheet" href="css/korrespondenz.css">
+  <link rel="stylesheet" href="css/aktionsbereich.css">
+  <link rel="stylesheet" href="css/navigation.css?v=7">
+  <link rel="stylesheet" href="css/warehouse.css?v=1">
+  <link rel="stylesheet" href="css/actions.css?v=1">
+  <link rel="stylesheet" href="css/hud.css">
+  <link rel="stylesheet" href="css/handbook.css">
+  <link rel="stylesheet" href="css/intrigen.css">
+  <link rel="stylesheet" href="css/finanzen.css">
+  <link rel="stylesheet" href="css/toolbar.css">
+  <link rel="stylesheet" href="css/handelskalender.css">
+  <link rel="stylesheet" href="css/wuerfelspiel.css">
+  <link rel="stylesheet" href="css/preise.css">
 </head>
 <body>
   <div id="title-screen" class="overlay"></div>
   <div id="game" hidden>
     <header id="hud">
-      <div class="hud-left"><span class="logo" data-i18n="title">Hanse-Kontor</span><span id="hud-date" class="hud-date"></span><span id="hud-time" class="hud-time"></span><span id="hud-weather" class="hud-weather"></span></div>
+      <div class="hud-left"><span class="brand-seal" aria-hidden="true">H</span><div class="brand-text"><span class="logo" data-i18n="title">Hanse-Kontor</span><small data-i18n="brandSubtitle">Sundhaven · Anno 1372</small></div></div>
       <div class="hud-stats">
-        <span id="hud-money" class="hud-money"></span>
-        <span class="stat" data-i18n-title="rep">☆ <b id="hud-rep"></b></span>
-        <span class="stat" data-i18n-title="influence">♜ <b id="hud-influence"></b></span>
-        <span class="stat" data-i18n-title="piety">✝ <b id="hud-piety"></b></span>
-        <span class="stat susp" data-i18n-title="suspicion">👁 <b id="hud-suspicion"></b></span>
-        <span id="hud-rank" class="hud-rank"></span>
+        <div class="stat cash" data-stat="money"><span class="stat-art" aria-hidden="true"></span><div class="stat-reading"><small data-i18n="money">Kasse</small><span id="hud-money" class="hud-money"></span></div></div>
+        <div class="stat" data-stat="rep"><span class="stat-art" aria-hidden="true"></span><div class="stat-reading"><small id="hud-rep-label" data-i18n="rep">Ruf</small><b id="hud-rep"></b><span class="stat-meter" role="meter" aria-labelledby="hud-rep-label" aria-valuemin="0" aria-valuemax="100"><i></i></span></div></div>
+        <div class="stat" data-stat="influence"><span class="stat-art" aria-hidden="true"></span><div class="stat-reading"><small data-i18n="influence">Einfluss</small><b id="hud-influence"></b></div></div>
+        <div class="stat" data-stat="piety"><span class="stat-art" aria-hidden="true"></span><div class="stat-reading"><small id="hud-piety-label" data-i18n="piety">Frömmigkeit</small><b id="hud-piety"></b><span class="stat-meter" role="meter" aria-labelledby="hud-piety-label" aria-valuemin="0" aria-valuemax="100"><i></i></span></div></div>
+        <div class="stat susp" data-stat="suspicion"><span class="stat-art" aria-hidden="true"></span><div class="stat-reading"><small id="hud-suspicion-label" data-i18n="suspicion">Verdacht</small><b id="hud-suspicion"></b><span class="stat-meter" role="meter" aria-labelledby="hud-suspicion-label" aria-valuemin="0" aria-valuemax="100"><i></i></span></div></div>
       </div>
-      <div class="hud-right">
-        <div class="speed">
-          <button id="btn-pause" data-i18n-title="pause">⏸</button><button id="btn-s1" data-i18n-title="speed1">▶</button><button id="btn-s2" data-i18n-title="speed2">▶▶</button><button id="btn-s3" data-i18n-title="speed3">▶▶▶</button><button id="btn-step" data-i18n-title="stepDay">+1</button>
-        </div>
-        <div class="menu">
-          <button id="btn-save" data-i18n="save">Speichern</button><button id="btn-export" data-i18n="exportSave">Exportieren</button><button id="btn-import" data-i18n="importSave">Importieren</button>
-          <input type="file" id="file-import" accept="application/json,.json" hidden>
-          <button id="btn-help" data-i18n="help">Hilfe</button><button id="btn-menu">☰</button>
-          <span class="lang-switch"><button class="lang-btn" data-lang="de">DE</button><button class="lang-btn" data-lang="en">EN</button></span>
-        </div>
-      </div>
+      <div class="hud-right"><span id="hud-date" class="hud-date"></span><div class="hud-sky"><span id="hud-time" class="hud-time"></span><span id="hud-weather" class="hud-weather"></span></div></div>
     </header>
     <main id="main">
+      <div id="city-column">
       <div id="scene-wrap">
-        <canvas id="scene" width="1280" height="800"></canvas>
+        <canvas id="scene" width="1280" height="800" tabindex="0" data-i18n-aria="mapAria"></canvas>
+        <div id="map-heading"><small data-i18n="cityEyebrow">Sundhaven · Hansestadt</small><h1 id="map-location">Markt &amp; Kontor</h1><p data-i18n="cityAtmosphere">Seewind, Segeltuch und volle Speicher.</p></div>
         <div id="tooltip" hidden></div>
         <div id="scene-hint" class="legend" data-i18n="legend">Klicke auf Gebäude, Schiffe, Karawanen und Passanten.</div>
-        <div id="zoom-ctl"><button type="button" data-zoom="in" title="+">+</button><button type="button" data-zoom="out" title="−">−</button><button type="button" data-zoom="reset" title="0">⌂</button></div>
+      </div>
       </div>
       <aside id="side">
-        <nav id="tabs">
-          <button data-tab="place" class="active"><span id="tab-place-label">…</span></button>
-          <button data-tab="overview" data-i18n="tabOverview">Übersicht</button>
-          <button data-tab="log"><span data-i18n="tabLog">Chronik</span> <span id="log-badge" class="badge" hidden></span></button>
+        <div class="sidebar-chapter"><div><span data-i18n="yourHouse">Dein Handelshaus</span><small id="hud-rank" class="hud-rank"></small></div><span class="chapter-mark" aria-hidden="true">⚑</span></div>
+        <div class="menu-group-label" data-i18n="menuPlaces">Stadtbereiche</div>
+        <nav id="city-links" data-i18n-aria="cityNavigation">
+          <div class="primary-nav"><button data-place="market"></button><button data-place="kontor"></button><button data-place="harbour"></button><button data-place="townhall"></button><button data-place="rural"></button><button data-place="books"><span id="books-badge" class="badge" hidden></span></button></div>
+          <div id="area-links" role="group" data-i18n-aria="sectionNavigation">
+            <div id="area-destinations"></div>
+            <div id="tabs" role="group" data-i18n-aria="menuBooks">
+              <button data-tab="overview"><span class="book-label" data-i18n="tabOverview">Übersicht</span></button>
+              <button data-tab="planning"><span class="book-label" data-i18n="tradePlanningTab">Planung</span></button>
+              <button data-tab="missions"><span class="book-label" data-i18n="missionsNav">Aufträge</span><span id="mission-badge" class="badge" hidden></span></button>
+              <button data-tab="log"><span class="book-label" data-i18n="journalTab">Journal</span><span id="log-badge" class="badge" hidden></span></button>
+              <button data-tab="mail"><span class="book-label" data-i18n="postTab">Nachrichten</span><span id="mail-badge" class="badge" hidden></span></button>
+            </div>
+          </div>
         </nav>
-        <div id="sidebar"></div>
+        <div id="place-return" class="place-return" hidden><button data-tab="place"><span aria-hidden="true">←</span><span><small data-i18n="backToPlace">Zurück zum Ort</small><span id="tab-place-label">…</span></span></button></div>
+        <div id="sidebar" role="region" tabindex="-1"></div>
+
       </aside>
     </main>
+    <footer id="game-toolbar" data-i18n-aria="toolbarLabel">
+      <nav class="toolbar-tools" data-i18n-aria="toolbarTools">
+        <details class="utility-menu" id="map-menu"><summary><span class="toolbar-icon" data-tool-icon="map" aria-hidden="true"></span><span data-i18n="mapOptions">Ansicht</span></summary><div class="utility-popover"><label class="district-control"><span data-i18n="districtLabel">Stadtviertel anzeigen</span><select id="view-district"></select></label><div id="zoom-ctl"><button type="button" data-zoom="out" data-i18n-title="zoomOut" data-i18n-aria="zoomOut">−</button><output id="view-zoom" data-i18n-aria="zoomLevel">100 %</output><button type="button" data-zoom="in" data-i18n-title="zoomIn" data-i18n-aria="zoomIn">+</button><button type="button" data-zoom="reset" data-i18n="viewAll">Gesamtansicht</button></div></div></details>
+        <div class="audio-controls toolbar-audio"><button type="button" id="btn-audio-mute" aria-pressed="false" data-i18n-title="audioMute" data-i18n-aria="audioMute">♩</button><button type="button" id="btn-audio" data-i18n="audioOpen" data-i18n-title="audioOpenHint">Klang</button></div>
+        <button id="btn-save"><span class="toolbar-icon" data-tool-icon="save" aria-hidden="true"></span><span data-i18n="save">Speichern</span></button>
+        <button id="btn-help"><span class="toolbar-icon" data-tool-icon="help" aria-hidden="true"></span><span data-i18n="help">Hilfe</span></button>
+        <details class="utility-menu" id="settings-menu"><summary><span class="toolbar-icon" data-tool-icon="settings" aria-hidden="true"></span><span data-i18n="toolbarSettings">Einstellungen</span></summary><div class="utility-popover"><strong data-i18n="toolbarSettings">Einstellungen</strong><div class="toolbar-setting"><span data-i18n="toolbarLanguage">Sprache</span><div class="lang-switch" role="group" data-i18n-aria="toolbarLanguage"><button class="lang-btn" data-lang="de" lang="de">Deutsch</button><button class="lang-btn" data-lang="en" lang="en">English</button></div></div><button id="btn-menu"><span class="toolbar-icon" data-tool-icon="home" aria-hidden="true"></span><span data-i18n="toolbarMainMenu">Hauptmenü</span></button></div></details>
+      </nav>
+      <div class="toolbar-time" role="group" data-i18n-aria="gameSpeed">
+        <button id="btn-pause"><span class="toolbar-icon pause-icon" aria-hidden="true"></span><span class="pause-label">Pause</span></button>
+        <div class="speed toolbar-speeds" role="group" data-i18n-aria="gameSpeed"><button id="btn-s1" data-i18n-title="speed1" data-i18n-aria="speed1">1</button><button id="btn-s2" data-i18n-title="speed2" data-i18n-aria="speed2">2</button><button id="btn-s3" data-i18n-title="speed3" data-i18n-aria="speed3">3</button></div>
+        <details class="utility-menu" id="time-menu"><summary id="time-toggle" data-i18n-title="gameSpeed" data-i18n-aria="gameSpeed"><span class="toolbar-icon" data-tool-icon="clock" aria-hidden="true"></span><span class="time-caption">Zeit</span></summary><div class="utility-popover"><strong data-i18n="gameSpeed">Spielgeschwindigkeit</strong><p id="time-status"></p><button id="btn-step" data-i18n="nextDay">Nächster Tag →</button></div></details>
+      </div>
+    </footer>
   </div>
   <div id="toasts"></div>
   <div id="modal" class="overlay" hidden></div>
@@ -56,7 +90,7 @@
   <script src="js/data.js"></script>
   <script src="js/iso.js"></script>
   <script src="js/town.js"></script>
-  <script src="js/i18n.js"></script>
+  <script src="js/i18n.js?v=dice-3"></script>
   <script src="js/game.js"></script>
   <script src="js/paths.js"></script>
   <script src="js/rivals.js"></script>
@@ -69,11 +103,91 @@
   <script src="js/staff.js"></script>
   <script src="js/burghers.js"></script>
   <script src="js/chains.js"></script>
+  <script src="js/ostviertel.js"></script>
+  <script src="js/ausgleich.js"></script>
+  <script src="js/lehrgang.js"></script>
+  <script src="js/weiterentwicklung.js"></script>
+  <script src="js/handelsvorhaben.js"></script>
+  <script src="js/ereignisse.js"></script>
+  <script src="js/salzgeschichte.js"></script>
+  <script src="js/salzgeschichte-text.js"></script>
+  <script src="js/korrespondenz.js"></script>
+  <script src="js/korrespondenz-text.js"></script>
+  <script src="js/landwirtschaft.js"></script>
+  <script src="js/bevoelkerung.js"></script>
+  <script src="js/aufstieg.js"></script>
+  <script src="js/wetter.js"></script>
+  <script src="js/kalkulation.js"></script>
+  <script src="js/stadtgedaechtnis.js"></script>
+  <script src="js/handelsgeschichten.js"></script>
+  <script src="js/handelsgeschichten-text.js"></script>
+  <script src="js/intrigen.js"></script>
+  <script src="js/intrigen-text.js"></script>
+  <script src="js/brotgeschichte.js"></script>
+  <script src="js/brotgeschichte-text.js"></script>
+  <script src="js/gildenbuergschaft.js"></script>
+  <script src="js/gildenbuergschaft-text.js"></script>
+  <script src="js/nebenauftraege.js"></script>
+  <script src="js/nebenauftraege-text.js"></script>
+  <script src="js/ufergeschichte.js"></script>
+  <script src="js/ufergeschichte-text.js"></script>
+  <script src="js/aussenhandel.js"></script>
+  <script src="js/aussenhandel-text.js"></script>
+  <script src="js/seebetrieb.js"></script>
+  <script src="js/seebetrieb-text.js"></script>
+  <script src="js/nachttransport.js"></script>
+  <script src="js/arbeitsvorhaben.js"></script>
+  <script src="js/arbeitsvorhaben-text.js"></script>
+  <script src="js/wuerfelspiel.js"></script>
+  <script src="js/audio-synth.js?v=ambience-2"></script>
+  <script src="js/audio.js?v=gulls-3"></script>
+  <script src="js/audio-ambience.js?v=crowd-de-4"></script>
   <script src="js/scene.js"></script>
-  <script src="js/buildings.js"></script>
+  <script src="js/buildings.js?v=wall-foot-joints-3"></script>
+  <script src="js/art.js"></script>
+  <script src="js/flair.js"></script>
+  <script src="js/stadtereignisse.js"></script>
+  <script src="js/warenverkehr.js"></script>
   <script src="js/gfx-pixi.js"></script>
-  <script src="js/scene-pixi.js"></script>
-  <script src="js/ui.js"></script>
+  <script src="js/scene-pixi.js?v=animal-walk-2"></script>
+  <script src="js/menu-art.js"></script>
+  <script src="js/ui.js?v=dice-3"></script>
+  <script src="js/presentation.js"></script>
+  <script src="js/weiterentwicklung-ui.js"></script>
+  <script src="js/handelsvorhaben-ui.js"></script>
+  <script src="js/ereignisse-ui.js"></script>
+  <script src="js/salzgeschichte-ui.js"></script>
+  <script src="js/korrespondenz-ui.js"></script>
+  <script src="js/landwirtschaft-ui.js"></script>
+  <script src="js/landwirtschaft-scene.js?v=animal-walk-2"></script>
+  <script src="js/bevoelkerung-scene.js"></script>
+  <script src="js/audio-ui.js?v=gulls-3"></script>
+  <script src="js/action-design.js"></script>
+  <script src="js/bevoelkerung-ui.js"></script>
+  <script src="js/waldleben.js"></script>
+  <script src="js/hilfe.js?v=tavern-2"></script>
+  <script src="js/aufstieg-ui.js"></script>
+  <script src="js/wetter-ui.js"></script>
+  <script src="js/kalkulation-ui.js"></script>
+  <script src="js/stadtgedaechtnis-ui.js"></script>
+  <script src="js/handelsgeschichten-ui.js"></script>
+  <script src="js/intrigen-ui.js"></script>
+  <script src="js/brotgeschichte-ui.js"></script>
+  <script src="js/gildenbuergschaft-ui.js"></script>
+  <script src="js/nebenauftraege-ui.js"></script>
+  <script src="js/ufergeschichte-ui.js"></script>
+  <script src="js/aussenhandel-ui.js"></script>
+  <script src="js/seebetrieb-ui.js"></script>
+  <script src="js/hafenbau.js"></script>
+  <script src="js/fischerboote.js"></script>
+  <script src="js/arbeitsvorhaben-ui.js"></script>
+  <script src="js/finanzen-ui.js"></script>
+  <script src="js/auftragswege-ui.js"></script>
+  <script src="js/handelskalender-ui.js"></script>
+  <script src="js/wuerfelspiel-ui.js"></script>
+  <script src="js/geld-ui.js"></script>
+  <script src="js/toolbar-ui.js"></script>
+  <script src="js/preise-ui.js"></script>
   <script src="js/main.js"></script>
 </body>
 </html>

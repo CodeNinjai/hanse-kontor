@@ -1,0 +1,95 @@
+/* Illustrated menus share their materials and colours with the city. */
+.menu-art { display: block; flex: none; width: 80px; height: 59px; }
+.menu-symbol { display: inline-block; width: 18px; height: 18px; flex: none; vertical-align: middle; }
+.sidebar-chapter { padding-top: 15px; padding-bottom: 9px; }
+#city-links { gap: 7px; padding-top: 5px; padding-bottom: 12px; border-bottom: 0; }
+#city-links button { min-width: 0; display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 5px 2px 8px; border: 1px solid var(--line); border-radius: 7px; background: #ffffff03; font-size: 12px; }
+#city-links button.active { border: 1px solid #dab77c90; background: #dab77c13; box-shadow: inset 0 -2px var(--gold); }
+#city-links button:hover { background: #dab77c12; }
+#city-links .nav-picture { width: 65px; height: 46px; opacity: .84; }
+#city-links button.active .nav-picture, #city-links button:hover .nav-picture { opacity: 1; }
+#tabs { padding-top: 0; }
+#tabs button { display: flex; align-items: center; justify-content: center; gap: 6px; min-width: 0; }
+#sidebar { padding-top: 16px; }
+.illustrated-head { display: flex; align-items: center; gap: 14px; margin-bottom: 15px; }
+.illustrated-head > div { min-width: 0; }
+.illustrated-head h2 { margin: 0 0 3px; font-size: 26px; }
+.panel-picture { width: 72px; height: 58px; }
+.tradebox { background: radial-gradient(ellipse at 15% 5%, #c7af7330, transparent 65%), #10271f; padding: 12px 14px; border-color: #dab77c45; border-radius: 8px; margin-bottom: 18px; }
+.trade-heading { align-items: center; justify-content: flex-start; gap: 14px; }
+.selected-good-picture { width: 105px; height: 77px; }
+.trade-title { min-width: 0; }
+.trade-title h3 { font-size: 25px; margin-bottom: 4px; }
+.trade-title > small { display: block; margin-top: 7px; font-size: 12px; }
+.trade-title .demand { display: inline-block; }
+.tradebox .qty-row { margin: 10px 0; }
+.trade-availability { gap: 8px; margin: 9px 0; }
+.trade-availability > span { display: flex; align-items: center; gap: 7px; background: #ffffff04; border-radius: 4px; padding: 5px 8px; flex: 1; }
+.trade-availability strong { font-size: 16px; font-weight: 500; color: var(--ink); }
+.trade-actions button { border-radius: 5px; }
+.trade-note { margin-top: 7px; }
+.goods-list { margin-bottom: 18px; }
+.goods-list-head { align-items: center; font-size: 10px; margin: 0 0 10px; }
+.goods-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 7px; }
+.goods-grid .commodity { display: flex; flex-direction: column; gap: 0; min-width: 0; padding: 7px 6px 8px; border: 1px solid var(--line); border-radius: 7px; background: linear-gradient(150deg, #ffffff07, #081d1720); text-align: center; position: relative; }
+.goods-grid .commodity:hover:not(:disabled) { background: #dab77c15; border-color: #dab77c70; }
+.goods-grid .commodity.selected { background: radial-gradient(ellipse at 50% 10%, #cdb47532, transparent 90%), #263e2d; border: 1px solid var(--gold); box-shadow: inset 0 -2px var(--gold); }
+.commodity-art { width: 100%; position: relative; display: flex; justify-content: center; margin-bottom: 2px; }
+.commodity-art .menu-art { width: 70px; height: 51px; }
+.goods-grid .commodity-name { display: flex; align-items: center; justify-content: center; min-height: 28px; width: 100%; font: 500 11px/1.2 system-ui, sans-serif; color: var(--ink); overflow-wrap: anywhere; }
+.goods-grid .commodity-prices { width: 100%; display: grid; grid-template-columns: 1fr 1fr; gap: 4px; margin-top: 4px; font: 15px/1.25 Georgia, serif; text-align: center; }
+.commodity-prices > span + span { border-left: 1px solid var(--line); color: #bcc9b1; }
+.goods-grid .commodity-prices small { display: block; margin: 0 0 2px; font: 9px/1.5 system-ui, sans-serif; letter-spacing: 0; color: var(--ink-soft); }
+.stock-count { position: absolute; bottom: 1px; right: 0; min-width: 19px; padding: 1px 4px; font: 600 10px/1.5 system-ui, sans-serif; color: #203026; background: #dbc28b; border: 1px solid #e8d7af; border-radius: 4px; }
+.demand-dot { position: absolute; top: 1px; right: 1px; width: 7px; height: 7px; border-radius: 50%; box-shadow: 0 0 0 2px #172d27; }
+.demand-dot.shortage { background: var(--red); }
+.demand-dot.surplus { background: var(--green); }
+.goods-legend { display: block; font-size: 10px; line-height: 1.6; margin-top: 9px; }
+.trade-comparison { margin-bottom: 18px; background: #ffffff03; }
+.trade-comparison summary { cursor: pointer; display: flex; align-items: center; justify-content: space-between; gap: 7px; font-size: 12px; color: var(--gold); }
+.trade-comparison summary::before { content: '›'; font: 22px/1 Georgia, serif; }
+.trade-comparison[open] summary::before { transform: rotate(90deg); }
+.trade-comparison summary > span { margin-right: auto; }
+.trade-comparison summary .rat { font-size: 11px; padding: 3px 5px; }
+.visitor-goods { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 9px; }
+.visitor-good { min-width: 0; display: flex; flex-direction: column; padding: 10px; border: 1px solid var(--line); border-radius: 7px; background: #ffffff03; }
+.visitor-good-head { display: flex; align-items: center; gap: 4px; margin-bottom: 8px; }
+.visitor-good-head .menu-art { width: 55px; height: 42px; }
+.visitor-good-head > div { min-width: 0; }
+.visitor-good-head b { font-size: 12px; overflow-wrap: anywhere; }
+.visitor-good small { display: block; font-size: 10px; line-height: 1.5; }
+.visitor-good-price { margin-bottom: 6px; }
+.visitor-good-price > strong { display: block; font: 22px Georgia, serif; color: var(--gold); margin: 2px 0; }
+.visitor-good-price strong > small { display: inline; font: 10px system-ui, sans-serif; }
+.visitor-good-comparison { flex: 1; margin: 8px 0; overflow-wrap: anywhere; }
+.visitor-good-comparison .rat { display: inline-block; margin-top: 3px; font-size: 11px; white-space: normal; }
+.visitor-good > button { width: 100%; margin-top: 3px; }
+.warehouse-goods { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 9px; margin: 12px 0; }
+.warehouse-good { display: flex; align-items: center; gap: 6px; padding: 10px; border: 1px solid var(--line); border-radius: 7px; background: #ffffff03; }
+.warehouse-good .menu-art { width: 60px; height: 44px; }
+.warehouse-good > div { min-width: 0; }
+.warehouse-good b { font-size: 12px; }
+.warehouse-good strong { display: block; font: 20px Georgia, serif; color: var(--gold); }
+.warehouse-good strong small { display: inline; }
+.warehouse-good small { display: block; font: 10px/1.5 system-ui, sans-serif; overflow-wrap: anywhere; }
+.captain-card { display: flex; align-items: center; gap: 10px; border-radius: 7px; }
+.captain-card > div { min-width: 0; }
+.captain-card .person-picture { width: 64px; height: 60px; }
+.person .person-picture { width: 40px; height: 40px; }
+.person { flex-wrap: wrap; }
+.person .who { min-width: 110px; }
+@media (max-width: 560px) {
+  .goods-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  #city-links { gap: 6px; }
+  #city-links .nav-picture { width: 58px; height: 42px; }
+  .selected-good-picture { width: 90px; height: 66px; }
+  .trade-availability { flex-wrap: wrap; }
+}
+@media (max-width: 360px) {
+  .visitor-goods, .warehouse-goods { grid-template-columns: 1fr; }
+  .trade-availability > span { padding: 5px; }
+  #city-links button { font-size: 11px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  #city-links button, .commodity { transition: none; }
+}

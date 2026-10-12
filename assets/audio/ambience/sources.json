@@ -1,0 +1,102 @@
+[
+  {
+    "kind": "water",
+    "author": "RandomMind",
+    "source": "https://opengameart.org/content/sea-and-river-wave-sounds",
+    "original": "https://opengameart.org/sites/default/files/VistulaShort_0.mp3",
+    "license": "CC0 1.0",
+    "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+    "duration": 62.0,
+    "changes": "Excerpt, filtering, loudness adjustment, fades or loop crossfade, MP3 encoding."
+  },
+  {
+    "kind": "bird",
+    "author": "isaiah658",
+    "source": "https://opengameart.org/content/ambient-bird-sounds",
+    "original": "https://opengameart.org/sites/default/files/birds-isaiah658_0.ogg",
+    "license": "CC0 1.0",
+    "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+    "duration": 30.6765,
+    "changes": "Excerpt, filtering, loudness adjustment, fades or loop crossfade, MP3 encoding."
+  },
+  {
+    "kind": "gull",
+    "author": "Tuomo Untinen",
+    "source": "https://opengameart.org/content/rpg-sound-package",
+    "original": "seagull1.wav",
+    "license": "CC BY 3.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by/3.0/",
+    "duration": 0.9985625,
+    "changes": "Excerpt, filtering, loudness adjustment, fades or loop crossfade, MP3 encoding."
+  },
+  {
+    "kind": "gull2",
+    "author": "Tuomo Untinen",
+    "source": "https://opengameart.org/content/rpg-sound-package",
+    "original": "seagull2.wav",
+    "license": "CC BY 3.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by/3.0/",
+    "duration": 0.85103125,
+    "changes": "Excerpt, filtering, loudness adjustment, fades or loop crossfade, MP3 encoding."
+  },
+  {
+    "kind": "cargo",
+    "author": "Tuomo Untinen",
+    "source": "https://opengameart.org/content/rpg-sound-package",
+    "original": "build1.wav",
+    "license": "CC BY 3.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by/3.0/",
+    "duration": 3.848375,
+    "changes": "Excerpt, filtering, loudness adjustment, fades or loop crossfade, MP3 encoding."
+  },
+  {
+    "kind": "work",
+    "author": "Tuomo Untinen",
+    "source": "https://opengameart.org/content/rpg-sound-package",
+    "original": "build2.wav",
+    "license": "CC BY 3.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by/3.0/",
+    "duration": 4.7096875,
+    "changes": "Excerpt, filtering, loudness adjustment, fades or loop crossfade, MP3 encoding."
+  },
+  {
+    "kind": "hammer",
+    "author": "Tuomo Untinen",
+    "source": "https://opengameart.org/content/rpg-sound-package",
+    "original": "smith1.wav",
+    "license": "CC BY 3.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by/3.0/",
+    "duration": 3.0093125,
+    "changes": "Excerpt, filtering, loudness adjustment, fades or loop crossfade, MP3 encoding."
+  },
+  {
+    "kind": "door",
+    "author": "Tuomo Untinen",
+    "source": "https://opengameart.org/content/rpg-sound-package",
+    "original": "dooropen.wav",
+    "license": "CC BY 3.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by/3.0/",
+    "duration": 1.46284375,
+    "changes": "Excerpt, filtering, loudness adjustment, fades or loop crossfade, MP3 encoding."
+  },
+  {
+    "kind": "horse",
+    "author": "Tuomo Untinen",
+    "source": "https://opengameart.org/content/rpg-sound-package",
+    "original": "horse.wav",
+    "license": "CC BY 3.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by/3.0/",
+    "duration": 1.69021875,
+    "changes": "Excerpt, filtering, loudness adjustment, fades or loop crossfade, MP3 encoding."
+  },
+  {
+    "kind": "crowd",
+    "author": "Breviceps",
+    "source": "https://freesound.org/people/Breviceps/sounds/473586/",
+    "original": "https://cdn.freesound.org/previews/473/473586_9159316-hq.mp3",
+    "license": "CC0 1.0",
+    "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+    "duration": 32.0,
+    "changes": "Excerpt 1\u201335 s, high/low-pass filtering, 2 s loop crossfade, quiet offset layers at 7 and 19 s, loudness adjustment, MP3 encoding."
+  }
+]

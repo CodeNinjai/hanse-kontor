@@ -10,7 +10,7 @@ function seeded(seed) { let s = seed >>> 0; return () => { s = (s + 0x6D2B79F5) 
 function load(seed) {
   const M = Object.create(Math); M.random = seeded(seed);
   const ctx = { console, Intl, Math: M, Date, JSON }; vm.createContext(ctx);
-  for (const f of ['data', 'town', 'i18n', 'game', 'paths', 'rivals', 'contracts', 'sea', 'family', 'offices', 'faith', 'deals', 'staff', 'burghers', 'chains']) vm.runInContext(fs.readFileSync(ROOT + '/js/' + f + '.js', 'utf8'), ctx, { filename: f });
+  for (const f of ['data', 'town', 'i18n', 'game', 'paths', 'rivals', 'contracts', 'sea', 'family', 'offices', 'faith', 'deals', 'staff', 'burghers', 'chains', 'ostviertel', 'ausgleich', 'weiterentwicklung', 'handelsvorhaben', 'ereignisse', 'salzgeschichte', 'salzgeschichte-text','korrespondenz','korrespondenz-text','landwirtschaft']) vm.runInContext(fs.readFileSync(ROOT + '/js/' + f + '.js', 'utf8'), ctx, { filename: f });
   vm.runInContext('globalThis.HK = HK', ctx);
   return ctx.HK;
 }
@@ -162,7 +162,7 @@ function makeBot(HK, st, path) {
     const loyal = HK.councillors().filter(c => st.persons[c.id].loyalty >= 60).length;
     if (st.influence >= 45 && st.day % 7 === 0 && loyal >= 4) {
       if (path === 'mayor' && !HK.law(st, 'staple')) HK.propose(st, 'staple', 1);
-      else if (path === 'merchant' && HK.law(st, 'monopoly') === 'none' && st.seat !== 'none') HK.propose(st, 'monopoly', 'salt');
+      else if (path === 'merchant' && HK.law(st, 'monopoly') === 'none' && st.seat !== 'none') { if (HK.pachteMonopol && !HK.monopolPachtGruende(st).length) HK.pachteMonopol(st, 'salt'); else HK.propose(st, 'monopoly', 'salt'); }
       else if (path === 'mayor' && HK.law(st, 'tariff') !== 5 && st.taxFarm === null) HK.propose(st, 'tariff', 5);
     }
   }

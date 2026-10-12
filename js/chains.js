@@ -20,13 +20,13 @@ HK.CHAINS = {
         if (st.militia) { HK.log(st, 'vt_raidRepelled', {}, 'good'); ch.data.repelled = true; }
         else { if (st.ships.length) st.ships.pop(); for (const g in st.town.stock) st.town.stock[g] *= warned ? 0.97 : 0.93; st.town.prosperity = HK.clamp(st.town.prosperity - (warned ? 2 : 5), 0, 100); HK.log(st, warned ? 'vt_raidWarned' : 'vt_raid', {}, 'bad'); }
       }
-      if (stage === 'hunt' && ch.data.choice === 'lead') { const s = st.ownShips.find(x => x.id === ch.data.shipId); if (s) { s.status = 'away'; s.dest = 'luebeck'; s.daysLeft = 12; s.phase = 'hunt'; s.cargo = {}; } }
+      if (stage === 'hunt' && ch.data.choice === 'lead') { const s = st.ownShips.find(x => x.id === ch.data.shipId); if (s) { s.status = 'away'; s.dest = 'luebeck'; s.daysLeft = 12; s.phase = 'hunt'; s.cargo = {}; HK.fleetPrepare?.(s); } }
       if (stage === 'peace') {
         if (ch.data.choice === 'lead') {
           const s = st.ownShips.find(x => x.id === ch.data.shipId); const bonus = (st.militia ? 0.1 : 0) + (st.blessedUntil > st.day ? 0.1 : 0) + (HK.rivalAlly(st) ? 0.1 : 0) + (ch.data.funded ? 0.1 : 0);
-          if (Math.random() < 0.55 + bonus) { const loot = HK.rndi(3000, 6000); HK.book(st, 'expedition', loot); st.rep = HK.clamp(st.rep + 10, 0, 100); HK.fac(st, 'patrizier', 8); HK.fac(st, 'kirche', 3); HK.fac(st, 'kaufleute', 5); st.influence += 8; st.stats.pirateVictory = (st.stats.pirateVictory || 0) + 1; HK.log(st, 'vt_victory', { loot: HK.fmt(loot) }, 'good'); }
-          else { if (s) s.hull = Math.max(5, s.hull - 40); st.rep = HK.clamp(st.rep - 3, 0, 100); HK.log(st, 'vt_defeat', {}, 'bad'); }
-          if (s) { s.status = 'port'; s.dest = null; s.daysLeft = 0; s.phase = 'out'; }
+          if (s && s.status === 'away' && s.phase === 'hunt' && Math.random() < 0.55 + bonus) { const loot = HK.rndi(3000, 6000); HK.book(st, 'expedition', loot); st.rep = HK.clamp(st.rep + 10, 0, 100); HK.fac(st, 'patrizier', 8); HK.fac(st, 'kirche', 3); HK.fac(st, 'kaufleute', 5); st.influence += 8; st.stats.pirateVictory = (st.stats.pirateVictory || 0) + 1; HK.log(st, 'vt_victory', { loot: HK.fmt(loot) }, 'good'); }
+          else { if (s?.phase === 'hunt') s.hull = Math.max(5, s.hull - 40); st.rep = HK.clamp(st.rep - 3, 0, 100); HK.log(st, 'vt_defeat', {}, 'bad'); }
+          if (s?.phase === 'hunt') { s.status = 'port'; s.dest = null; s.daysLeft = 0; s.phase = 'out'; }
         } else if (ch.data.choice === 'fund') { const won = Math.random() < 0.6; HK.log(st, won ? 'vt_fleetWon' : 'vt_fleetLost', {}, won ? 'good' : 'info'); if (won) { HK.fac(st, 'patrizier', 3); st.rep = HK.clamp(st.rep + 3, 0, 100); } }
         else HK.log(st, 'vt_peace', {}, 'info');
       }
@@ -40,7 +40,7 @@ HK.CHAINS = {
       }
       if (ch.stage === 'council') {
         if (choice === 'fund') { if (st.money < 2000) return { ok: false, msg: 'notEnoughMoney' }; HK.book(st, 'politics', -2000); d.funded = true; HK.fac(st, 'patrizier', 4); st.rep = HK.clamp(st.rep + 3, 0, 100); }
-        if (choice === 'lead') { const s = st.ownShips.find(x => x.status === 'port'); if (!s) return { ok: false, msg: 'needShipInPort' }; d.shipId = s.id; }
+        if (choice === 'lead') { const s = st.ownShips.find(x => x.status === 'port' && !HK.stockUsed(x.cargo) && (!HK.fleetReady || HK.fleetReady(st,x,'luebeck',12).ok)); if (!s) return { ok: false, msg: HK.fleetReady ? 'fleetNeedExpedition' : 'needShipInPort' }; d.shipId = s.id; }
         if (choice === 'stayout') HK.fac(st, 'patrizier', -3);
         d.choice = choice; return { ok: true, next: 'hunt' };
       }

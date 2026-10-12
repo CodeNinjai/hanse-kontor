@@ -1,0 +1,61 @@
+.trade-teaser { display: flex; align-items: center; gap: 8px; padding: 8px; margin: 0 0 16px; background: #dab77c0d; border: 1px solid #dab77c40; border-radius: 7px; }
+.trade-teaser .menu-art { width: 50px; height: 38px; }
+.trade-teaser > div { flex: 1; min-width: 0; }
+.trade-teaser b { font-size: 12px; }
+.trade-teaser small { display: block; font-size: 10px; }
+.planning-link { display: flex; align-items: center; gap: 7px; margin-bottom: 16px; font-size: 12px; }
+.trade-plans { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.trade-plan-card, .trade-supply, .trade-news-card { min-width: 0; padding: 12px; background: #0f261f; border: 1px solid var(--line); border-radius: 7px; }
+.trade-plan-card { display: flex; flex-direction: column; gap: 9px; }
+.trade-plan-card.committed { border-color: #dab77c85; grid-column: 1 / -1; }
+.plan-heading { display: flex; align-items: center; gap: 7px; }
+.plan-heading .menu-art { width: 53px; height: 40px; }
+.plan-heading > div { min-width: 0; }
+.plan-heading b { display: block; font-size: 13px; }
+.trade-plan-card small, .trade-supply small, .trade-news-card small { display: block; font-size: 10px; line-height: 1.6; }
+.trade-plan-card .plan-story { font-size: 11px; line-height: 1.55; margin: 0; flex: 1; }
+.plan-terms { display: flex; flex-wrap: wrap; gap: 8px 14px; }
+.plan-terms span { flex: 1; font-size: 10px; color: var(--ink-soft); }
+.plan-terms strong { display: block; color: var(--gold); font: 16px/1.5 Georgia, serif; }
+.plan-stock { margin: 4px 0 0; font-size: 12px; }
+.trade-plan-card progress { width: 100%; height: 7px; accent-color: var(--gold); }
+.procurement-option { padding: 9px; background: #ffffff04; border-radius: 5px; display: grid; gap: 5px; }
+.procurement-option b, .trade-supply > b { font-size: 12px; }
+.plan-risk { display: block; color: var(--red); font-size: 11px; font-weight: 500; }
+.trade-news, .trade-supplies { display: grid; gap: 9px; }
+.trade-news-card { display: grid; gap: 5px; }
+.trade-news-card > .tag { justify-self: start; }
+.trade-news-card > b { font-size: 13px; }
+.trade-news-card > p { font-size: 12px; margin: 0; }
+.trade-news-card.denied { opacity: .65; }
+.trade-supply { display: grid; gap: 7px; }
+.trade-advance-receipt { padding: 10px 0; border-bottom: 1px solid var(--line); }
+.trade-advance-receipt b { font-size: 12px; }
+.trade-advance-receipt small { display: block; font-size: 10px; }
+.visitor-good > .bulk-deal { margin: 7px 0; color: var(--gold); border-color: #dab77c65; background: #dab77c0a; }
+.visitor-good .rival-intent { margin-top: 8px; color: var(--gold); }
+.trade-plan-card, .trade-supply, .trade-news-card { overflow-wrap: anywhere; }
+@media (max-width: 360px) { .trade-plans { grid-template-columns: 1fr; } }
+.city-life { padding-top: 3px; }
+.city-mood { padding: 12px; border: 1px solid var(--line); border-radius: 7px; background: #12332a; }
+.city-mood b { font-size: 11px; color: var(--ink-soft); }
+.city-mood strong { float: right; font-size: 12px; color: var(--gold); }
+.city-mood meter { width: 100%; height: 10px; margin-top: 8px; accent-color: #b5c792; }
+.city-story { border: 1px solid #dab77c50; border-radius: 7px; padding: 13px; margin: 12px 0; background: linear-gradient(135deg,#244034,#0f261f); }
+.city-story .plan-heading { align-items: start; }
+.city-story .plan-heading .menu-art { width: 66px; height: 50px; }
+.city-story .plan-heading b { margin-top: 6px; }
+.city-story p { font-size: 12px; line-height: 1.65; }
+.city-story small { display: block; font-size: 10px; line-height: 1.65; }
+.city-effects { list-style: none; margin: 10px 0; padding: 0; display: grid; gap: 5px; font-size: 11px; }
+.city-effects li { display: grid; gap: 3px; border-bottom: 1px solid #ffffff09; padding-bottom: 5px; }
+.city-effects b { font-weight: 500; color: var(--ink-soft); font-size: 10px; }
+.city-responses { display: grid; gap: 8px; margin: 9px 0; }
+.city-response { padding: 8px; border: 1px solid var(--line); border-radius: 5px; background: #00000015; }
+.city-response button { width: 100%; text-align: left; margin-bottom: 5px; }
+.city-protection { font-size: 11px; color: #b5c792; }
+.quality-badge { display: inline-block; color: var(--ink-soft); font-size: 10px; margin: 4px 0; }
+.quality-badge.poor { color: #e6ad91; }
+.quality-badge.fine { color: #c4d9a1; }
+.market-quality { display: flex; flex-wrap: wrap; gap: 0 14px; }
+.city-story,.city-response,.city-mood { overflow-wrap: anywhere; }

@@ -1,0 +1,47 @@
+'use strict';
+const {chromium}=require('playwright'),assert=require('node:assert/strict'),fs=require('node:fs');
+(async()=>{const browser=await chromium.launch({headless:true,args:['--no-sandbox','--enable-unsafe-swiftshader']});try{
+ const page=await browser.newPage({viewport:{width:1600,height:1050},locale:'de-DE'}),errors=[];page.on('pageerror',e=>errors.push(e.message));
+ await page.addInitScript(()=>{let seed=774;Math.random=()=>((seed=(Math.imul(seed,1664525)+1013904223)>>>0)/4294967296);});
+ await page.goto(process.env.HK_URL||'http://localhost:8778/');await page.waitForFunction(()=>HK.PixiScene.bereit);await page.locator('#new-game-form button[type=submit]').click();await page.evaluate(()=>{HK.loop=()=>{};HK.state.speed=0;});
+ // Both actual map buildings must pick and open their own panel.
+ for(const id of ['warehouse','kontor']){
+  const point=await page.evaluate(id=>{const S=HK.Scene,b=HK.BUILDING[id];S.zeigeAuf(b.x+b.w/2,b.y+b.d/2);S.renderPick();for(const z of [b.h,b.h+.4,b.h-.4,.5])for(const dx of [.5,.3,.7])for(const dy of [.5,.3,.7]){const p=HK.Iso.p(b.x+b.w*dx,b.y+b.d*dy,z),hit=S.hit(p[0],p[1]);if(hit?.building?.id!==id)continue;const x=(p[0]-S.cam.x)*S.cam.z,y=(p[1]-S.cam.y)*S.cam.z;if(x<0||y<0||x>HK.SCENE.W||y>HK.SCENE.H)continue;const r=document.getElementById('scene').getBoundingClientRect();return{x:r.left+x*r.width/HK.SCENE.W,y:r.top+y*r.height/HK.SCENE.H};}throw Error('Building cannot be picked '+id);},id);
+  await page.mouse.click(point.x,point.y);assert.equal(await page.evaluate(()=>HK.UI.panel),id);assert.equal(await page.evaluate(()=>HK.Scene.selected),id);
+ }
+ assert.equal(await page.locator('.office-factor').count(),0);assert.equal(await page.locator('.office-ledger').count(),1);assert.equal(await page.locator('.warehouse-inventory,.freight-panel,[data-action=expandwh]').count(),0);
+ await page.locator('#area-links [data-panel=staff]').click();assert.equal(await page.locator('.office-factor').count(),1);
+ const funds=await page.evaluate(()=>HK.state.money);await page.locator('[data-action=hirefactor]').click();assert.equal(await page.evaluate(()=>HK.state.money),funds-await page.evaluate(()=>HK.CONST.FACTOR_COST));assert(await page.evaluate(()=>!!HK.state.factor));await page.locator('[data-action=dismissfactor]').click();
+ await page.locator('#area-links [data-panel=warehouse]').click();assert.equal(await page.locator('#tab-place-label').textContent(),'Lagerhaus');assert(await page.locator('#city-links [data-place=kontor]').evaluate(el=>el.classList.contains('active')));
+ assert.equal(await page.locator('.warehouse-inventory').count(),1);assert.equal(await page.locator('.office-factor,.office-ledger,[data-action=hirefactor]').count(),0);assert.equal(await page.locator('.freight-panel').count(),1);
+ const capacity=async()=>page.evaluate(()=>Object.fromEntries([...document.querySelectorAll('[data-capacity]')].map(el=>[el.dataset.capacity,parseInt(el.querySelector('strong').textContent,10)])));
+ assert.deepEqual(await capacity(),{stored:50,reserved:0,free:350});
+ assert(await page.evaluate(()=>{const before=HK.serialize(HK.state);for(let i=0;i<15;i++){HK.UI.panel_kontor();HK.UI.panel_warehouse();}return before===HK.serialize(HK.state);}),'Views change economy/mission/letters');
+ await page.locator('[data-action=warehousetrade][data-good=salt]').click();assert.equal(await page.evaluate(()=>HK.UI.marketGood),'salt');assert.equal(await page.locator('[data-action=mbuy]').getAttribute('data-good'),'salt');
+ await page.evaluate(()=>{HK.state.money=100000;HK.UI.inputs.qty=18;HK.UI.inputs.qtyAll=false;HK.UI.setTab('planning');});
+ const incoming=await page.evaluate(()=>HK.state.incoming.find(i=>i.origin==='umland'&&i.tradeLot?.good==='grain').id);const prepaid=await page.evaluate(()=>HK.state.money);
+ await page.locator(`[data-action=tradeadvance][data-id="${incoming}"]`).click();const cost=await page.evaluate(()=>HK.tradeAdvances(HK.state)[0].cost);assert.equal(await page.evaluate(()=>HK.state.money),prepaid-cost);
+ await page.locator('#city-links [data-place=kontor]').click();await page.locator('#area-links [data-panel=warehouse]').click();assert.deepEqual(await capacity(),{stored:50,reserved:18,free:332});assert.equal(await page.locator('.warehouse-delivery[data-advance]').count(),1);assert.match(await page.locator('.warehouse-delivery[data-advance]').textContent(),/18 Last.*Getreide/);assert.equal(await page.locator('[data-action=warehousetrade][data-good=grain]').count(),0,'Reserved goods shown as stocked');
+ const money=await page.evaluate(()=>HK.state.money),cap=await page.evaluate(()=>HK.state.warehouse.cap);await page.locator('[data-action=expandwh]').click();assert.equal(await page.evaluate(()=>HK.state.money),money-await page.evaluate(()=>HK.CONST.WAREHOUSE_EXPAND_COST));assert.equal(await page.evaluate(()=>HK.state.warehouse.cap),cap+await page.evaluate(()=>HK.CONST.WAREHOUSE_EXPAND));
+ await page.locator('.warehouse-stores>summary').click();await page.locator('[data-action=businessplace][data-building=storage2]').click();assert.equal(await page.evaluate(()=>HK.UI.plot),1);const storageMoney=await page.evaluate(()=>HK.state.money);await page.locator('[data-action=buystorage]').click();assert(await page.evaluate(()=>HK.state.storages[1].owner==='player'));assert(await page.evaluate(()=>HK.state.money)<storageMoney);
+ assert(await page.evaluate(()=>{const st=HK.state,cap=st.warehouse.cap;st.warehouse.cap=HK.stockUsed(st.warehouse.stock)+HK.tradeAdvances(st).reduce((n,a)=>n+a.qty,0)+HK.STORAGES[1].cap-1;const before=HK.serialize(st);const valid=!HK.toggleStorage(st,1).ok&&!HK.sellStorage(st,1).ok&&before===HK.serialize(st);st.warehouse.cap=cap;return valid;}),'Storage disposal invalidates prepaid space');
+ // Ship cargo is kept separate until a real unloading action succeeds.
+ await page.evaluate(()=>{const st=HK.state;HK.buyShip(st,'kogge');const ship=st.ownShips.at(-1);ship.cargo.salt=7;ship.quality={salt:108};window.testShip=ship.id;HK.UI.panel='warehouse';HK.UI.setTab('place');});assert.equal(await page.locator('.ship-cargo').count(),1);assert.match(await page.locator('.ship-cargo').textContent(),/7 Last.*Salz.*108/);const salt=await page.evaluate(()=>HK.state.warehouse.stock.salt),stockBefore=await capacity();
+ await page.locator('[data-action=warehouseship]').click();assert.equal(await page.evaluate(()=>HK.UI.selectedOwnShip),await page.evaluate(()=>window.testShip));assert.equal(await page.evaluate(()=>HK.state.warehouse.stock.salt),salt);await page.evaluate(()=>{HK.UI.inputs.qty=7;HK.UI.renderAll();});await page.locator('[data-action=unload][data-good=salt]').click();assert.equal(await page.evaluate(()=>HK.state.warehouse.stock.salt),salt+7);
+ await page.locator('#city-links [data-place=kontor]').click();await page.locator('#area-links [data-panel=warehouse]').click();assert.equal(await page.locator('.ship-cargo').count(),0);assert.equal((await capacity()).stored,stockBefore.stored+7);
+ // Save/load and delivery release reserved space exactly once.
+ await page.evaluate(()=>{HK.state=HK.deserialize(HK.serialize(HK.state));HK.UI.renderAll();});assert.equal((await capacity()).reserved,18);
+ const beforeArrival=await page.evaluate(()=>HK.state.money);await page.evaluate(id=>{const st=HK.state,inc=st.incoming.find(i=>i.id===id);inc.delayResolved=true;st.incoming=[inc];st.caravans=[];HK.scheduleArrival=()=>{};HK.triggerEvent=()=>{};st.cityLife.nextStory=100000;for(let i=0;i<4;i++)HK.tick(st);HK.UI.closeModal();HK.UI.renderAll();},incoming);assert.equal((await capacity()).reserved,0);assert.equal(await page.evaluate(()=>HK.state.warehouse.stock.grain),18);assert.equal(await page.locator('.warehouse-delivery[data-advance]').count(),0);
+ const economic=await page.evaluate(()=>HK.serialize({money:HK.state.money,warehouse:HK.state.warehouse,advances:HK.state.tradePlanning.advances}));await page.evaluate(()=>{HK.UI.renderAll();HK.UI.panel_warehouse();HK.UI.renderAll();});assert.equal(await page.evaluate(()=>HK.serialize({money:HK.state.money,warehouse:HK.state.warehouse,advances:HK.state.tradePlanning.advances})),economic);
+ fs.mkdirSync('/tmp/hanse-map-audit',{recursive:true});
+ for(const width of [1600,1024,768,390,360])for(const lang of ['de','en']){
+  await page.setViewportSize({width,height:1050});await page.evaluate(lang=>HK.setLang(lang),lang);
+  for(const panel of ['kontor','warehouse']){
+   await page.evaluate(panel=>{const b=HK.BUILDING[panel];HK.UI.sceneClick({kind:'building',building:b,panel});},panel);assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),'Overflow '+panel+'/'+width+'/'+lang);
+   const title=await page.locator('#sidebar h2').textContent();assert.equal(title,lang==='de'?panel==='kontor'?'Dein Kontor':'Lagerhaus':panel==='kontor'?'Your office':'Warehouse');
+   assert.equal(await page.locator('#area-links [aria-current=page]').getAttribute('data-panel'),panel);
+   if(width===1600&&lang==='de')await page.locator('#side').screenshot({path:'/tmp/hanse-map-audit/'+panel+'-separated.png'});
+  }
+ }
+ assert.deepEqual(errors,[]);console.log(JSON.stringify({result:'PASS',mapBuildings:2,independentPanels:true,factor:true,warehouseExpansion:true,reservations:true,arrivalOnce:true,cargoUnloading:true,storagePlot:true,saveLoad:true,pureViews:true,languages:2,widths:5,errors}));
+}finally{await browser.close();}})().catch(e=>{console.error(e);process.exitCode=1;});

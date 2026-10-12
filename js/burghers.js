@@ -169,7 +169,7 @@ HK.tickHooks.push(st => {
     if (h.vacantUntil && h.vacantUntil === st.day) { h.family = HK.pick(HK.BURGHER_FAMILIES); h.trade = HK.pick(HK.BURGHER_TRADES); h.mood = HK.rndi(45, 65); h.vacantUntil = 0; HK.log(st, 'burgherMovedIn', { house: HK.burgherName(h), family: h.family }, 'good'); }
     if (h.mood < 18 && Math.random() < 0.01) { h.vacantUntil = st.day + HK.rndi(30, 90); HK.log(st, 'burgherLeft', { house: HK.burgherName(h), family: h.family }, 'bad'); }
   }
-  if (rent) HK.book(st, 'rent', rent);
+  if (rent) {HK.book(st, 'rent', rent);HK.noteAscentRent?.(st);}
   if (upkeep) HK.book(st, 'upkeep', -upkeep);
   // Neue Angebote, etwa zwei bis drei im Jahr, und die Gebote der Rivalen
   if (Math.random() < 0.007) HK.offerBurgher(st);

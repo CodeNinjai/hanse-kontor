@@ -106,3 +106,16 @@ ul.log li.bad { background: rgba(200,90,80,.14); } ul.log li.good { background: 
 
 details.title { border-top: 1px solid var(--border); padding: 4px 0; } details.title summary { cursor: pointer; } details.title.done summary { color: var(--gold-dark); } ul.conds { list-style: none; padding-left: 4px; margin: 4px 0; font-size: 13px; } ul.conds li { color: var(--ink-soft); } ul.conds li.ok { color: var(--green); }
 .choices { display: flex; flex-direction: column; gap: 8px; margin-top: 12px; } .choices .choice { text-align: left; padding: 8px 12px; display: flex; flex-direction: column; gap: 2px; } .choices .choice small { font-weight: normal; color: var(--ink-soft); } .modal-box .lede { font-style: italic; }
+/* Handelsrat */
+.rat { font-size: 12px; font-weight: 600; padding: 0 4px; border-radius: 3px; white-space: nowrap; }
+.rat.gut { background: #cfe0c2; color: var(--green); } .rat.schlecht { color: var(--ink-soft); font-weight: normal; }
+/* Lehrgang „Erste Schritte“ */
+#lehrgang { position: absolute; left: 10px; top: 10px; width: min(330px, calc(100% - 20px)); z-index: 5; background: rgba(243, 232, 207, .96); border: 1px solid var(--border); border-radius: 4px; box-shadow: 0 3px 14px rgba(40, 28, 10, .28); padding: 9px 12px 11px; font-size: 14px; line-height: 1.35; }
+#lehrgang.zu { width: auto; padding: 0; background: none; border: 0; box-shadow: none; }
+#lehrgang.zu button { background: rgba(243, 232, 207, .96); border: 1px solid var(--border); border-radius: 3px; padding: 4px 10px; font: inherit; color: var(--ink); cursor: pointer; }
+#lehrgang .lg-kopf { display: flex; align-items: baseline; gap: 8px; } #lehrgang .lg-kopf small { color: var(--ink-soft); flex: 1; }
+#lehrgang .lg-x { border: 0; background: none; font-size: 18px; line-height: 1; cursor: pointer; color: var(--ink-soft); padding: 0 2px; }
+#lehrgang h4 { margin: 6px 0 2px; font-size: 15px; } #lehrgang p { margin: 4px 0 6px; } #lehrgang .lg-lohn { font-size: 12.5px; color: var(--green); font-style: italic; }
+#lehrgang .lg-punkte { display: flex; gap: 4px; margin-top: 5px; } #lehrgang .lg-punkte i { flex: 1; height: 4px; border-radius: 2px; background: rgba(179,154,102,.35); }
+#lehrgang .lg-punkte i.ok { background: var(--green); } #lehrgang .lg-punkte i.jetzt { background: var(--gold-dark); }
+.lg-liste { margin: 4px 0 6px 18px; padding: 0; } .lg-liste li { margin: 1px 0; color: var(--ink-soft); } .lg-liste li.ok { color: var(--green); text-decoration: line-through; } .lg-liste li.jetzt { color: var(--ink); font-weight: 600; }
