@@ -5,7 +5,7 @@ const ctx=vm.createContext({console,Intl,Math:math,Date,JSON});
 for(const file of ['data','town','i18n','game','paths','rivals','contracts','sea','family','offices','faith','deals','staff','burghers','chains','ostviertel','ausgleich','lehrgang','weiterentwicklung','handelsvorhaben','ereignisse','salzgeschichte','salzgeschichte-text','korrespondenz','korrespondenz-text','landwirtschaft','menu-art'])vm.runInContext(fs.readFileSync(path.join(__dirname,'..','js',file+'.js'),'utf8'),ctx,{filename:file});
 const H=vm.runInContext('HK',ctx),check=(v,m)=>{checks++;assert(v,m);},fresh=()=>{H.state=H.newGame({name:'Landprüfung',difficulty:'normal',years:20});H.state.money=1000000;return H.state;};
 const runDay=st=>{st.day++;H.ruralDay(st);};
-let st=fresh();check(Object.keys(st.rural.sites).length===10,'Ten real producers');
+let st=fresh();check(Object.keys(st.rural.sites).length===12,'Twelve real producers');
 for(const id of Object.keys(H.RURAL_SITES)){
   st=fresh();const s=st.rural.sites[id],def=H.RURAL_SITES[id],g=Object.keys(s.stock)[0],qty=Math.min(3,s.stock[g]),money=st.money,free=H.whFree(st),local=s.stock[g],q=H.ruralQuote(st,id,g,qty);
   check(q.ok&&H.orderRural(st,id,g,qty).ok&&st.money===money-q.cost,'Payment includes actual goods and freight: '+id);
@@ -45,8 +45,28 @@ check(H.setRuralCrop(st,'grainfarm','hemp').ok&&farm.crop==='grain'&&farm.nextCr
 for(let i=0;i<7;i++)runDay(st);check(farm.stock.grain===12&&farm.crop==='hemp'&&!farm.stock.hemp,'Existing crop harvested before changing');
 for(let i=0;i<7;i++)runDay(st);check(farm.stock.hemp===10,'Next crop produces after seven days');
 st.day=300;st.rural.day=299;farm.next=300;const hemp=farm.stock.hemp;H.ruralDay(st);check(farm.stock.hemp===hemp&&farm.reason==='ruralWinter','Winter pauses field production');
+// Beer chain: a farm can switch to barley, which yields like grain and survives saving.
+st=fresh();H.buyRural(st,'grainfarm');farm=st.rural.sites.grainfarm;
+check(H.setRuralCrop(st,'grainfarm','barley').ok&&farm.nextCrop==='barley','Farm can be switched to barley');
+check(!H.setRuralCrop(st,'grainfarm','hops').ok&&farm.nextCrop==='barley','Hops are not a field crop');
+for(let i=0;i<7;i++)runDay(st);check(farm.stock.grain===12&&farm.crop==='barley'&&!farm.stock.barley,'Grain harvested before barley grows');
+st=H.deserialize(H.serialize(st));H.state=st;farm=st.rural.sites.grainfarm;check(farm.crop==='barley','Barley crop persists in the save');
+for(let i=0;i<7;i++)runDay(st);check(farm.stock.barley===12&&farm.crop==='barley','Barley yields like grain after seven days');
+// Hop garden: no inputs, four last of hops each week, wages only on success.
+st=fresh();H.buyRural(st,'hopgarden');let hops=st.rural.sites.hopgarden;st.day=hops.next-1;st.rural.day=st.day-1;cash=st.money;runDay(st);
+check(hops.stock.hops===4&&st.money===cash-10&&!hops.reason&&hops.next===st.day+7,'Hop garden picks four last of hops every seven days');
+// Malthouse: three last of barley become two last of malt, with the barley's quality.
+st=fresh();H.buyRural(st,'malthouse');let malt=st.rural.sites.malthouse;st.day=malt.next-1;st.rural.day=st.day-1;st.warehouse.stock.barley=7;st.warehouse.quality.barley=94;cash=st.money;runDay(st);
+check(malt.stock.malt===2&&st.warehouse.stock.barley===4&&malt.quality.malt===94&&st.money===cash-5&&malt.next===st.day+2,'Malthouse turns barley into malt');
+st.warehouse.stock.barley=2;const barleyLeft=H.serialize(st.warehouse.stock);for(let i=0;i<2;i++)runDay(st);check(malt.reason==='ruralInputs'&&malt.stock.malt===2&&H.serialize(st.warehouse.stock)===barleyLeft,'Malthouse waits for a full batch of barley');
+// A local (not owned) malthouse buys barley from the town market.
+st=fresh();malt=st.rural.sites.malthouse;const town=st.town.stock.barley;st.day=malt.next-1;st.rural.day=st.day-1;runDay(st);
+check(st.town.stock.barley===town-3&&!malt.reason,'Local malthouse uses town barley');
+// Old saves without the beer-chain producers gain both as local, unowned businesses.
+st=fresh();delete st.rural.sites.hopgarden;delete st.rural.sites.malthouse;st=H.deserialize(H.serialize(st));
+check(['hopgarden','malthouse'].every(id=>st.rural.sites[id]&&!st.rural.sites[id].owner&&st.rural.sites[id].active),'Migration adds hop garden and malthouse');
 // Feed, local space and natural resource limits are hard constraints before any debit.
-for(const id of ['cattlefarm','windmill','dairy','stonemason']){
+for(const id of ['cattlefarm','windmill','dairy','stonemason','malthouse']){
  st=fresh();H.buyRural(st,id);const s=st.rural.sites[id],d=H.RURAL_SITES[id];s.next=1;st.warehouse.stock={};H.qualityStocks.set(st.warehouse.stock,st.warehouse.quality);cash=st.money;runDay(st);
  check(s.reason==='ruralInputs'&&st.money===cash&&H.stockUsed(s.stock)===0,'Missing inputs stop '+id);
  for(const [g,q]of Object.entries(d.inp)){st.warehouse.stock[g]=q;}s.stock.tools=100;const inputs=H.serialize(st.warehouse.stock);s.next=st.day+1;runDay(st);
@@ -68,4 +88,4 @@ st=fresh();H.buyRural(st,'cattlefarm');st.warehouse.stock.grain=1;const e=H.anno
 // Migration only adds NPC data; it neither settles deliveries nor consumes RNG/cash.
 st=fresh();delete st.rural;const state=H.serialize(st),random=seed,cargo=H.serialize(st.warehouse);st=H.deserialize(state);check(seed===random&&H.serialize(st.warehouse)===cargo&&!Object.values(st.rural.sites).some(s=>s.owner),'Legacy migration grants no owned assets or cargo');
 const migrated=H.serialize(st.rural);H.migrate(st);check(H.serialize(st.rural)===migrated&&seed===random,'Idempotent migration');
-console.log(JSON.stringify({result:'PASS',checks,sites:10,goods:H.GOODS.length,production:true,quality:true,deliveries:true,cropRotation:true,resources:true,legacy:true}));
+console.log(JSON.stringify({result:'PASS',checks,sites:12,goods:H.GOODS.length,production:true,quality:true,deliveries:true,cropRotation:true,resources:true,legacy:true}));

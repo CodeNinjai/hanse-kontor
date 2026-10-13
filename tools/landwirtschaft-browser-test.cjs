@@ -5,7 +5,7 @@ const {chromium}=require('playwright'),assert=require('node:assert/strict'),fs=r
  await page.goto(process.env.HK_URL||'http://localhost:8778/');await page.waitForFunction(()=>HK.PixiScene.bereit);await page.locator('#new-game-form button[type=submit]').click();
  await page.evaluate(()=>{HK.loop=()=>{};HK.setSpeed(0);HK.state.money=100000;});
  const sites=await page.evaluate(()=>Object.keys(HK.RURAL_SITES));
- const ruralGroups={ruralFields:['grainfarm','fiberfarm','sheepfarm','cattlefarm'],ruralMill:['windmill','dairy'],ruralForest:['woodcutter','hunter','quarry','stonemason'],ruralDeliveries:[]},groupOf=id=>Object.keys(ruralGroups).find(k=>ruralGroups[k].includes(id));
+ const ruralGroups={ruralFields:['grainfarm','fiberfarm','sheepfarm','cattlefarm','hopgarden'],ruralMill:['windmill','dairy','malthouse'],ruralForest:['woodcutter','hunter','quarry','stonemason'],ruralDeliveries:[]},groupOf=id=>Object.keys(ruralGroups).find(k=>ruralGroups[k].includes(id));
  assert.deepEqual(Object.values(ruralGroups).flat().sort(),[...sites].sort(),'Every producer belongs to exactly one subpage');
  // Real pixel picking must reach both reused rural landmarks and each new building.
  for(const id of sites){
@@ -30,6 +30,7 @@ const {chromium}=require('playwright'),assert=require('node:assert/strict'),fs=r
  const before=await page.evaluate(()=>HK.serialize(HK.state));for(let i=0;i<5;i++)await page.evaluate(()=>{HK.UI.panel_rural();HK.UI.panel_warehouse();});assert.equal(await page.evaluate(()=>HK.serialize(HK.state)),before,'Views change quantities or delivery clocks');
  await page.evaluate(()=>{HK.tick(HK.state);HK.UI.renderAll();});assert.equal(await page.evaluate(()=>HK.state.warehouse.stock.flour),2);assert.equal(await page.locator('[data-rural-delivery]').count(),0);assert.equal(await page.locator('[data-capacity=reserved] strong').textContent(),'0 Last');
  await page.evaluate(()=>HK.UI.action({action:'ruralopen',site:'grainfarm'}));const funds=await page.evaluate(()=>HK.state.money);await page.locator('[data-action=ruralbuy]').click();assert.equal(await page.evaluate(()=>HK.state.money),funds-3600);
+ await page.locator('[data-action=ruralcrop][data-good=barley]').click();assert.equal(await page.evaluate(()=>HK.state.rural.sites.grainfarm.nextCrop),'barley');
  await page.locator('[data-action=ruralcrop][data-good=hemp]').click();assert.equal(await page.evaluate(()=>HK.state.rural.sites.grainfarm.nextCrop),'hemp');assert.equal(await page.evaluate(()=>HK.state.rural.sites.grainfarm.crop),'grain');
  await page.locator('[data-action=ruralpause]').click();assert(!(await page.evaluate(()=>HK.state.rural.sites.grainfarm.active)));await page.locator('[data-action=ruralpause]').click();
  // Native butcher/tannery ownership and mode controls process actual stock.
@@ -84,7 +85,7 @@ const {chromium}=require('playwright'),assert=require('node:assert/strict'),fs=r
  }
  await page.setViewportSize({width:1600,height:1100});await page.evaluate(()=>HK.setLang('de'));
  for(const width of [1600,1024,390,360])for(const lang of ['de','en']){
-  await page.setViewportSize({width,height:1100});await page.evaluate(lang=>{HK.setLang(lang);HK.UI.action({action:'ruralopen'});},lang);assert.equal(await page.locator('.rural-site').count(),10);
+  await page.setViewportSize({width,height:1100});await page.evaluate(lang=>{HK.setLang(lang);HK.UI.action({action:'ruralopen'});},lang);assert.equal(await page.locator('.rural-site').count(),12);
   assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),'Catalogue overflow '+width+'/'+lang);
   if(lang==='de'&&[1600,390].includes(width))await page.locator('#side').screenshot({path:`/tmp/hanse-map-audit/rural-catalogue-${width}.png`});
   for(const id of ['cattlefarm','windmill','quarry','stonemason','hunter']){
@@ -93,5 +94,5 @@ const {chromium}=require('playwright'),assert=require('node:assert/strict'),fs=r
    if(id==='cattlefarm'&&lang==='de'&&width===390)await page.locator('#side').screenshot({path:'/tmp/hanse-map-audit/rural-cattle-mobile.png'});
   }
  }
- assert.deepEqual(errors,[]);console.log(JSON.stringify({result:'PASS',mapSites:sites.length,visibleWorkers:10,stableCamera:true,purchases:true,deliveries:true,reservations:true,craftProduction:true,cropChoice:true,legacy:true,languages:2,widths:4,ruralSubpages:5,errors}));
+ assert.deepEqual(errors,[]);console.log(JSON.stringify({result:'PASS',mapSites:sites.length,visibleWorkers:sites.length,stableCamera:true,purchases:true,deliveries:true,reservations:true,craftProduction:true,cropChoice:true,legacy:true,languages:2,widths:4,ruralSubpages:5,errors}));
 }finally{await browser.close();}})().catch(e=>{console.error(e);process.exitCode=1;});

@@ -5,10 +5,10 @@ let seed = 741, checks = 0;
 const math = Object.create(Math); math.random = () => ((seed = (Math.imul(seed, 1664525) + 1013904223) >>> 0) / 4294967296);
 const ctx = vm.createContext({ console, Intl, Math: math, Date, JSON });
 for (const file of ['data','town','i18n','game','paths','rivals','contracts','sea','family','offices','faith','deals','staff','burghers','chains','ostviertel','ausgleich','lehrgang','weiterentwicklung','handelsvorhaben','ereignisse','salzgeschichte','salzgeschichte-text','korrespondenz','korrespondenz-text','landwirtschaft','menu-art']) vm.runInContext(fs.readFileSync(path.join(__dirname,'..','js',file+'.js'),'utf8'),ctx,{filename:file});
-const H = vm.runInContext('HK',ctx), ids = ['hemp','flax','pitch','bricks','honey','cheese','rope','canvas','flour','cattle','milk','meat','hides','stone','dressedstone'];
+const H = vm.runInContext('HK',ctx), ids = ['hemp','flax','pitch','bricks','honey','cheese','rope','canvas','flour','cattle','milk','meat','hides','stone','dressedstone','barley','malt','hops'];
 const check = (condition, label) => { checks++; assert(condition,label); };
 const fresh = () => { H.state = H.newGame({name:'Warenprüfung',difficulty:'normal',years:20}); H.state.money = 1000000; return H.state; };
-check(H.GOODS.length === 31 && new Set(H.GOODS.map(g=>g.id)).size === H.GOODS.length,'Unique goods');
+check(H.GOODS.length === 34 && new Set(H.GOODS.map(g=>g.id)).size === H.GOODS.length,'Unique goods');
 check(new Set(Object.values(H.GOOD_GROUPS).flat()).size === H.GOODS.length && Object.values(H.GOOD_GROUPS).flat().length === H.GOODS.length,'Each good has one category');
 const pictures = H.GOODS.map(g=>H.MenuArt.good(g.id).replace(/data-menu-art="[^"]*"/g,''));
 check(new Set(pictures).size === H.GOODS.length,'Real illustrations must be different, not renamed fallback crates');
@@ -70,6 +70,22 @@ for(const type of ['ropemaker','sailweaver']){
   H.tick(st);check(st.warehouse.stock[w.out]===w.qty && st.workshops[0].idle,'Missing raw materials stop production: '+type);
   st=H.deserialize(H.serialize(st));H.state=st;check(st.workshops[0].type===type && st.licenses[type] && st.warehouse.stock[w.out]===w.qty,'Workshop and output persist: '+type);
 }
+// Beer chain: the brewery needs malt and hops; grain alone no longer brews.
+check(['barley','malt','hops'].every(id=>H.GOOD[id].group==='food'&&H.cargoKind(id)==='sack'),'Beer-chain goods are food and travel in sacks');
+check(H.ORIGIN.umland.sell.barley&&H.ORIGIN.umland.sell.hops&&H.ORIGIN.luebeck.sell.malt&&H.ORIGIN.bergen.want.beer&&H.ORIGIN.luebeck.sell.beer&&H.GOOD.beer.prod>0,'Beer-chain origins and town beer production');
+{
+  st=fresh();st.guildMember=true;st.cityLife.nextStory=1e9;const w=H.WORKSHOP.brewery;
+  check(w.out==='beer'&&w.qty===4&&w.inp.malt===2&&w.inp.hops===1&&!w.inp.grain,'Brewery recipe uses malt and hops');
+  check(H.buyLicense(st,'brewery').ok&&H.buildWorkshop(st,0,'brewery').ok,'Brewery built');
+  st.workshops[0].type='brewery';st.warehouse.stock.malt=3;st.warehouse.stock.hops=1;st.warehouse.stock.beer=0;H.tick(st);
+  check(st.warehouse.stock.beer===4&&st.warehouse.stock.malt===1&&!st.warehouse.stock.hops&&!st.workshops[0].idle,'Brewery brews four beer from two malt and one hops');
+  H.tick(st);check(st.warehouse.stock.beer===4&&st.warehouse.stock.malt===1&&st.workshops[0].idle,'Brewery without hops stands idle');
+  // A save from before the beer chain: running brewery, grain but no malt in stock.
+  st.warehouse.stock.grain=10;delete st.warehouse.stock.malt;delete st.warehouse.stock.hops;delete st.town.stock.malt;delete st.town.stock.hops;delete st.town.stock.barley;
+  st=H.deserialize(H.serialize(st));H.state=st;H.tick(st);
+  check(st.workshops[0].type==='brewery'&&st.workshops[0].idle&&st.warehouse.stock.grain===10&&st.warehouse.stock.beer===4,'Old brewery save loads and idles without malt');
+  check(['barley','malt','hops'].every(id=>st.town.stock[id]>0),'Old save gains town stocks of the new goods');
+}
 st=fresh();st.day=H.TRADE_NEWS.quayworks.offset;
 const baseline=H.consMod(st,'bricks');st.tradePlanning.news=[];check(baseline>H.consMod(st,'bricks'),'Quay works change actual brick demand');
 st=fresh();for(const type of ['heatwave','highWater']){
@@ -77,4 +93,4 @@ st=fresh();for(const type of ['heatwave','highWater']){
   const e=H.announceCityStory(st,type,st.day);st.day=e.respondBy+1;H.cityDayStart(st);
   const good=type==='heatwave'?'cheese':'canvas';check(st.warehouse.stock[good]<100 && H.goodQuality(st,good)<100,'Real event damage and quality: '+good);
 }
-console.log(JSON.stringify({result:'PASS',checks,newGoods:ids.length,totalGoods:H.GOODS.length,productionChains:2,migration:true,trade:true,contracts:true,reservations:true,quality:true}));
+console.log(JSON.stringify({result:'PASS',checks,newGoods:ids.length,totalGoods:H.GOODS.length,productionChains:3,migration:true,trade:true,contracts:true,reservations:true,quality:true}));

@@ -59,7 +59,7 @@ for(const sp of H.CARAVAN_SPOTS){
   }
 }
 const workerClock=S.clock;S.clock=.5;
-check(S.ruralWorkers(H.state,'summer',0).length===10,'A rural profession has no visible worker');
+check(S.ruralWorkers(H.state,'summer',0).length===H.RURAL_WORKERS.length&&H.RURAL_WORKERS.length===Object.keys(H.RURAL_SITES).length,'A rural profession has no visible worker');
 for(const worker of S.ruralWorkers(H.state,'summer',0)){
   check(!S.blockedAt(worker.x,worker.y),'Rural worker is inside an obstacle: '+worker.site);
   check(!S.isWater(worker.x,worker.y)&&!H.Iso.inHull(S.moatBand().inner,worker.x,worker.y),'Rural worker stands in water');
@@ -69,7 +69,7 @@ for(const worker of S.ruralWorkers(H.state,'summer',0)){
   if(worker.x>=building.x-.1&&worker.y>building.y+building.d)check(yard.indexOf(it)>yard.indexOf(house),'Worker is drawn behind the building in front of it: '+worker.site+'/'+house?.c);
 }
 S.clock=.95;check(!S.ruralWorkers(H.state,'summer',0).length,'Day workers ignore night');S.clock=.5;
-check(S.ruralWorkers(H.state,'winter',0).length===8,'Winter field workers still harvesting');
+check(S.ruralWorkers(H.state,'winter',0).length===H.RURAL_WORKERS.filter(w=>!w.crop).length,'Winter field workers still harvesting');
 H.state.rural.sites.woodcutter.active=false;check(!S.ruralWorkers(H.state,'summer',0).some(w=>w.site==='woodcutter'),'Paused operation keeps working');H.state.rural.sites.woodcutter.active=true;S.clock=workerClock;
 check(H.RURAL_FORESTS.every(f=>f.trees.length>=12),'Woodland is just a few isolated trees');
 function checkCart(w, p) {

@@ -1037,6 +1037,7 @@ Object.assign(HK.Scene, {
     hemp: ['#b8b58a', '#95916a'], flax: ['#d7c495', '#b4a274'], pitch: ['#494637', '#353629'], bricks: ['#bc7757', '#99593f'],
     honey: ['#c49c54', '#a17b3b'], cheese: ['#d8bc72', '#b69a55'], rope: ['#c4a374', '#a18359'], canvas: ['#e1d7b7', '#bcb393'],
     flour: ['#e4dbc3','#bdb494'], milk: ['#dadcc5','#abb8a6'], meat: ['#b57e66','#92614e'], hides: ['#baa68a','#96866f'], stone: ['#aeb5a4','#899685'], dressedstone: ['#cecdb3','#aab6a3'], cattle: ['#b69e78','#8e7654'],
+    barley: ['#cdb57e','#ad9660'], malt: ['#a5784a','#875f37'], hops: ['#a9bf74','#879d58'],
   },
   cargoTone(g) { return this.CARGO_TONE[g] || ['#9a7a4a', '#85683d']; },
   CARGO_STEP: { crate: 0.28, barrel: 0.32, sack: 0.34, livestock: 0.5 },

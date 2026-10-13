@@ -248,6 +248,11 @@ for (const b of [
   {id:'hunter', kind:'eave', x:23.0,y:-9.5,w:1.2,d:1,h:.8,wall:'#a49b79',roof:'#68705a',frames:true,name:{de:'Jagdhütte',en:'Hunting lodge'}},
   {id:'quarry', kind:'quarry', x:47.7,y:14.7,w:2.5,d:2,h:1.1,name:{de:'Steinbruch am Landweg',en:'Country road quarry'}},
   {id:'stonemason', kind:'eave', x:44.9,y:17.1,w:1.6,d:1.05,h:.85,wall:'#b9b7a1',roof:'#71665a',name:{de:'Steinmetzhütte',en:'Stonemason’s workshop'}},
+  // Beer chain: the hop garden closes the village lane north of the sheep farm;
+  // the malthouse with its kiln stands on the shore meadow beside the stonemason,
+  // at the end of the quarry lane, clear of the cattle pasture and the stonemason's bench.
+  {id:'hopgarden', kind:'hopyard', x:15.0,y:-13.0,w:2.0,d:1.4,h:1.3,name:{de:'Hopfengarten',en:'Hop garden'}},
+  {id:'malthouse', kind:'eave', x:47.2,y:19.2,w:1.4,d:1.0,h:.8,wall:'#c0aa84',roof:'#6e5a46',name:{de:'Mälzerei',en:'Malthouse'}},
 ]) { b.panel='rural'; HK.RURAL_BUILDINGS[b.id]=HK.BUILDING[b.id]=b; HK.BUILDINGS.push(b); }
 // Short access lanes end alongside the premises, never through a building or field.
 const ruralRoads = [
@@ -258,6 +263,7 @@ const ruralRoads = [
   // Leave the foregate before turning south; the former OUT branch crossed its wall.
   ['GATEEXIT','MILLTURN',[42.0,15.6]], ['MILLTURN','MILLROAD',[40.6,15.6]], ['MILLROAD','MILL',[42.5,16.1]],
   ['MILLROAD','CATTLEPATH',[38.7,15.6]], ['CATTLEPATH','CATTLE',[38.7,16.4]], ['V4','DAIRY',[18.4,-6.45]],
+  ['QUARRYBEND','MALT',[46.85,19.7]],
 ];
 for (const [from,to,point] of ruralRoads) {
   HK.ROAD_NODES[to]=point; HK.ROAD_ADJ[to]=[];
@@ -319,6 +325,8 @@ HK.RURAL_WORKERS = [
   {site:'hunter',task:'hunt',x:24.5,y:-10.3,color:'#5f7049'},
   {site:'stonemason',task:'chisel',x:45.5,y:18.9,color:'#8c9181'},
   {site:'quarry',task:'pick',x:49.3,y:17.1,color:'#948065'},
+  {site:'hopgarden',task:'harvest',x:16.1,y:-11.3,color:'#6f7f4a'},
+  {site:'malthouse',task:'sack',good:'malt',x:47.9,y:20.7,color:'#94795a'},
 ];
 // Small family groups in two clearings; calves and does have no antlers.
 HK.RURAL_DEER = [[25.2,-13.8,'deer'],[26.05,-13.15,'hind'],[25.45,-12.9,'fawn'],[23.3,-15.4,'hind'],[24.05,-15.05,'fawn']];

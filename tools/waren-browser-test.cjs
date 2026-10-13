@@ -7,7 +7,7 @@ const {chromium}=require('playwright'),assert=require('node:assert/strict'),fs=r
   await page.locator('#new-game-form button[type=submit]').click();
   await page.evaluate(()=>{HK.loop=()=>{};HK.setSpeed(0);HK.state.money=100000;HK.UI.panel='market';HK.UI.setTab('place');});
   await page.locator('#qty-input').fill('1');
-  const ids=['hemp','flax','pitch','bricks','honey','cheese','rope','canvas'];
+  const ids=['hemp','flax','pitch','bricks','honey','cheese','rope','canvas','barley','malt','hops'];
   for(const id of ids){
     await page.locator('#market-good-'+id).click();
     assert.equal(await page.locator('.selected-good-picture').getAttribute('data-menu-art'),id);
@@ -18,6 +18,9 @@ const {chromium}=require('playwright'),assert=require('node:assert/strict'),fs=r
     await page.locator('[data-action=msell]').click();
     assert.equal(await page.evaluate(id=>HK.state.warehouse.stock[id]||0,id),0);
   }
+  // The beer-chain goods appear in the price table and the trade advisor without special cases.
+  const beerChain=await page.evaluate(()=>{const html=HK.UI.panel_marketPrices();return ['barley','malt','hops'].map(id=>({id,table:html.includes(HK.goodName(id)),food:HK.GOOD_GROUPS.food.includes(id),source:!!HK.besteQuelle(HK.state,id),buyer:!!HK.besterAbnehmer(HK.state,id)}));});
+  for(const r of beerChain)assert.deepEqual(r,{id:r.id,table:true,food:true,source:true,buyer:true},'Beer-chain good missing from price table or trade advisor: '+r.id);
   const state=await page.evaluate(()=>{const data=JSON.parse(HK.serialize(HK.state));delete data._presentation;return JSON.stringify(data);});
   for(const group of ['food','materials','maritime','textiles','luxury','all']){
     await page.locator('#market-good-group').selectOption(group);
@@ -66,5 +69,5 @@ const {chromium}=require('playwright'),assert=require('node:assert/strict'),fs=r
       if(lang==='de' && [1600,390].includes(width))await page.locator('#side').screenshot({path:`/tmp/hanse-map-audit/goods-${group}-${width}.png`});
     }
   }
-  assert.deepEqual(errors,[]);console.log(JSON.stringify({result:'PASS',nativeTrades:16,newWorkshops:2,categoryFilters:6,oldSave:true,warehouseShortcut:true,languages:2,widths:4,errors}));
+  assert.deepEqual(errors,[]);console.log(JSON.stringify({result:'PASS',nativeTrades:ids.length*2,newWorkshops:2,categoryFilters:6,oldSave:true,warehouseShortcut:true,languages:2,widths:4,errors}));
 }finally{await browser.close();}})().catch(e=>{console.error(e);process.exitCode=1;});

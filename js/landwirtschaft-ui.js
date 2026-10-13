@@ -20,7 +20,7 @@ Object.assign(HK.UI,{
   },
   ruralRecipe(inp,out){return `<div class="rural-recipe">${Object.entries(inp||{}).map(([g,q])=>`<span>${HK.MenuArt.good(g)}<small>${q} ${HK.t('unitLast')} ${HK.goodName(g)}</small></span>`).join('')}${Object.keys(inp||{}).length?'<b aria-hidden="true">→</b>':''}${Object.entries(out).map(([g,q])=>`<span>${HK.MenuArt.good(g)}<small>${q} ${HK.t('unitLast')} ${HK.goodName(g)}</small></span>`).join('')}</div>`;},
   // Subpages of the countryside; the detail view of a producer stays on panel 'rural'.
-  ruralSections:{ruralFields:['grainfarm','fiberfarm','sheepfarm','cattlefarm'],ruralMill:['windmill','dairy'],ruralForest:['woodcutter','hunter','quarry','stonemason']},
+  ruralSections:{ruralFields:['grainfarm','fiberfarm','sheepfarm','cattlefarm','hopgarden'],ruralMill:['windmill','dairy','malthouse'],ruralForest:['woodcutter','hunter','quarry','stonemason']},
   ruralPanels:['rural','ruralFields','ruralMill','ruralForest','ruralDeliveries'],
   ruralSection(site){return Object.keys(this.ruralSections).find(k=>this.ruralSections[k].includes(site))||'rural';},
   ruralNavPanel(){return this.panel==='rural'&&HK.RURAL_SITES[HK.Scene.selected]?this.ruralSection(HK.Scene.selected):this.panel;},
@@ -45,7 +45,7 @@ Object.assign(HK.UI,{
       h+=this.ruralSiteGrid(Object.keys(HK.RURAL_SITES));
       h+=this.ruralCraftLinks();return h+this.ruralDeliveryPanel();
     }
-    const s=st.rural.sites[id],d=HK.RURAL_SITES[id],section=this.ruralSection(id),out=d.crops?{[s.crop]:s.crop==='grain'?12:10}:d.out;
+    const s=st.rural.sites[id],d=HK.RURAL_SITES[id],section=this.ruralSection(id),out=d.crops?{[s.crop]:HK.ruralCropYield(s.crop)}:d.out;
     h+=`<nav class="btn-row location-actions" aria-label="${HK.t('actionLocation')}"><button class="small work-back" data-action="ruralopen" data-section="${section}">← ${HK.t(section+'Sub')}</button><button class="small map-action" data-action="ruralshow" data-site="${id}" title="${HK.t('ruralShowMap')}" aria-label="${HK.t('ruralShowMap')}">${HK.MenuArt.symbol('map')}<span>${HK.t('actionMap')}</span></button></nav>`;
     const farm=id.endsWith('farm'),orderTitle=s.owner?'ruralOwnStock':farm?'ruralFarmOrder':'ruralProducerOrder';
     h+=`<section class="rural-order-section">${this.helpHeading(orderTitle,'ruralOrderHelp')}<span class="tag">${HK.t(s.owner?'ruralOwned':'ruralLocal')}</span>`;
@@ -62,7 +62,7 @@ Object.assign(HK.UI,{
     h+=`${this.helpHeading('ruralBatchOutput','ruralProductionHelp')}${this.ruralRecipe(d.inp,out)}<small>${this.ruralCycleText(d.period)} · ${HK.t(s.owner?'ruralWages':'ruralOwnerWages',{cost:d.wage})}</small><p>${HK.t(s.active?'ruralNext':'ruralPaused',{date:HK.fmtDate(s.next)})}${s.reason?` · <span class="tag">${HK.t(s.reason)}</span>`:''}</p>${d.extra?`<p class="hint">${HK.t('ruralGrainExtra')}</p>`:''}${d.resource?`<p>${HK.t('ruralResource',{qty:Math.floor(s.resource),max:d.resource})}${d.regrow?` · ${HK.t('ruralRegrow',{qty:d.regrow})}`:''}</p>`:''}`;
     if(s.owner){
       h+=`<button class="small" data-action="ruralpause" data-site="${id}">${HK.t(s.active?'ruralPause':'ruralResume')}</button>`;
-      if(d.crops)h+=`<div class="rural-crops">${s.nextCrop?`<p>${HK.t('ruralQueuedCrop',{good:HK.goodName(s.nextCrop)})}</p>`:''}<h3>${HK.t('ruralCrop')}${this.contextualHelp('ruralCropHelp',HK.t('ruralCrop'))}</h3>${['grain','hemp','flax'].map(g=>`<button class="small ${(s.nextCrop||s.crop)===g?'primary':''}" data-action="ruralcrop" data-site="${id}" data-good="${g}" ${(s.nextCrop||s.crop)===g?'disabled':''}>${HK.goodName(g)}</button>`).join('')}</div>`;
+      if(d.crops)h+=`<div class="rural-crops">${s.nextCrop?`<p>${HK.t('ruralQueuedCrop',{good:HK.goodName(s.nextCrop)})}</p>`:''}<h3>${HK.t('ruralCrop')}${this.contextualHelp('ruralCropHelp',HK.t('ruralCrop'))}</h3>${HK.RURAL_CROPS.map(g=>`<button class="small ${(s.nextCrop||s.crop)===g?'primary':''}" data-action="ruralcrop" data-site="${id}" data-good="${g}" ${(s.nextCrop||s.crop)===g?'disabled':''}>${HK.goodName(g)}</button>`).join('')}</div>`;
     }else h+=`<button class="small" data-action="ruralbuy" data-site="${id}" ${st.money<d.cost?'disabled':''}>${HK.t('ruralBuy',{cost:HK.fmt(d.cost)})}</button>`;
     return h+'</section>'+this.ruralDeliveryPanel();
   },

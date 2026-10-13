@@ -10,7 +10,7 @@ function seeded(seed) { let s = seed >>> 0; return () => { s = (s + 0x6D2B79F5) 
 function load(seed) {
   const M = Object.create(Math); M.random = seeded(seed);
   const ctx = { console, Intl, Math: M, Date, JSON }; vm.createContext(ctx);
-  for (const f of ['data', 'town', 'i18n', 'game', 'paths', 'rivals', 'contracts', 'sea', 'family', 'offices', 'faith', 'deals', 'staff', 'burghers', 'chains', 'ostviertel', 'ausgleich', 'weiterentwicklung', 'handelsvorhaben', 'ereignisse', 'salzgeschichte', 'salzgeschichte-text','korrespondenz','korrespondenz-text','landwirtschaft']) vm.runInContext(fs.readFileSync(ROOT + '/js/' + f + '.js', 'utf8'), ctx, { filename: f });
+  for (const f of ['data', 'town', 'i18n', 'game', 'paths', 'rivals', 'contracts', 'sea', 'family', 'offices', 'faith', 'deals', 'staff', 'burghers', 'chains', 'ostviertel', 'ausgleich', 'lehrgang', 'weiterentwicklung', 'handelsvorhaben', 'ereignisse', 'salzgeschichte', 'salzgeschichte-text','korrespondenz','korrespondenz-text','landwirtschaft']) vm.runInContext(fs.readFileSync(ROOT + '/js/' + f + '.js', 'utf8'), ctx, { filename: f });
   vm.runInContext('globalThis.HK = HK', ctx);
   return ctx.HK;
 }

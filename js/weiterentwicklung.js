@@ -7,7 +7,7 @@ HK.initProgress = function (st) {
   st.regularCaptains ||= {};
   st.chapters ||= { step: 0, bought: 0, sold: {}, done: [], choice: null };
 };
-HK.cargoKind = g => g === 'cattle' ? 'livestock' : ['grain', 'salt', 'wool', 'spices', 'hemp', 'flax', 'flour'].includes(g) ? 'sack' : ['beer', 'wine', 'fish', 'smokedfish', 'wax', 'pitch', 'honey', 'milk'].includes(g) ? 'barrel' : 'crate';
+HK.cargoKind = g => g === 'cattle' ? 'livestock' : ['grain', 'salt', 'wool', 'spices', 'hemp', 'flax', 'flour', 'barley', 'malt', 'hops'].includes(g) ? 'sack' : ['beer', 'wine', 'fish', 'smokedfish', 'wax', 'pitch', 'honey', 'milk'].includes(g) ? 'barrel' : 'crate';
 HK.transport = function (st, source, good, qty, direction, kind = 'visitor', owner = 'player') {
   if (!HK.GOOD[good] || !(qty > 0)) return null;
   HK.initProgress(st);

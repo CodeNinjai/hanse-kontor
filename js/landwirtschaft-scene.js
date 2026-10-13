@@ -78,8 +78,52 @@
   S.drawCargo=function(ctx,x,y,z,it,...args){if(it?.good==='cattle')return;return cargo.call(this,ctx,x,y,z,it,...args);};
   S.drawBuilding=function(ctx,b,st,season,sv,separate){
     if(['hunter','woodcutter','stonemason'].includes(b.id))return this.drawRuralHome(ctx,b,st,season,sv);
+    if(b.id==='malthouse')return this.drawMalthouse(ctx,b,st,season,sv);
+    if(b.kind==='hopyard')return this.drawHopGarden(ctx,b,season,sv);
     if(b.kind!=='quarry')return build.call(this,ctx,b,st,season,sv,separate);
     this.drawQuarry(ctx,b,season,sv);
+  };
+  // Malthouse: a low working hall with the kiln (Darre) and its vent cowl on
+  // the right, malt sacks stacked in front of the kiln; all within the footprint.
+  S.drawMalthouse=function(c,b,st,season,sv){
+    const hall={...b,w:b.w*.68},kx=b.x+hall.w,ky=b.y+.08,kw=b.w-hall.w-.02,kd=.55,kh=b.h+.3,winter=season==='winter';
+    this.drawHouse(c,{...hall,noWindowsUpper:true},st,season,sv,false);
+    I.shadow(c,kx,ky,kw,kd,kh+.3,sv.v,sv.a*.8);
+    I.box(c,kx,ky,0,kw,kd,kh,{wall:'#a8654b'},{noTop:true});
+    for(let z=.1;z<kh;z+=.1){I.line(c,[kx,ky+kd,z],[kx+kw,ky+kd,z],'rgba(70,32,22,.28)',.45);I.line(c,[kx+kw,ky,z],[kx+kw,ky+kd,z],'rgba(60,28,20,.32)',.45);}
+    // Fire hole under the kiln floor, faintly glowing while the malthouse works.
+    const s=st.rural?.sites?.malthouse,burning=s?.active&&!s.reason;
+    I.poly(c,[[kx+kw,ky+.18,.04],[kx+kw,ky+.37,.04],[kx+kw,ky+.37,.2],[kx+kw,ky+.18,.2]],burning?'#c7783c':'#3e2c22');
+    I.pyramid(c,kx-.03,ky-.03,kh,kw+.06,kd+.06,.32,winter?'#e6eaee':'#5d4d3e');
+    const cx=kx+kw/2-.07,cy=ky+kd/2-.07;
+    I.box(c,cx,cy,kh+.24,.14,.14,.14,{wall:'#6b5a48',top:'#4e4236'});
+    I.pyramid(c,cx-.03,cy-.03,kh+.38,.2,.2,.08,'#5a4a3a');
+    for(const [u,v,z] of [[.06,.64,0],[.24,.66,0],[.15,.7,.11]])this.drawCargo(c,kx+u,b.y+v,z,{good:'malt',kind:'sack'},.6);
+  };
+  // Hop garden: tall poles strung with wire, bines climbing them through the
+  // year, and a small shed at the back corner of the yard.
+  S.drawHopGarden=function(c,b,season,sv){
+    const winter=season==='winter',spring=season==='spring',P=(u,v,z=0)=>[b.x+u,b.y+v,z];
+    I.poly(c,[P(0,0),P(b.w,0),P(b.w,b.d),P(0,b.d)],winter?'#c9c6b6':'#7d6a4c');
+    for(let v=.2;v<b.d;v+=.35)I.line(c,P(.85,v),P(b.w-.05,v),winter?'#b6b2a1':'#6a593f',1.1);
+    this.drawHouse(c,{x:b.x+.06,y:b.y+.08,w:.62,d:.55,h:.45,kind:'eave',wall:'#a99a76',roof:'#6f6148',noWindowsUpper:true},HK.state,season,sv,false);
+    const poles=[];for(const u of [.95,1.3,1.65])for(const v of [.2,.55,.9,1.25])poles.push([u,v]);
+    poles.sort((p,q)=>p[0]+p[1]-q[0]-q[1]);
+    const top=b.h-.05,grow=winter?0:spring?.45:1;
+    for(const v of [.2,.55,.9,1.25])I.line(c,P(.95,v,top),P(1.65,v,top),'#8a7d62',.5);
+    for(const [u,v] of poles){
+      I.line(c,P(u,v,0),P(u,v,top+.04),'#8b6f48',1.4);
+      if(!grow)continue;
+      const h=top*grow;
+      for(let k=0;k<6;k++){const z0=h*k/6,z1=h*(k+1)/6,s=k%2?.035:-.035;I.line(c,P(u+s,v,z0),P(u-s,v,z1),'#5d7b3a',1.3);}
+      if(season==='summer'||season==='autumn')for(const [du,z] of [[-.05,top*.82],[.05,top*.68],[-.04,top*.5],[.05,top*.92]]){
+        const q=I.p(b.x+u+du,b.y+v,z);c.fillStyle=season==='autumn'?'#c3c47a':'#a9c46c';c.beginPath();c.ellipse(q[0],q[1],1.5,2.2,0,0,Math.PI*2);c.fill();
+      }
+      if(grow===1){const q=I.p(b.x+u,b.y+v,top*.75);c.fillStyle='rgba(96,130,62,.85)';c.beginPath();c.ellipse(q[0],q[1],3.2,6,0,0,Math.PI*2);c.fill();}
+    }
+    // A basket of picked cones in front of the shed.
+    const q=I.p(b.x+.4,b.y+1.05,.1);c.fillStyle='#9c7c4f';c.beginPath();c.ellipse(q[0],q[1]+2,5,3,0,0,Math.PI*2);c.fill();
+    if(!winter){c.fillStyle='#b6cc7a';c.beginPath();c.ellipse(q[0],q[1],4.2,2.2,0,0,Math.PI*2);c.fill();}
   };
   S.drawQuarry=function(c,b,season,sv){
     const P=(u,v,z=0)=>[b.x+u*b.w,b.y+v*b.d,z*b.h],winter=season==='winter';
@@ -369,9 +413,10 @@
     if(w.task==='harvest'){
       const left=a.second,right=a.grip;
       // Hold a small sheaf with one hand and draw a curved sickle through it.
+      const hop=w.site==='hopgarden';
       for(let i=0;i<4;i++){
         const b=[left[0]+(i-1.5)*.025,left[1],left[2]-.14],top=[b[0]+.03,left[1]-.025,left[2]+.10];
-        I.line(c,b,top,'#bba46d',.7);I.line(c,top,[top[0]+.04,top[1],top[2]-.025],'#d1bc7d',.9);
+        I.line(c,b,top,hop?'#5f7a3c':'#bba46d',.7);I.line(c,top,[top[0]+.04,top[1],top[2]-.025],hop?'#b6cc7a':'#d1bc7d',.9);
       }
       I.line(c,right,[right[0]+.065,right[1],right[2]-.04],'#816443',1.6);
       const q=I.p(right[0]+.09,right[1],right[2]);c.strokeStyle='#adb6a0';c.lineWidth=1.15;c.beginPath();c.arc(q[0],q[1],3,.15,Math.PI*1.3);c.stroke();
@@ -410,7 +455,7 @@
       I.line(c,[x,y,.13],[x+.14,y,.43],'#ae9568',1.3);I.line(c,[x+.14,y,.43],[x,y,.68],'#ae9568',1.3);I.line(c,[x,y,.13],[x+.025+swing*.015,y,.4],'#c0b89a',.55);I.line(c,[x+.025+swing*.015,y,.4],[x,y,.68],'#c0b89a',.55);
       I.line(c,[w.x-.1,w.y,.4],[w.x-.18,w.y,.68],'#6f5940',2.6);
     }else if(w.task==='shepherd')I.line(c,[w.x+.2,w.y+.08,0],[w.x+.2,w.y+.08,.7],'#8c7552',1.3);
-    else if(w.task==='feed'||w.task==='sack')this.drawCargo(c,w.x+.18,w.y+.07,.11,{good:w.task==='feed'?'grain':'flour',kind:'sack'});
+    else if(w.task==='feed'||w.task==='sack')this.drawCargo(c,w.x+.18,w.y+.07,.11,{good:w.good||(w.task==='feed'?'grain':'flour'),kind:'sack'});
     else if(w.task==='churn'){
       this.barrel3(c,w.x+.28,w.y+.05,0,.85);I.line(c,[w.x+.28,w.y+.05,.2],[w.x+.28,w.y+.05,.52+swing*.04],'#b39c71',1.3);
     }

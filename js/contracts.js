@@ -3,9 +3,9 @@
 'use strict';
 
 HK.CONTRACT_GIVERS = {
-  council:       { faction: 'patrizier', goods: ['grain', 'salt', 'timber', 'fish', 'bricks', 'pitch', 'stone', 'dressedstone', 'flour'], premium: [1.1, 1.25], panel: 'townhall' },
+  council:       { faction: 'patrizier', goods: ['grain', 'salt', 'timber', 'fish', 'bricks', 'pitch', 'stone', 'dressedstone', 'flour', 'barley'], premium: [1.1, 1.25], panel: 'townhall' },
   guild:         { faction: 'kaufleute', goods: ['cloth', 'iron', 'wool', 'tools', 'hemp', 'flax', 'rope', 'canvas', 'hides', 'cattle'], premium: [1.1, 1.22], panel: 'guild' },
-  abbey:         { faction: 'kirche',    goods: ['wax', 'wine', 'beer', 'smokedfish', 'honey', 'cheese', 'milk', 'meat'], premium: [1.15, 1.3], panel: 'monastery' },
+  abbey:         { faction: 'kirche',    goods: ['wax', 'wine', 'beer', 'smokedfish', 'honey', 'cheese', 'milk', 'meat', 'malt', 'hops'], premium: [1.15, 1.3], panel: 'monastery' },
   dive:          { faction: 'zuenfte',   goods: ['spices', 'furs', 'wine', 'cloth'], premium: [1.15, 1.3], panel: 'dive', shady: true },
   harbourmaster: { faction: 'kaufleute', voyage: true, panel: 'harbourmaster' },
 };

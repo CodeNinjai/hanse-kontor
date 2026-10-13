@@ -34,10 +34,14 @@ HK.GOODS = [
   { id: 'hides',      name: { de: 'Rohhäute', en: 'Raw hides' }, base: 42, cons: 2, prod: 0 },
   { id: 'stone',      name: { de: 'Bruchstein', en: 'Rough stone' }, base: 28, cons: 5, prod: 0 },
   { id: 'dressedstone', name: { de: 'Werkstein', en: 'Dressed stone' }, base: 80, cons: 2, prod: 0 },
+  // Bierkette: Gerste wird zu Malz, Malz und Hopfen werden in der Brauerei zu Bier.
+  { id: 'barley',     name: { de: 'Gerste', en: 'Barley' }, base: 26, cons: 6, prod: 8 },
+  { id: 'malt',       name: { de: 'Malz', en: 'Malt' }, base: 45, cons: 4, prod: 3 },
+  { id: 'hops',       name: { de: 'Hopfen', en: 'Hops' }, base: 70, cons: 2, prod: 1.5 },
 ];
 HK.GOOD = {}; HK.GOODS.forEach(g => HK.GOOD[g.id] = g);
 HK.GOOD_GROUPS = {
-  food: ['grain', 'fish', 'smokedfish', 'beer', 'cheese', 'honey', 'salt', 'flour', 'cattle', 'milk', 'meat'],
+  food: ['grain', 'fish', 'smokedfish', 'beer', 'cheese', 'honey', 'salt', 'flour', 'cattle', 'milk', 'meat', 'barley', 'malt', 'hops'],
   materials: ['timber', 'iron', 'tools', 'bricks', 'leather', 'hides', 'stone', 'dressedstone'],
   maritime: ['pitch', 'rope', 'canvas'],
   textiles: ['wool', 'cloth', 'hemp', 'flax', 'finecloth'],
@@ -47,15 +51,15 @@ for (const [group, ids] of Object.entries(HK.GOOD_GROUPS)) for (const id of ids)
 
 /* Herkunftsorte der Schiffe und Karawanen: was sie günstig bringen (sell) und was sie suchen (want) */
 HK.ORIGINS = [
-  { id: 'luebeck',   name: { de: 'Lübeck', en: 'Lübeck' },     sea: true,  days: 4,  sell: { salt: 0.7, beer: 0.8 },                  want: { fish: 1.5, smokedfish: 1.6, wool: 1.4, timber: 1.5, finecloth: 1.3, leather: 1.4 } },
+  { id: 'luebeck',   name: { de: 'Lübeck', en: 'Lübeck' },     sea: true,  days: 4,  sell: { salt: 0.7, beer: 0.8, malt: 0.8 },      want: { fish: 1.5, smokedfish: 1.6, wool: 1.4, timber: 1.5, finecloth: 1.3, leather: 1.4 } },
   { id: 'bruegge',   name: { de: 'Brügge', en: 'Bruges' },     sea: true,  days: 9,  sell: { cloth: 0.65, wine: 0.7, spices: 0.7 },    want: { smokedfish: 1.7, wax: 1.6, furs: 1.5, wool: 1.3 } },
-  { id: 'bergen',    name: { de: 'Bergen', en: 'Bergen' },     sea: true,  days: 8,  sell: { fish: 0.6, timber: 0.7 },                want: { grain: 1.8, beer: 1.6, salt: 1.5, finecloth: 1.4 } },
+  { id: 'bergen',    name: { de: 'Bergen', en: 'Bergen' },     sea: true,  days: 8,  sell: { fish: 0.6, timber: 0.7 },                want: { grain: 1.8, beer: 1.6, salt: 1.5, finecloth: 1.4, malt: 1.5, barley: 1.5 } },
   { id: 'danzig',    name: { de: 'Danzig', en: 'Danzig' },     sea: true,  days: 6,  sell: { grain: 0.6, timber: 0.6, wax: 0.8 },      want: { salt: 1.6, cloth: 1.5, tools: 1.6, wine: 1.4, finecloth: 1.6, leather: 1.3 } },
   { id: 'riga',      name: { de: 'Riga', en: 'Riga' },         sea: true,  days: 10, sell: { furs: 0.65, wax: 0.7, timber: 0.7 },      want: { salt: 1.7, cloth: 1.6, beer: 1.5, tools: 1.5, finecloth: 1.5 } },
-  { id: 'stockholm', name: { de: 'Stockholm', en: 'Stockholm' }, sea: true, days: 8, sell: { iron: 0.65, timber: 0.75 },              want: { cloth: 1.5, salt: 1.5, beer: 1.4, wine: 1.5, finecloth: 1.4 } },
+  { id: 'stockholm', name: { de: 'Stockholm', en: 'Stockholm' }, sea: true, days: 8, sell: { iron: 0.65, timber: 0.75 },              want: { cloth: 1.5, salt: 1.5, beer: 1.4, wine: 1.5, finecloth: 1.4, hops: 1.4 } },
   { id: 'london',    name: { de: 'London', en: 'London' },     sea: true,  days: 10, sell: { wool: 0.6, cloth: 0.75, tools: 0.8 },    want: { wine: 1.5, wax: 1.6, furs: 1.6, fish: 1.4, finecloth: 1.5 } },
   { id: 'koeln',     name: { de: 'Köln', en: 'Cologne' },      sea: false, days: 7,  sell: { wine: 0.65, iron: 0.75, tools: 0.7 },    want: { fish: 1.4, smokedfish: 1.6, furs: 1.5, wax: 1.4, leather: 1.5 } },
-  { id: 'umland',    name: { de: 'Umland', en: 'Countryside' }, sea: false, days: 2, sell: { grain: 0.65, wool: 0.7, timber: 0.75 },  want: { salt: 1.5, tools: 1.6, cloth: 1.5, beer: 1.3 } },
+  { id: 'umland',    name: { de: 'Umland', en: 'Countryside' }, sea: false, days: 2, sell: { grain: 0.65, wool: 0.7, timber: 0.75, barley: 0.7, hops: 0.75 },  want: { salt: 1.5, tools: 1.6, cloth: 1.5, beer: 1.3 } },
 ];
 HK.ORIGIN = {}; HK.ORIGINS.forEach(o => HK.ORIGIN[o.id] = o);
 // Supply profiles are game balance: each new good has suppliers and export buyers.
@@ -96,7 +100,7 @@ HK.KONTOR_CITIES = ['luebeck', 'bruegge', 'bergen'];
 
 /* Betriebe (Werkstätten) */
 HK.WORKSHOPS = [
-  { id: 'brewery',    name: { de: 'Brauerei',    en: 'Brewery' },    out: 'beer',       qty: 2, inp: { grain: 2 },            cost: 9000,  wage: 30, license: 1500 },
+  { id: 'brewery',    name: { de: 'Brauerei',    en: 'Brewery' },    out: 'beer',       qty: 4, inp: { malt: 2, hops: 1 },    cost: 9000,  wage: 30, license: 1500 },
   { id: 'smokehouse', name: { de: 'Räucherei',   en: 'Smokehouse' }, out: 'smokedfish', qty: 2, inp: { fish: 3, timber: 1 },  cost: 7000,  wage: 15, license: 1200 },
   { id: 'weaver',     name: { de: 'Weberei',     en: 'Weavery' },    out: 'cloth',      qty: 1, inp: { wool: 3 },             cost: 12000, wage: 25, license: 2500 },
   { id: 'smithy',     name: { de: 'Schmiede',    en: 'Smithy' },     out: 'tools',      qty: 1, inp: { iron: 1 },             cost: 11000, wage: 20, license: 2000 },
