@@ -1,10 +1,6 @@
 'use strict';
-const assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path'),vm=require('node:vm');
-const context=vm.createContext({console,Intl,Math,Date,JSON});
-for (const file of ['data', 'town', 'i18n', 'game', 'paths', 'rivals', 'contracts', 'sea', 'family', 'offices', 'faith', 'deals', 'staff', 'burghers', 'chains', 'ostviertel', 'ausgleich', 'weiterentwicklung', 'handelsvorhaben', 'ereignisse', 'salzgeschichte', 'salzgeschichte-text','korrespondenz','korrespondenz-text','landwirtschaft', 'iso', 'scene', 'buildings', 'art', 'flair', 'stadtereignisse', 'warenverkehr','landwirtschaft-scene','bevoelkerung','bevoelkerung-scene']) {
-  vm.runInContext(fs.readFileSync(path.join(__dirname, '..', 'js', file + '.js'), 'utf8'), context, { filename: file + '.js' });
-}
-const H = vm.runInContext('HK', context), S = H.Scene;
+const assert=require('node:assert/strict');
+const H = require('./domain-loader.cjs')(undefined, { random: Math.random, scene: ['scene', 'buildings', 'art', 'flair', 'stadtereignisse', 'warenverkehr', 'landwirtschaft-scene', 'bevoelkerung-scene'] }), S = H.Scene;
 H.state = H.newGame({ name: 'Kartentest', difficulty: 'normal', years: 20 });
 H.UI = { selectedVisitor: null };
 S.clock=.5;S.weather='clear';S.populationSetup(H.state);

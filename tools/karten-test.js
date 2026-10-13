@@ -2,17 +2,9 @@
    node tools/karten-test.js */
 'use strict';
 const assert = require('node:assert/strict');
-const fs = require('node:fs');
-const path = require('node:path');
-const vm = require('node:vm');
 let seed = 42;
-const math = Object.create(Math);
-math.random = () => ((seed = (Math.imul(seed, 1664525) + 1013904223) >>> 0) / 4294967296);
-const context = vm.createContext({ console, Intl, Math: math, Date, JSON });
-for (const file of ['data', 'town', 'i18n', 'game', 'paths', 'rivals', 'contracts', 'sea', 'family', 'offices', 'faith', 'deals', 'staff', 'burghers', 'chains', 'ostviertel', 'ausgleich', 'weiterentwicklung', 'handelsvorhaben', 'ereignisse', 'salzgeschichte', 'salzgeschichte-text','korrespondenz','korrespondenz-text','landwirtschaft', 'iso', 'scene', 'buildings', 'art', 'flair', 'stadtereignisse', 'warenverkehr','landwirtschaft-scene','fischerboote']) {
-  vm.runInContext(fs.readFileSync(path.join(__dirname, '..', 'js', file + '.js'), 'utf8'), context, { filename: file + '.js' });
-}
-const H = vm.runInContext('HK', context), S = H.Scene;
+const random = () => ((seed = (Math.imul(seed, 1664525) + 1013904223) >>> 0) / 4294967296);
+const H = require('./domain-loader.cjs')(seed, { random, scene: ['scene', 'buildings', 'art', 'flair', 'stadtereignisse', 'warenverkehr', 'landwirtschaft-scene', 'fischerboote'] }), S = H.Scene;
 H.state = H.newGame({ name: 'Kartentest', difficulty: 'normal', years: 20 });
 H.UI = { selectedVisitor: null };
 let checks = 0;
@@ -113,7 +105,7 @@ S.weather = 'clear';
 const ruralMoat=S.moatBand().inner;
 // Moving animals must actually cover ground, face their travel direction and
 // keep supporting hooves planted. Resting must not mean freezing the head.
-const animalCoverage=Array.from({length:7},()=>({distance:0,rests:0,steps:0}));
+const animalCoverage=Array.from({length:S.ruralAnimals(0).length},()=>({distance:0,rests:0,steps:0}));
 let previousAnimals;
 for(let frame=0;frame<=7200;frame++){
   const animals=S.ruralAnimals(frame/60);
@@ -137,7 +129,8 @@ for(let t=0;t<150;t+=.5)for(const a of S.ruralAnimals(t)){
   const corners=[[a.x-.25,a.y-.2],[a.x+.25,a.y-.2],[a.x+.25,a.y+.2],[a.x-.25,a.y+.2]];
   check(corners.every(p=>!S.isWater(...p)&&!H.Iso.inHull(ruralMoat,...p)),'Livestock enters water or the moat');
   check(![...buildings,H.FARM,...H.HAMLET].some(b=>contains(S.buildingBox(b),a.x,a.y,.25)),'Livestock overlaps a house');
-  check(!H.FIELDS.some(([x,y,w,d])=>a.x>x-.2&&a.x<x+w+.2&&a.y>y-.2&&a.y<y+d+.2),'Livestock tramples a cultivated field');
+  // Only the field hare at the east wood's edge may sit in a (purely decorative) field; every other animal stays out.
+  if(a.type!=='hare')check(!H.FIELDS.some(([x,y,w,d])=>a.x>x-.2&&a.x<x+w+.2&&a.y>y-.2&&a.y<y+d+.2),'Livestock tramples a cultivated field');
 }
 for(const b of Object.values(H.RURAL_BUILDINGS))check(S.buildingBox(b).every(Number.isFinite)&&Number.isFinite(S.buildingHeight(b)),'Rural landmark has invalid selection geometry');
 for (const [i, p] of H.PROPS.entries()) {
@@ -372,6 +365,8 @@ try {
   polygons = []; cylinders = []; S.lamps = [];
   S.drawMole(fake, S.shadowVec());
   check(polygons.filter(p => p.fill === '#837d72').every(p => p.points.every(q => q[2] === 0)), 'Mole schließt nicht auf Kaideckhöhe an');
+  // Der Leuchtturm wird seit dem Mole-Umbau getrennt vom begehbaren Deck gezeichnet.
+  S.drawLighthouse(fake);
   check(cylinders.find(p => p.x === H.LIGHTHOUSE.x && p.y === H.LIGHTHOUSE.y).z === 0, 'Leuchtturm schwebt über der Mole');
   // Die gezeichnete Plankenfläche und ihre Nutzer müssen bündig zum Stein
   // liegen. Auch ein Deck auf z = 0 bleibt für die Wegsuche begehbar.
