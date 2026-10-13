@@ -6,7 +6,7 @@ HK.RURAL_SITES = {
   sheepfarm:{period:3,cost:4600,wage:8,inp:{grain:1},out:{wool:3}},
   cattlefarm:{period:1,cost:6200,wage:5,inp:{grain:1},out:{milk:3},extra:{cattle:1},extraPeriod:7},
   dairy:{period:1,cost:4000,wage:6,inp:{milk:3},out:{cheese:1}},
-  windmill:{period:1,cost:6500,wage:8,inp:{grain:3},out:{flour:3}},
+  windmill:{period:1,cost:9800,wage:8,inp:{grain:3},out:{flour:3}},
   woodcutter:{period:2,cost:4200,wage:8,out:{timber:4},resource:80,regrow:1,use:4},
   hunter:{period:3,cost:3800,wage:10,out:{meat:2,hides:1,furs:1},resource:50,regrow:.75,use:3},
   quarry:{period:2,cost:7000,wage:10,out:{stone:4},resource:2000,use:4},

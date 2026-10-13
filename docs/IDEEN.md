@@ -357,13 +357,13 @@ Die Chronik merkt sich die prägenden Taten (erstes Monopol, aufgeflogener Schmu
 
 **Neu festgehalten am 12. Oktober 2026; wird schrittweise umgesetzt (Reihenfolge am Ende des Abschnitts).** Heute gibt es zehn Erzeuger im Umland: Bauernhof (Getreide, wahlweise Flachs oder Hanf), Flachshof, Schäferei, Viehweide, Käserei, Windmühle, Holzfäller, Jäger, Steinbruch und Steinmetz ([landwirtschaft.js](../js/landwirtschaft.js)). Mit allen kann man nur bestellen, abholen oder den Betrieb übernehmen; Müller, Jäger und Holzfäller sind Bewohner mit Berufsbezeichnung, keine Gesprächspartner. Das Untermenü zeigte nur den Schlüssel `ruralSub` (behoben: „Höfe & Betriebe“).
 
-**8.1 Unterseiten des Umlands** — *klein*
+**8.1 Unterseiten des Umlands** — *klein* — **umgesetzt 13. Oktober 2026** (fünf Unterseiten, Commit 19d5ea2)
 Nach dem Muster von „Handel“: **Acker & Vieh** (Bauernhof, Flachshof, Schäferei, Viehweide), **Mühle & Verarbeitung** (Mühle, Käserei, Fleischer, Gerber, Bäcker), **Wald & Stein** (Holzfäller, Jäger, Steinbruch, Steinmetz, mit Waldbestand), **Lieferungen** (offene Bestellungen und Abholungen) und **Dorf** (Schulze, Müller, Jäger, Dorfkrug).
 
-**8.2 Der Müller und die Bannmühle** — *mittel*
+**8.2 Der Müller und die Bannmühle** — *mittel* — **umgesetzt 13. Oktober 2026** (js/muehle.js: Mahlgeld, Mühlenpacht im Rathaus, Müllerbrief und Mehlstrecken)
 Die Bauern müssen in der Mühle mahlen lassen und zahlen Mahlgeld, meist ein Sechzehntel des Korns. Die Mühle lässt sich pachten; der Pächter verdient am Mahlgeld. Müller galten als Betrüger: Der Müller bietet an, Mehl zu strecken (mehr Ertrag, Verdacht, Bauern verärgert) — ein Dilemma mit Folgen.
 
-**8.3 Vorkauf der Ernte auf dem Halm** — *mittel*
+**8.3 Vorkauf der Ernte auf dem Halm** — *mittel* — **umgesetzt 13. Oktober 2026** (js/muehle.js: im Frühjahr bei fremden Ackerhöfen, Ernte am 1. August mit drei Ausgängen)
 Im Frühjahr zahlt der Kaufmann den Bauern einen Vorschuss und bekommt im Herbst Korn unter Marktpreis. Bei einer Missernte geht ein Teil verloren. Echte hansische Praxis und eine Wette auf das Wetter.
 
 **8.4 Jäger: Jagdpacht und Wilderei** — *mittel*
@@ -383,7 +383,7 @@ Aussaat im Frühjahr, Ernte im August, Schlachtzeit um Martini im November. Dara
 
 **8.9 Neue Waren nur mit Kette oder Entscheidung** — *mittel bis groß*
 Das Spiel hat 31 Waren; jede weitere verlängert Markt und Tabellen. Aufgenommen werden nur Waren, die eine Kette oder Entscheidung erzeugen:
-- **Gerste, Malz, Hopfen → Bier** (mittel, große Wirkung). Hopfengärten vor den Hansestädten; Hamburger und Wismarer Bier war ein Exportschlager.
+- **Gerste, Malz, Hopfen → Bier** (mittel, große Wirkung) — **umgesetzt 13. Oktober 2026** (Commit d500985: Hopfengarten, Mälzerei, Gerste als Frucht, Brauerei braut aus Malz und Hopfen). Hopfengärten vor den Hansestädten; Hamburger und Wismarer Bier war ein Exportschlager.
 - **Schwein und Pökelfleisch:** Fleisch und Salz werden Pökelfleisch und Speck, der Schiffsproviant schlechthin (mittel).
 - **Butter** neben Käse, damals ein großer Handelsartikel aus Schonen und Dänemark (klein).
 - **Holzkohle und Pottasche** aus dem Wald (klein, siehe 8.5).

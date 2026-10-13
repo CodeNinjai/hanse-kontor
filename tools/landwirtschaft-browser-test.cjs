@@ -94,5 +94,37 @@ const {chromium}=require('playwright'),assert=require('node:assert/strict'),fs=r
    if(id==='cattlefarm'&&lang==='de'&&width===390)await page.locator('#side').screenshot({path:'/tmp/hanse-map-audit/rural-cattle-mobile.png'});
   }
  }
- assert.deepEqual(errors,[]);console.log(JSON.stringify({result:'PASS',mapSites:sites.length,visibleWorkers:sites.length,stableCamera:true,purchases:true,deliveries:true,reservations:true,craftProduction:true,cropChoice:true,legacy:true,languages:2,widths:4,ruralSubpages:5,errors}));
+ // Bannmühle, Müller und Erntevorkauf (8.2, 8.3): Pacht im Rathaus, Schalter in der Mühle, Angebot im Frühjahr.
+ await page.setViewportSize({width:1600,height:1100});await page.evaluate(()=>{HK.setLang('de');HK.loop=()=>{};HK.setSpeed(0);HK.state.money=100000;const st=HK.state;let d=st.day;while(HK.monthOf(d)!==3)d++;st.day=d;HK.UI.action({action:'ruralopen',site:'windmill'});});
+ assert.equal(await page.locator('#sidebar .muehle-section').getAttribute('data-muehle'),'town');assert.equal(await page.locator('#sidebar .muehle-section [data-action=muehlestrecken]').count(),0);
+ await page.locator('#sidebar .muehle-section [data-action=open][data-panel=customsLease]').click();assert.equal(await page.evaluate(()=>HK.UI.panel),'customsLease');
+ const leasePrice=await page.evaluate(()=>HK.muehlePachtPreis(HK.state)),leaseCash=await page.evaluate(()=>HK.state.money);
+ assert((await page.locator('#sidebar [data-action=taxfarm]').count())+(await page.locator('#sidebar .tag.gold').count())>0,'Customs lease section missing next to the mill lease');
+ await page.locator('#sidebar .muehle-pacht [data-action=muehlepacht]').click();assert.equal(await page.evaluate(()=>HK.state.money),leaseCash-leasePrice);assert(await page.evaluate(()=>HK.muehlePachtAktiv(HK.state)));
+ assert.equal(await page.locator('#sidebar .muehle-pacht [data-action=muehlepacht]').count(),0);
+ await page.evaluate(()=>HK.UI.action({action:'ruralopen',site:'windmill'}));assert.equal(await page.locator('#sidebar .muehle-section').getAttribute('data-muehle'),'lease');
+ await page.locator('#sidebar [data-action=muehlestrecken]').click();assert(await page.evaluate(()=>HK.state.muehle.strecken));assert.equal(await page.locator('#sidebar .muehle-mueller').getAttribute('data-muehle-strecken'),'on');
+ await page.locator('#sidebar [data-action=muehlestrecken]').click();assert(!(await page.evaluate(()=>HK.state.muehle.strecken)));
+ await page.evaluate(()=>HK.UI.action({action:'ruralopen',site:'fiberfarm'}));
+ const offer=await page.evaluate(()=>HK.vorkaufAngebot(HK.state,'fiberfarm'));assert(offer.ok&&offer.qty===60);
+ const farmText=await page.locator('#sidebar .vorkauf-section').textContent();assert(farmText.includes(String(offer.qty))&&farmText.includes(await page.evaluate(p=>HK.fmt(p),offer.price))&&farmText.includes('Verkauf am Markt heute'),'Spring offer shows quantity, price and market comparison');
+ assert.equal(await page.locator('#sidebar .vorkauf-section [data-action=vorkauf]').isEnabled(),true);
+ const pureMill=await page.evaluate(()=>HK.serialize(HK.state));
+ for(let i=0;i<3;i++)await page.evaluate(()=>{for(const site of ['windmill','fiberfarm','grainfarm']){HK.UI.action({action:'ruralopen',site});HK.UI.panel_rural();}HK.UI.action({action:'open',panel:'customsLease'});HK.UI.panel_customsLease();HK.UI.action({action:'ruralopen',site:'fiberfarm'});});
+ assert.equal(await page.evaluate(()=>HK.serialize(HK.state)),pureMill,'Rendering mill, farm or lease views changes the game state');
+ for(const width of [320,390])for(const lang of ['de','en']){
+  await page.setViewportSize({width,height:900});await page.evaluate(lang=>HK.setLang(lang),lang);
+  for(const view of [{action:'ruralopen',site:'windmill'},{action:'ruralopen',site:'fiberfarm'},{action:'open',panel:'customsLease'}]){
+   await page.evaluate(v=>{HK.UI.action(v);HK.UI.renderAll();},view);
+   assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),'Mill/forward overflow '+JSON.stringify(view)+'/'+width+'/'+lang);
+   assert(await page.evaluate(()=>[...document.querySelectorAll('#sidebar')].every(e=>e.scrollWidth<=e.clientWidth+1)),'Mill/forward inner overflow '+JSON.stringify(view)+'/'+width+'/'+lang);
+   assert(!(await page.locator('#sidebar').textContent()).includes('NaN')&&!(await page.locator('#sidebar').textContent()).includes('undefined'));
+  }
+  if(lang==='de'&&width===390){await page.evaluate(()=>HK.UI.action({action:'ruralopen',site:'windmill'}));await page.locator('#side').screenshot({path:'/tmp/hanse-map-audit/rural-mill-390.png'}).catch(()=>{});}
+ }
+ await page.setViewportSize({width:1600,height:1100});await page.evaluate(()=>{HK.setLang('de');HK.UI.action({action:'ruralopen',site:'fiberfarm'});});
+ await page.locator('#sidebar [data-action=vorkauf]').click();assert(await page.evaluate(()=>!!HK.state.vorkauf[HK.yearOf(HK.state.day)].fiberfarm));assert.equal(await page.locator('#sidebar .vorkauf-section [data-action=vorkauf]').count(),0);
+ await page.evaluate(()=>{const st=HK.state;st.vorkauf={};let d=st.day;while(HK.monthOf(d)!==5)d++;st.day=d;HK.UI.action({action:'ruralopen',site:'fiberfarm'});});
+ assert.equal(await page.locator('#sidebar .vorkauf-section [data-action=vorkauf]').count(),0);assert((await page.locator('#sidebar .vorkauf-section').textContent()).includes('Frühjahr'),'Outside spring the farm explains when to buy');
+ assert.deepEqual(errors,[]);console.log(JSON.stringify({result:'PASS',mapSites:sites.length,visibleWorkers:sites.length,stableCamera:true,purchases:true,deliveries:true,reservations:true,craftProduction:true,cropChoice:true,legacy:true,languages:2,widths:4,ruralSubpages:5,millLease:true,forwardHarvest:true,errors}));
 }finally{await browser.close();}})().catch(e=>{console.error(e);process.exitCode=1;});
