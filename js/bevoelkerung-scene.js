@@ -249,7 +249,7 @@
    const frame=Math.floor((t*.55+HK.citizenHash(p.id)%11)*16)%16,working=m.place==='work',actor=p.actor&&HK.CITY_ACTORS.find(a=>a.id===p.actor),worker=p.group==='worker'&&HK.RURAL_WORKERS.find(w=>w.site===p.work);
    const canWork=worker&&!st.rural.sites[p.work].reason,workMotion=worker?this.ruralWorkSample(worker,t,canWork):null;
    const fishMotion=actor?.action==='fish'?this.fishingSample(actor,t):null;
-   const item={s:'citizen|'+p.id+'|'+head+'|'+phase+'|'+(working?(workMotion?workMotion.key:fishMotion?fishMotion.key:frame):'walk')+'|'+Math.round(blend*8)+'|'+p.gender,citizen:p.id,ap,k:this.pointKey(px,py),box:[px-.07,py-.07,px+.07,py+.07],pick:this.populationPick(p),f:c=>{
+   const item={s:'citizen|'+p.id+'|'+head+'|'+phase+'|'+(working?(workMotion?workMotion.key:fishMotion?fishMotion.key:frame):'walk')+'|'+Math.round(blend*8)+'|'+p.gender,citizen:p.id,ap,k:this.pointKey(px,py),box:[px-.07,py-.07,px+.07,py+.07],pick:working&&worker?{...this.populationPick(p),building:HK.RURAL_BUILDINGS[p.work]}:this.populationPick(p),f:c=>{
     if(worker?.task==='hunt'&&m.place!=='bench')this.drawHunter(c,{...worker,x:m.x,y:m.y,look:p.look,head,phase,moving:m.moving,motion:workMotion,working:working&&canWork});
     else if(working&&actor)this.drawCityActor(c,{...actor,x:m.x,y:m.y,look:p.look,fishMotion},frame/4);
     else if(working&&worker)this.drawRuralWorker(c,{...worker,x:m.x,y:m.y,look:p.look,motion:workMotion,phase:workMotion?workMotion.u*2*Math.PI:frame*Math.PI/8,working:canWork});

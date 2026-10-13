@@ -6,7 +6,7 @@
  U.sceneClick=function(h){
   if(h.kind!=='citizen')return click.call(this,h);
   const p=HK.state.population.people[h.citizen];if(!p)return;
-  p.met??=HK.state.day;this.citizen=p.id;this.citizenDestination=h.destination||null;this.panel='citizen';HK.Scene.selected=null;
+  p.met??=HK.state.day;this.citizen=p.id;this.citizenDestination=h.destination||null;this.panel='citizen';HK.Scene.selected=h.building?.id||null;
   this.setTab('place');this.sidebar.scrollTop=0;HK.scheduleSave?.();
  };
  U.citizenPlace=function(id){const b=HK.citizenBuilding(id);return b?(b.burgher?HK.buildingLabel(HK.state,b):HK.name(b)):id;};

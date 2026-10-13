@@ -305,22 +305,25 @@ HK.PROPS = [
   { t: 'cross', x: 8.95, y: 18.9 }, { t: 'crates', x: 8.8, y: 19.5 }, { t: 'barrels', x: 10.1, y: 19.95 }, { t: 'ropes', x: 14.4, y: 19.0 }, { t: 'crates', x: 16.5, y: 18.8 }, { t: 'barrels', x: 17.3, y: 18.85 }, { t: 'nets', x: 18.05, y: 18.7 }, { t: 'crates', x: 18.4, y: 19.6 }, { t: 'barrels', x: 20.0, y: 19.9 }, { t: 'crates', x: 20.5, y: 19.8 }, { t: 'nets', x: 21.45, y: 19.75 }, { t: 'crates', x: 22.0, y: 18.8 }, { t: 'sails', x: 22.9, y: 18.7 }, { t: 'ropes', x: 22.8, y: 19.3 },
 ];
 
+// Workers stand on population navigation cells (odd tenths), so the citizen
+// drawn at the workplace occupies exactly this point; the shepherd stays in
+// front of the sheep farm instead of behind its roof.
 HK.RURAL_WORKERS = [
-  {site:'grainfarm',task:'hoe',x:12.3,y:-5.8,color:'#9e8452',crop:true},
+  {site:'grainfarm',task:'hoe',x:12.3,y:-5.9,color:'#9e8452',crop:true},
   {site:'fiberfarm',task:'harvest',x:19.5,y:-9.3,color:'#758154',crop:true},
-  {site:'sheepfarm',task:'shepherd',x:14.7,y:-11.1,color:'#857763'},
-  {site:'cattlefarm',task:'feed',x:41.05,y:18.65,color:'#8c794d'},
-  {site:'dairy',task:'churn',x:19.95,y:-4.35,color:'#ad956f'},
-  {site:'windmill',task:'sack',x:43.35,y:17.65,color:'#9c9275'},
-  {site:'woodcutter',task:'axe',x:44.55,y:7.65,color:'#897247'},
-  {site:'hunter',task:'hunt',x:24.6,y:-10.35,color:'#5f7049'},
-  {site:'stonemason',task:'chisel',x:45.5,y:18.85,color:'#8c9181'},
-  {site:'quarry',task:'pick',x:49.3,y:17.05,color:'#948065'},
+  {site:'sheepfarm',task:'shepherd',x:13.5,y:-10.7,color:'#857763'},
+  {site:'cattlefarm',task:'feed',x:40.7,y:18.9,color:'#8c794d'},
+  {site:'dairy',task:'churn',x:19.9,y:-4.5,color:'#ad956f'},
+  {site:'windmill',task:'sack',x:43.3,y:17.5,color:'#9c9275'},
+  {site:'woodcutter',task:'axe',x:44.5,y:7.7,color:'#897247'},
+  {site:'hunter',task:'hunt',x:24.5,y:-10.3,color:'#5f7049'},
+  {site:'stonemason',task:'chisel',x:45.5,y:18.9,color:'#8c9181'},
+  {site:'quarry',task:'pick',x:49.3,y:17.1,color:'#948065'},
 ];
 // Small family groups in two clearings; calves and does have no antlers.
 HK.RURAL_DEER = [[25.2,-13.8,'deer'],[26.05,-13.15,'hind'],[25.45,-12.9,'fawn'],[23.3,-15.4,'hind'],[24.05,-15.05,'fawn']];
 HK.WOODLAND_FAUNA = [[22.4,-12.3,'hare'],[23.2,-12.6,'hare'],[26.7,-11.4,'fox'],[43.1,3.8,'hare']];
-HK.HUNTER_ROUND = [[24.6,-10.35],[25.0,-12.05],[23.5,-13.3],[22.1,-11.5]];
+HK.HUNTER_ROUND = [[24.5,-10.3],[25.0,-12.05],[23.5,-13.3],[22.1,-11.5]];
 HK.RURAL_FORESTS = [];
 HK.TREE_SPECIES = Object.create(null);
 // Stable woodland, with clearings for buildings, paths, fields and working people.
