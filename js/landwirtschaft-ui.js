@@ -19,15 +19,34 @@ Object.assign(HK.UI,{
     return HK.ruralWaiting(HK.state).map(d=>`<article class="warehouse-delivery" data-rural-delivery="${d.id}">${HK.MenuArt.good(d.good)}<div><b>${d.qty} ${HK.t('unitLast')} ${HK.goodName(d.good)}</b><small>${HK.name(HK.RURAL_BUILDINGS[d.site])} → ${HK.t('warehouseBuilding')}</small><strong class="delivery-eta">${HK.t('tradeEta',{date:HK.fmtDate(Math.max(HK.state.day+1,d.eta))})}</strong>${this.warehouseRoute(1)}${this.cityQualityBadge(d.quality)}<button class="small" data-action="ruralopen" data-site="${d.site}">${HK.t('warehouseSupplier')} →</button></div></article>`).join('');
   },
   ruralRecipe(inp,out){return `<div class="rural-recipe">${Object.entries(inp||{}).map(([g,q])=>`<span>${HK.MenuArt.good(g)}<small>${q} ${HK.t('unitLast')} ${HK.goodName(g)}</small></span>`).join('')}${Object.keys(inp||{}).length?'<b aria-hidden="true">→</b>':''}${Object.entries(out).map(([g,q])=>`<span>${HK.MenuArt.good(g)}<small>${q} ${HK.t('unitLast')} ${HK.goodName(g)}</small></span>`).join('')}</div>`;},
+  // Subpages of the countryside; the detail view of a producer stays on panel 'rural'.
+  ruralSections:{ruralFields:['grainfarm','fiberfarm','sheepfarm','cattlefarm'],ruralMill:['windmill','dairy'],ruralForest:['woodcutter','hunter','quarry','stonemason']},
+  ruralPanels:['rural','ruralFields','ruralMill','ruralForest','ruralDeliveries'],
+  ruralSection(site){return Object.keys(this.ruralSections).find(k=>this.ruralSections[k].includes(site))||'rural';},
+  ruralNavPanel(){return this.panel==='rural'&&HK.RURAL_SITES[HK.Scene.selected]?this.ruralSection(HK.Scene.selected):this.panel;},
+  ruralSiteGrid(sites,stock=false){
+    const st=HK.state;
+    return `<div class="rural-grid">${sites.map(site=>{const d=HK.RURAL_SITES[site],s=st.rural.sites[site];
+      const left=stock&&d.regrow&&Number.isFinite(s.resource)?Math.max(0,Math.floor(s.resource)):null;
+      return `<button class="rural-site" data-action="ruralopen" data-site="${site}">${HK.MenuArt.good(Object.keys(d.out)[0])}<b>${HK.name(HK.RURAL_BUILDINGS[site])}</b><small>${HK.t(s.owner?'ruralOwned':'ruralLocal')} · ${this.ruralCycleText(d.period)}</small>${left===null?'':`<small class="rural-resource">${HK.t('ruralResource',{qty:left,max:d.resource})}</small><progress value="${Math.min(left,d.resource)}" max="${d.resource}" aria-label="${HK.t('ruralResource',{qty:left,max:d.resource})}"></progress>`}${s.reason?`<span class="tag">${HK.t(s.reason)}</span>`:''}</button>`;}).join('')}</div>`;
+  },
+  ruralCraftLinks(){return `<section><h3>${HK.t('ruralProduction')}</h3><div class="btn-row">${['butcher','tannery','bakery'].map(site=>`<button class="small" data-action="businessplace" data-building="${site}">${HK.name(HK.BUILDING[site])}</button>`).join('')}</div></section>`;},
+  panel_ruralFields(){return this.head(HK.t('ruralFieldsSub'),'','ruralHelp')+this.ruralSiteGrid(this.ruralSections.ruralFields);},
+  panel_ruralMill(){return this.head(HK.t('ruralMillSub'),'','ruralHelp')+this.ruralSiteGrid(this.ruralSections.ruralMill)+this.ruralCraftLinks();},
+  panel_ruralForest(){return this.head(HK.t('ruralForestSub'),'','ruralHelp')+this.ruralSiteGrid(this.ruralSections.ruralForest,true);},
+  panel_ruralDeliveries(){
+    const rows=HK.ruralWaiting(HK.state).length?this.ruralDeliveryRows():`<p class="hint">${HK.t('warehouseNoDeliveries')}</p>`;
+    return this.head(HK.t('ruralDeliveriesSub'),'','ruralHelp')+`<section class="rural-deliveries">${rows}</section>`;
+  },
   panel_rural(){
     const st=HK.state,b=this.selBuilding(),id=b&&HK.RURAL_SITES[b.id]?b.id:null;
     let h=this.head(id?HK.name(b):HK.t('ruralTitle'),'','ruralHelp');
     if(!id){
-      h+=`<div class="rural-grid">${Object.entries(HK.RURAL_SITES).map(([site,d])=>{const s=st.rural.sites[site];return `<button class="rural-site" data-action="ruralopen" data-site="${site}">${HK.MenuArt.good(Object.keys(d.out)[0])}<b>${HK.name(HK.RURAL_BUILDINGS[site])}</b><small>${HK.t(s.owner?'ruralOwned':'ruralLocal')} · ${this.ruralCycleText(d.period)}</small>${s.reason?`<span class="tag">${HK.t(s.reason)}</span>`:''}</button>`;}).join('')}</div>`;
-      h+=`<section><h3>${HK.t('ruralProduction')}</h3><div class="btn-row">${['butcher','tannery','bakery'].map(site=>`<button class="small" data-action="businessplace" data-building="${site}">${HK.name(HK.BUILDING[site])}</button>`).join('')}</div></section>`;return h+this.ruralDeliveryPanel();
+      h+=this.ruralSiteGrid(Object.keys(HK.RURAL_SITES));
+      h+=this.ruralCraftLinks();return h+this.ruralDeliveryPanel();
     }
-    const s=st.rural.sites[id],d=HK.RURAL_SITES[id],out=d.crops?{[s.crop]:s.crop==='grain'?12:10}:d.out;
-    h+=`<nav class="btn-row location-actions" aria-label="${HK.t('actionLocation')}"><button class="small work-back" data-action="ruralopen">← ${HK.t('ruralTitle')}</button><button class="small map-action" data-action="ruralshow" data-site="${id}" title="${HK.t('ruralShowMap')}" aria-label="${HK.t('ruralShowMap')}">${HK.MenuArt.symbol('map')}<span>${HK.t('actionMap')}</span></button></nav>`;
+    const s=st.rural.sites[id],d=HK.RURAL_SITES[id],section=this.ruralSection(id),out=d.crops?{[s.crop]:s.crop==='grain'?12:10}:d.out;
+    h+=`<nav class="btn-row location-actions" aria-label="${HK.t('actionLocation')}"><button class="small work-back" data-action="ruralopen" data-section="${section}">← ${HK.t(section+'Sub')}</button><button class="small map-action" data-action="ruralshow" data-site="${id}" title="${HK.t('ruralShowMap')}" aria-label="${HK.t('ruralShowMap')}">${HK.MenuArt.symbol('map')}<span>${HK.t('actionMap')}</span></button></nav>`;
     const farm=id.endsWith('farm'),orderTitle=s.owner?'ruralOwnStock':farm?'ruralFarmOrder':'ruralProducerOrder';
     h+=`<section class="rural-order-section">${this.helpHeading(orderTitle,'ruralOrderHelp')}<span class="tag">${HK.t(s.owner?'ruralOwned':'ruralLocal')}</span>`;
     const stock=Object.entries(s.stock).filter(([,qty])=>qty>=1);
@@ -51,7 +70,7 @@ Object.assign(HK.UI,{
 const ruralUIAction=HK.UI.action;
 HK.UI.action=function(d){
   if(d.action==='ruralopen'){
-    const b=HK.RURAL_BUILDINGS[d.site];this.returnContext=null;this.panel='rural';HK.Scene.selected=b?.id||null;this.setTab('place');this.sidebar.scrollTop=0;return;
+    const b=HK.RURAL_BUILDINGS[d.site],section=!b&&this.ruralPanels.includes(d.section)?d.section:'rural';this.returnContext=null;this.panel=section;HK.Scene.selected=b?.id||null;this.setTab('place');this.sidebar.scrollTop=0;return;
   }
   if(d.action==='ruralshow'){const b=HK.RURAL_BUILDINGS[d.site];if(b)HK.Scene.zeigeAuf(b.x+b.w/2,b.y+b.d/2);return;}
   let r;
@@ -81,4 +100,4 @@ HK.UI.panel_venture=function(){
   return h+'</section>';
 };
 const ruralPanelTitle=HK.UI.panelTitle;
-HK.UI.panelTitle=function(){if(this.panel==='rural')return HK.RURAL_SITES[HK.Scene.selected]?HK.name(HK.RURAL_BUILDINGS[HK.Scene.selected]):HK.t('ruralTitle');return ruralPanelTitle.call(this);};
+HK.UI.panelTitle=function(){if(this.ruralPanels.includes(this.panel)&&this.panel!=='rural')return HK.t(this.panel+'Sub');if(this.panel==='rural')return HK.RURAL_SITES[HK.Scene.selected]?HK.name(HK.RURAL_BUILDINGS[HK.Scene.selected]):HK.t('ruralTitle');return ruralPanelTitle.call(this);};

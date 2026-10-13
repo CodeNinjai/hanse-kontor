@@ -3,7 +3,7 @@
 Object.assign(HK.I18N.de,{
   mapOptions:'Ansicht',timeControl:'Zeit · {speed}',timeStopped:'Pause',resumeTime:'Zeit fortsetzen',
   menuPlaces:'Stadtbereiche',ruralNav:'Umland',ruralNavShort:'Umland',ruralNavSub:'',menuBooks:'Bücher',backToPlace:'Zurück zum Ort',missionsNav:'Aufträge',
-  officeNav:'Handelshaus',officeNavShort:'Handelshaus',sectionNavigation:'Unterseiten',marketSub:'Markt',ruralSub:'Höfe & Betriebe',caravanSub:'Karawanen',marketPricesSub:'Preise & Verlauf',marketStallsSub:'Marktstände',kontorSub:'Kontor',warehouseSub:'Lagerhaus',staffSub:'Personal',agreementsSub:'Verträge',harbourSub:'Hafen',fleetSub:'Flotte & Versorgung',foreignSub:'Außenhandel & Routen',shipyardSub:'Werft',councilSub:'Rathaus',navBooks:'Bücher',navTownhall:'Rathaus',navRightsOffices:'Rechte & Ämter',navLaws:'Gesetze',navMonopolyLease:'Monopolpacht',navTownProjects:'Städtische Vorhaben',navCustomsLease:'Zollpacht',
+  officeNav:'Handelshaus',officeNavShort:'Handelshaus',sectionNavigation:'Unterseiten',marketSub:'Markt',ruralSub:'Höfe & Betriebe',ruralFieldsSub:'Acker & Vieh',ruralMillSub:'Mühle & Verarbeitung',ruralForestSub:'Wald & Stein',ruralDeliveriesSub:'Lieferungen',caravanSub:'Karawanen',marketPricesSub:'Preise & Verlauf',marketStallsSub:'Marktstände',kontorSub:'Kontor',warehouseSub:'Lagerhaus',staffSub:'Personal',agreementsSub:'Verträge',harbourSub:'Hafen',fleetSub:'Flotte & Versorgung',foreignSub:'Außenhandel & Routen',shipyardSub:'Werft',councilSub:'Rathaus',navBooks:'Bücher',navTownhall:'Rathaus',navRightsOffices:'Rechte & Ämter',navLaws:'Gesetze',navMonopolyLease:'Monopolpacht',navTownProjects:'Städtische Vorhaben',navCustomsLease:'Zollpacht',
   agreementDeliveries:'Bezahlte Lieferungen',agreementTreaties:'Aktive Städteabkommen',agreementRoutes:'Gespeicherte Außenhandelsrouten',agreementNone:'Keine offenen Vereinbarungen.',
   marketTradeNow:'Am Markt handeln',marketPricesSelect:'Ware ansehen',marketStallEffect:'Jeder Marktstand erhöht den Absatz um 35 % und den Verkaufspreis um 4 %. Der Ausbau beginnt nach Bezahlung und dauert zwei Tage.',marketStallOwned:'Deine Stände: {n} von {max}',marketStallBuilding:'Im Bau bis {date} · noch {days} Tage',marketStallNoBuild:'Zurzeit wird kein Marktstand errichtet.',marketStallView:'Marktplatz auf der Karte zeigen',
   placeContext:'In Sundhaven',conversationContext:'Im Gespräch',ruralContext:'Höfe & Handwerk',
@@ -15,7 +15,7 @@ Object.assign(HK.I18N.de,{
 Object.assign(HK.I18N.en,{
   mapOptions:'View',timeControl:'Time · {speed}',timeStopped:'Paused',resumeTime:'Resume time',
   menuPlaces:'Town areas',ruralNav:'Countryside',ruralNavShort:'Rural',ruralNavSub:'',menuBooks:'Books',backToPlace:'Back to location',missionsNav:'Missions',
-  officeNav:'Trading house',officeNavShort:'Trading house',sectionNavigation:'Sections',marketSub:'Market',ruralSub:'Farms & producers',caravanSub:'Caravans',marketPricesSub:'Prices & history',marketStallsSub:'Market stalls',kontorSub:'Counting house',warehouseSub:'Warehouse',staffSub:'Staff',agreementsSub:'Agreements',harbourSub:'Harbour',fleetSub:'Fleet & supplies',foreignSub:'Foreign trade & routes',shipyardSub:'Shipyard',councilSub:'Town hall',navBooks:'Books',navTownhall:'Town hall',navRightsOffices:'Rights & offices',navLaws:'Laws',navMonopolyLease:'Monopoly lease',navTownProjects:'Town projects',navCustomsLease:'Customs lease',
+  officeNav:'Trading house',officeNavShort:'Trading house',sectionNavigation:'Sections',marketSub:'Market',ruralSub:'Farms & producers',ruralFieldsSub:'Fields & livestock',ruralMillSub:'Mill & processing',ruralForestSub:'Forest & stone',ruralDeliveriesSub:'Deliveries',caravanSub:'Caravans',marketPricesSub:'Prices & history',marketStallsSub:'Market stalls',kontorSub:'Counting house',warehouseSub:'Warehouse',staffSub:'Staff',agreementsSub:'Agreements',harbourSub:'Harbour',fleetSub:'Fleet & supplies',foreignSub:'Foreign trade & routes',shipyardSub:'Shipyard',councilSub:'Town hall',navBooks:'Books',navTownhall:'Town hall',navRightsOffices:'Rights & offices',navLaws:'Laws',navMonopolyLease:'Monopoly lease',navTownProjects:'Town projects',navCustomsLease:'Customs lease',
   agreementDeliveries:'Prepaid deliveries',agreementTreaties:'Active city treaties',agreementRoutes:'Saved foreign trade routes',agreementNone:'No open agreements.',
   marketTradeNow:'Trade at market',marketPricesSelect:'View this good',marketStallEffect:'Each market stall increases sales volume by 35 % and the sale price by 4 %. Construction starts after payment and takes two days.',marketStallOwned:'Your stalls: {n} of {max}',marketStallBuilding:'Under construction until {date} · {days} days left',marketStallNoBuild:'No market stall is under construction.',marketStallView:'Show the market square on the map',
   placeContext:'In Sundhaven',conversationContext:'In conversation',ruralContext:'Farms & crafts',
@@ -77,7 +77,7 @@ HK.Presentation = {
       kontor:[['kontor','kontorSub'],['warehouse','warehouseSub'],['staff','staffSub'],['agreements','agreementsSub']],
       harbour:[['harbour','harbourSub'],['fleet','fleetSub'],['foreign','foreignSub'],['shipyard','shipyardSub']],
       townhall:[['townhall','navTownhall'],['rightsOffices','navRightsOffices'],['laws','navLaws'],['monopolyLease','navMonopolyLease'],['townProjects','navTownProjects'],['customsLease','navCustomsLease']],
-      rural:[['rural','ruralSub']],
+      rural:[['rural','ruralSub'],['ruralFields','ruralFieldsSub'],['ruralMill','ruralMillSub'],['ruralForest','ruralForestSub'],['ruralDeliveries','ruralDeliveriesSub']],
     };
     const sub=this.$areaLinks(),dest=document.getElementById('area-destinations'),tabs=document.getElementById('tabs'),key=HK.LANG+':'+(area||'none');
     sub.setAttribute('aria-label',HK.t('sectionNavigation'));
@@ -89,7 +89,8 @@ HK.Presentation = {
     dest.hidden=isBooks;
     tabs.hidden=!isBooks;
     sub.hidden=!area;
-    dest.querySelectorAll('[data-panel]').forEach(button=>button.setAttribute('aria-current',HK.UI.tab==='place'&&button.dataset.panel===HK.UI.panel?'page':'false'));
+    const current=HK.UI.ruralNavPanel?.()||HK.UI.panel;
+    dest.querySelectorAll('[data-panel]').forEach(button=>button.setAttribute('aria-current',HK.UI.tab==='place'&&button.dataset.panel===current?'page':'false'));
     document.querySelectorAll('#tabs [data-tab]').forEach(button => {
       if (!button.querySelector('.section-picture')) button.insertAdjacentHTML('afterbegin',HK.MenuArt.section(button.dataset.tab,'section-picture'));
       button.title=HK.t(button.dataset.tab+'NavHint');
@@ -119,7 +120,7 @@ HK.Presentation = {
     if(['kontor','warehouse','staff','agreements','bank'].includes(panel))return 'kontor';
     if(['harbour','fleet','foreign','shipyard'].includes(panel))return 'harbour';
     if(['townhall','rightsOffices','laws','monopolyLease','townProjects','customsLease'].includes(panel))return 'townhall';
-    if(panel==='rural')return 'rural';
+    if(['rural','ruralFields','ruralMill','ruralForest','ruralDeliveries'].includes(panel))return 'rural';
     return null;
   },
   openPlace(panel) {
@@ -143,7 +144,7 @@ HK.Presentation = {
       if(panel==='harbour')HK.UI.selectedVisitor=HK.state.ships[0]?.id||null;
       HK.Scene.focusDistrict(panel==='harbour'?'harbour':'market');HK.UI.renderAll();return;
     }
-    if(panel==='rural'){HK.UI.action({action:'ruralopen'});return;}
+    if(this.areaForPanel(panel)==='rural'){HK.UI.action({action:'ruralopen',section:panel});return;}
     if(panel==='staff'||panel==='agreements'||panel==='fleet'||panel==='foreign'){
       HK.UI.panel=panel; HK.UI.setTab('place');
       const district=panel==='fleet'||panel==='foreign'?'harbour':'market';HK.Scene.focusDistrict(district);HK.UI.renderAll();return;
@@ -252,10 +253,10 @@ Object.assign(HK.I18N.en, {
       heading.classList.add('action-heading');
       const title=heading.querySelector('h2'),context=title?.closest('.context-heading')||title;
       if(context){
-        const key=this.tab!=='place'?'menuBooks':this.panel==='rural'?'ruralContext':['person','encounter','citizen'].includes(this.panel)?'conversationContext':'placeContext';
+        const key=this.tab!=='place'?'menuBooks':P.areaForPanel(this.panel)==='rural'?'ruralContext':['person','encounter','citizen'].includes(this.panel)?'conversationContext':'placeContext';
         const label=document.createElement('small');label.className='panel-eyebrow';label.textContent=HK.t(key);context.before(label);
       }
-      if(this.tab==='place'&&['gate','marketPrices','marketStalls'].includes(this.panel)){
+      if(this.tab==='place'&&['gate','marketPrices','marketStalls','ruralFields','ruralMill','ruralForest','ruralDeliveries'].includes(this.panel)){
         const image=heading.querySelector(':scope > .menu-art,:scope > .menu-symbol');
         if(image)image.outerHTML=HK.MenuArt.section(this.panel,'panel-picture');
         else heading.insertAdjacentHTML('afterbegin',HK.MenuArt.section(this.panel,'panel-picture'));

@@ -5,11 +5,14 @@ const {chromium}=require('playwright'),assert=require('node:assert/strict'),fs=r
  await page.goto(process.env.HK_URL||'http://localhost:8778/');await page.waitForFunction(()=>HK.PixiScene.bereit);await page.locator('#new-game-form button[type=submit]').click();
  await page.evaluate(()=>{HK.loop=()=>{};HK.setSpeed(0);HK.state.money=100000;});
  const sites=await page.evaluate(()=>Object.keys(HK.RURAL_SITES));
+ const ruralGroups={ruralFields:['grainfarm','fiberfarm','sheepfarm','cattlefarm'],ruralMill:['windmill','dairy'],ruralForest:['woodcutter','hunter','quarry','stonemason'],ruralDeliveries:[]},groupOf=id=>Object.keys(ruralGroups).find(k=>ruralGroups[k].includes(id));
+ assert.deepEqual(Object.values(ruralGroups).flat().sort(),[...sites].sort(),'Every producer belongs to exactly one subpage');
  // Real pixel picking must reach both reused rural landmarks and each new building.
  for(const id of sites){
   const point=await page.evaluate(id=>{const S=HK.Scene,b=HK.RURAL_BUILDINGS[id],w=b.w||.6,d=b.d||.6;S.zeigeAuf(b.x+w/2,b.y+d/2);S.renderPick();for(const z of [b.h||1,2.15,.65,.4,.25,0])for(const dx of [.5,.3,.7])for(const dy of [.5,.3,.7]){const p=HK.Iso.p(b.x+w*dx,b.y+d*dy,z),hit=S.hit(...p);if(hit?.building?.id!==id)continue;const x=(p[0]-S.cam.x)*S.cam.z,y=(p[1]-S.cam.y)*S.cam.z;if(x<0||y<0||x>HK.SCENE.W||y>HK.SCENE.H)continue;const r=document.getElementById('scene').getBoundingClientRect();return{x:r.left+x*r.width/HK.SCENE.W,y:r.top+y*r.height/HK.SCENE.H};}throw Error('Cannot pick rural site '+id);},id);
   const camera=await page.evaluate(()=>({...HK.Scene.cam}));
   await page.mouse.click(point.x,point.y);assert.equal(await page.evaluate(()=>HK.UI.panel),'rural');assert.equal(await page.evaluate(()=>HK.Scene.selected),id);assert.equal(await page.locator('#sidebar h2').textContent(),await page.evaluate(id=>HK.name(HK.RURAL_BUILDINGS[id]),id));
+  assert.equal(await page.locator('#area-destinations [aria-current=page]').getAttribute('data-panel'),groupOf(id),'Map click marks wrong subpage: '+id);
   assert.deepEqual(await page.evaluate(()=>({...HK.Scene.cam})),camera,'Building click moves camera: '+id);
   await page.mouse.dblclick(point.x,point.y);assert.deepEqual(await page.evaluate(()=>({...HK.Scene.cam})),camera,'Building double click zooms camera: '+id);
   await page.mouse.move(point.x,point.y);await page.mouse.down();await page.mouse.move(point.x+6,point.y+1);await page.mouse.up();assert.deepEqual(await page.evaluate(()=>({...HK.Scene.cam})),camera,'Small click drift pans camera: '+id);
@@ -34,6 +37,52 @@ const {chromium}=require('playwright'),assert=require('node:assert/strict'),fs=r
  await page.evaluate(()=>{HK.tick(HK.state);HK.UI.renderAll();});assert.equal(await page.evaluate(()=>HK.state.warehouse.stock.leather),2);assert.equal(await page.evaluate(()=>HK.goodQuality(HK.state,'leather')),84);
  const migrated=await page.evaluate(()=>{const saved=JSON.parse(HK.serialize(HK.state)),cash=saved.money,stock=JSON.stringify(saved.warehouse);delete saved.rural;for(const g of ['flour','cattle','milk','meat','hides','stone','dressedstone'])delete saved.town.stock[g];const st=HK.deserialize(JSON.stringify(saved));HK.startWithState(st);HK.setSpeed(0);return{cash:st.money===cash,stock:JSON.stringify(st.warehouse)===stock,npc:Object.values(st.rural.sites).every(s=>!s.owner),income:HK.ventureIncome(st,'tannery')>0};});assert.deepEqual(migrated,{cash:true,stock:true,npc:true,income:true});
  fs.mkdirSync('/tmp/hanse-map-audit',{recursive:true});
+ // Countryside subpages: presence, contents, active marking, back navigation, render purity, narrow widths.
+ await page.setViewportSize({width:1600,height:1100});await page.evaluate(()=>{HK.setLang('de');HK.UI.action({action:'ruralopen',site:'windmill'});});
+ await page.locator('#qty-input').fill('1');await page.locator('[data-action=ruralorder][data-good=flour]').click();
+ const waiting=await page.evaluate(()=>HK.ruralWaiting(HK.state).length);assert(waiting>0,'Test needs a waiting delivery');
+ await page.evaluate(()=>HK.UI.action({action:'ruralopen'}));
+ assert.deepEqual(await page.locator('#area-destinations [data-panel]').evaluateAll(es=>es.map(e=>e.dataset.panel)),['rural','ruralFields','ruralMill','ruralForest','ruralDeliveries']);
+ assert.equal(await page.locator('#area-destinations [aria-current=page]').getAttribute('data-panel'),'rural');
+ for(const [panel,ids] of Object.entries(ruralGroups)){
+  await page.locator(`#area-destinations [data-panel=${panel}]`).click();
+  assert.equal(await page.evaluate(()=>HK.UI.panel),panel);assert.equal(await page.evaluate(()=>HK.Scene.selected),null);
+  assert.equal(await page.locator(`#area-destinations [data-panel=${panel}]`).getAttribute('aria-current'),'page');
+  assert.equal(await page.locator('#area-destinations [aria-current=page]').count(),1);
+  assert.deepEqual(await page.locator('#sidebar .rural-site').evaluateAll(es=>es.map(e=>e.dataset.site)),ids,'Wrong producers on '+panel);
+  assert.equal(await page.locator('#tab-place-label').textContent(),await page.evaluate(p=>HK.t(p+'Sub'),panel));
+  assert(!(await page.locator('#sidebar').textContent()).includes('NaN'));
+ }
+ await page.locator('#area-destinations [data-panel=ruralMill]').click();assert.deepEqual(await page.locator('#sidebar [data-action=businessplace]').evaluateAll(es=>es.map(e=>e.dataset.building)),['butcher','tannery','bakery']);
+ await page.locator('#area-destinations [data-panel=ruralForest]').click();
+ assert.deepEqual(await page.locator('#sidebar .rural-site:has(progress)').evaluateAll(es=>es.map(e=>e.dataset.site)),['woodcutter','hunter']);
+ assert.equal(await page.locator('#sidebar .rural-site[data-site=woodcutter] progress').getAttribute('value'),String(await page.evaluate(()=>Math.floor(HK.state.rural.sites.woodcutter.resource))));
+ await page.locator('#area-destinations [data-panel=ruralDeliveries]').click();assert.equal(await page.locator('#sidebar [data-rural-delivery]').count(),waiting);
+ for(const id of sites){
+  await page.evaluate(id=>HK.UI.action({action:'ruralopen',site:id}),id);
+  assert.equal(await page.evaluate(()=>HK.UI.panel),'rural');assert.equal(await page.locator('#sidebar h2').textContent(),await page.evaluate(id=>HK.name(HK.RURAL_BUILDINGS[id]),id));
+  assert.equal(await page.locator('#area-destinations [aria-current=page]').getAttribute('data-panel'),groupOf(id),'ruralopen marks wrong subpage: '+id);
+  await page.locator('#sidebar .work-back').click();assert.equal(await page.evaluate(()=>HK.UI.panel),groupOf(id),'Back leads to wrong subpage: '+id);
+ }
+ // Old and unknown saved panel names restore safely; new names survive a save round trip.
+ for(const [saved,expected] of [['ruralForest','ruralForest'],['rural','rural'],['ruralNoSuchPage','kontor']]){
+  const restored=await page.evaluate(saved=>{const data=JSON.parse(HK.serialize(HK.state));data._presentation.panel=saved;data._presentation.tab='place';HK.startWithState(HK.deserialize(JSON.stringify(data)));HK.setSpeed(0);return{panel:HK.UI.panel,saved:JSON.parse(HK.serialize(HK.state))._presentation.panel};},saved);
+  assert.deepEqual(restored,{panel:expected,saved:expected},'Restore of '+saved);
+ }
+ await page.evaluate(()=>{HK.loop=()=>{};HK.setSpeed(0);HK.UI.action({action:'ruralopen'});});
+ const pure=await page.evaluate(()=>HK.serialize(HK.state));
+ for(let i=0;i<3;i++)await page.evaluate(()=>{for(const p of ['rural','ruralFields','ruralMill','ruralForest','ruralDeliveries']){HK.UI['panel_'+p]();HK.UI.action({action:'ruralopen',section:p});}HK.UI.action({action:'ruralopen'});});
+ assert.equal(await page.evaluate(()=>HK.serialize(HK.state)),pure,'Rendering countryside subpages changes the game state');
+ for(const width of [320,390])for(const lang of ['de','en']){
+  await page.setViewportSize({width,height:900});await page.evaluate(lang=>HK.setLang(lang),lang);
+  for(const panel of ['rural','ruralFields','ruralMill','ruralForest','ruralDeliveries']){
+   await page.evaluate(panel=>HK.UI.action({action:'ruralopen',section:panel}),panel);
+   assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),'Subpage overflow '+panel+'/'+width+'/'+lang);
+   assert(await page.evaluate(()=>[...document.querySelectorAll('#sidebar,#area-destinations')].every(e=>e.scrollWidth<=e.clientWidth+1)),'Subpage inner overflow '+panel+'/'+width+'/'+lang);
+  }
+  if(lang==='de')await page.locator('#side').screenshot({path:`/tmp/hanse-map-audit/rural-subpages-${width}.png`}).catch(()=>{});
+ }
+ await page.setViewportSize({width:1600,height:1100});await page.evaluate(()=>HK.setLang('de'));
  for(const width of [1600,1024,390,360])for(const lang of ['de','en']){
   await page.setViewportSize({width,height:1100});await page.evaluate(lang=>{HK.setLang(lang);HK.UI.action({action:'ruralopen'});},lang);assert.equal(await page.locator('.rural-site').count(),10);
   assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),'Catalogue overflow '+width+'/'+lang);
@@ -44,5 +93,5 @@ const {chromium}=require('playwright'),assert=require('node:assert/strict'),fs=r
    if(id==='cattlefarm'&&lang==='de'&&width===390)await page.locator('#side').screenshot({path:'/tmp/hanse-map-audit/rural-cattle-mobile.png'});
   }
  }
- assert.deepEqual(errors,[]);console.log(JSON.stringify({result:'PASS',mapSites:sites.length,visibleWorkers:10,stableCamera:true,purchases:true,deliveries:true,reservations:true,craftProduction:true,cropChoice:true,legacy:true,languages:2,widths:4,errors}));
+ assert.deepEqual(errors,[]);console.log(JSON.stringify({result:'PASS',mapSites:sites.length,visibleWorkers:10,stableCamera:true,purchases:true,deliveries:true,reservations:true,craftProduction:true,cropChoice:true,legacy:true,languages:2,widths:4,ruralSubpages:5,errors}));
 }finally{await browser.close();}})().catch(e=>{console.error(e);process.exitCode=1;});
