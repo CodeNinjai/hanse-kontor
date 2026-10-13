@@ -240,3 +240,10 @@
 .rural-stock-row .menu-art { width:80px; height:60px; flex:none; }
 .rural-stock-row>div { display:flex; flex-direction:column; gap:6px; min-width:0; }
 .rural-entry .menu-symbol { width:25px; height:25px; vertical-align:middle; margin-right:10px; }
+/* Frischware (8.10): Korbknopf in der Personenzeile, Körbe für den Stand */
+.korb-gift { display:inline-flex; flex-wrap:wrap; gap:6px; align-items:center; max-width:100%; }
+.korb-gift select { max-width:150px; min-width:0; }
+.frisch-buttons { margin-top:4px; }
+.frisch-jahr { margin:8px 0; padding-left:18px; font-size:12px; }
+.frisch-auf-stand { padding-left:18px; }
+.frisch-betrieb { margin:10px 0 4px; }

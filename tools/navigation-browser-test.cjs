@@ -13,13 +13,13 @@ const {chromium}=require('playwright'),assert=require('node:assert/strict');
   assert.equal(await page.locator('#tabs .active').count(),0);
   assert(await page.locator('#place-return').isHidden());
  }
- assert.equal(await page.locator('.rural-site').count(),12);
+ assert.equal(await page.locator('.rural-site').count(),15);
  assert.deepEqual(await page.locator('#city-links [data-place]').evaluateAll(es=>es.map(e=>e.dataset.place)),['market','kontor','harbour','townhall','rural','books']);
  const ruralCam=await page.evaluate(()=>JSON.stringify(HK.Scene.cam));
  await page.locator('[data-action=ruralopen][data-site=hunter]').click();
  await page.locator('#city-links [data-place=books]').click();await page.locator('#tabs [data-tab=planning]').click();await page.locator('#place-return button').click();
  assert.equal(await page.evaluate(()=>HK.Scene.selected),'hunter');
- await page.locator('#city-links [data-place=rural]').click();assert.equal(await page.locator('.rural-site').count(),12);
+ await page.locator('#city-links [data-place=rural]').click();assert.equal(await page.locator('.rural-site').count(),15);
  assert.equal(await page.evaluate(()=>JSON.stringify(HK.Scene.cam)),ruralCam);
  assert.equal(await page.locator('.rural-entry').count(),0);
  // Books form a sixth area and their second-level pages retain warehouse context.
@@ -125,7 +125,7 @@ const {chromium}=require('playwright'),assert=require('node:assert/strict');
   assert(await page.locator('#area-links [data-panel]').evaluateAll(es=>es.every(el=>el.scrollWidth<=el.clientWidth+1&&el.querySelector('span').scrollWidth<=el.querySelector('span').clientWidth+1)),`Rat subnavigation buttons/text overflow ${width}/${lang}`);
   if(lang==='de'&&[1600,390].includes(width)){await page.evaluate(()=>document.querySelector('#toasts')?.replaceChildren());await page.locator('#side').screenshot({path:`/tmp/hanse-rights-offices-${width}.png`});}
   await page.locator('#city-links [data-place=rural]').click();
-  assert.equal(await page.locator('.rural-site').count(),12);
+  assert.equal(await page.locator('.rural-site').count(),15);
   assert(await page.locator('#city-links').evaluate(el=>el.scrollWidth<=el.clientWidth+1),'Destination navigation overflow');
   if(lang==='de'&&[1600,390].includes(width))await page.locator('#side').screenshot({path:'/tmp/hanse-rural-menu-'+width+'.png'});
   await page.locator('#city-links [data-place=books]').click();

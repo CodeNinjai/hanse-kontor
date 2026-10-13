@@ -4,7 +4,7 @@
 const assert = require('node:assert/strict');
 let seed = 42;
 const random = () => ((seed = (Math.imul(seed, 1664525) + 1013904223) >>> 0) / 4294967296);
-const H = require('./domain-loader.cjs')(seed, { random, scene: ['scene', 'buildings', 'art', 'flair', 'stadtereignisse', 'warenverkehr', 'landwirtschaft-scene', 'fischerboote'] }), S = H.Scene;
+const H = require('./domain-loader.cjs')(seed, { random, scene: ['scene', 'buildings', 'art', 'flair', 'stadtereignisse', 'warenverkehr', 'landwirtschaft-scene', 'frischware-scene', 'fischerboote'] }), S = H.Scene;
 H.state = H.newGame({ name: 'Kartentest', difficulty: 'normal', years: 20 });
 H.UI = { selectedVisitor: null };
 let checks = 0;

@@ -5,7 +5,7 @@ const {chromium}=require('playwright'),assert=require('node:assert/strict'),fs=r
  await page.goto(process.env.HK_URL||'http://localhost:8778/');await page.waitForFunction(()=>HK.PixiScene.bereit);await page.locator('#new-game-form button[type=submit]').click();
  await page.evaluate(()=>{HK.loop=()=>{};HK.setSpeed(0);HK.state.money=100000;});
  const sites=await page.evaluate(()=>Object.keys(HK.RURAL_SITES));
- const ruralGroups={ruralFields:['grainfarm','fiberfarm','sheepfarm','cattlefarm','hopgarden'],ruralMill:['windmill','dairy','malthouse'],ruralForest:['woodcutter','hunter','quarry','stonemason'],ruralDeliveries:[]},groupOf=id=>Object.keys(ruralGroups).find(k=>ruralGroups[k].includes(id));
+ const ruralGroups={ruralFields:['grainfarm','fiberfarm','sheepfarm','cattlefarm','hopgarden','poultry','gardenfarm','orchard'],ruralMill:['windmill','dairy','malthouse'],ruralForest:['woodcutter','hunter','quarry','stonemason'],ruralDeliveries:[]},groupOf=id=>Object.keys(ruralGroups).find(k=>ruralGroups[k].includes(id));
  assert.deepEqual(Object.values(ruralGroups).flat().sort(),[...sites].sort(),'Every producer belongs to exactly one subpage');
  // Real pixel picking must reach both reused rural landmarks and each new building.
  for(const id of sites){
@@ -85,7 +85,7 @@ const {chromium}=require('playwright'),assert=require('node:assert/strict'),fs=r
  }
  await page.setViewportSize({width:1600,height:1100});await page.evaluate(()=>HK.setLang('de'));
  for(const width of [1600,1024,390,360])for(const lang of ['de','en']){
-  await page.setViewportSize({width,height:1100});await page.evaluate(lang=>{HK.setLang(lang);HK.UI.action({action:'ruralopen'});},lang);assert.equal(await page.locator('.rural-site').count(),12);
+  await page.setViewportSize({width,height:1100});await page.evaluate(lang=>{HK.setLang(lang);HK.UI.action({action:'ruralopen'});},lang);assert.equal(await page.locator('.rural-site').count(),15);
   assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),'Catalogue overflow '+width+'/'+lang);
   if(lang==='de'&&[1600,390].includes(width))await page.locator('#side').screenshot({path:`/tmp/hanse-map-audit/rural-catalogue-${width}.png`});
   for(const id of ['cattlefarm','windmill','quarry','stonemason','hunter']){
@@ -126,5 +126,51 @@ const {chromium}=require('playwright'),assert=require('node:assert/strict'),fs=r
  await page.locator('#sidebar [data-action=vorkauf]').click();assert(await page.evaluate(()=>!!HK.state.vorkauf[HK.yearOf(HK.state.day)].fiberfarm));assert.equal(await page.locator('#sidebar .vorkauf-section [data-action=vorkauf]').count(),0);
  await page.evaluate(()=>{const st=HK.state;st.vorkauf={};let d=st.day;while(HK.monthOf(d)!==5)d++;st.day=d;HK.UI.action({action:'ruralopen',site:'fiberfarm'});});
  assert.equal(await page.locator('#sidebar .vorkauf-section [data-action=vorkauf]').count(),0);assert((await page.locator('#sidebar .vorkauf-section').textContent()).includes('Frühjahr'),'Outside spring the farm explains when to buy');
- assert.deepEqual(errors,[]);console.log(JSON.stringify({result:'PASS',mapSites:sites.length,visibleWorkers:sites.length,stableCamera:true,purchases:true,deliveries:true,reservations:true,craftProduction:true,cropChoice:true,legacy:true,languages:2,widths:4,ruralSubpages:5,millLease:true,forwardHarvest:true,errors}));
+ // Frischware (8.10): drei Betriebe, Kauf für den Stand, Korbknopf in der Personenzeile, reines Rendern, schmale Breiten.
+ const shots=process.env.HK_SHOTS||'/tmp/hanse-map-audit';fs.mkdirSync(shots,{recursive:true});
+ await page.setViewportSize({width:1600,height:1100});
+ await page.evaluate(()=>{HK.setLang('de');HK.loop=()=>{};HK.setSpeed(0);const st=HK.state;st.money=100000;st.stalls=0;st.day=130;st.frisch.stand={};st.frisch.koerbe={};st.persons.priest.loyalty=30;HK.frischErnten(st,false);HK.UI.action({action:'ruralopen',site:'poultry'});});
+ assert.equal(await page.locator('#sidebar h2').textContent(),await page.evaluate(()=>HK.name(HK.RURAL_BUILDINGS.poultry)));
+ assert.deepEqual(await page.locator('#sidebar [data-frisch]').evaluateAll(es=>es.map(e=>e.dataset.frisch)),['poultry:eggs']);
+ assert.equal(await page.locator('#sidebar [data-action=frischkaufen]').count(),0,'Without a stall there is no buy button');
+ assert((await page.locator('#sidebar').textContent()).includes(await page.evaluate(()=>HK.t('frischOhneStand'))));
+ await page.evaluate(()=>HK.UI.action({action:'ruralopen',site:'orchard'}));assert.deepEqual(await page.locator('#sidebar [data-frisch]').evaluateAll(es=>es.map(e=>e.dataset.frisch)),['orchard:cherries']);
+ await page.evaluate(()=>{HK.state.stalls=1;HK.UI.action({action:'tradepage',panel:'marketStalls'});});
+ assert.equal(await page.locator('#sidebar [data-frisch-stand]').count(),1);
+ let freshCash=await page.evaluate(()=>HK.state.money);
+ await page.locator('#sidebar [data-action=frischkaufen][data-site=orchard][data-sorte=cherries][data-qty="1"]').click();
+ assert.deepEqual(await page.evaluate(()=>({stand:HK.state.frisch.stand.cherries,hof:HK.state.frisch.hof.orchard.cherries,ledger:HK.state.ledger.at(-1).freshmarket})),{stand:1,hof:7,ledger:-6});
+ assert.equal(await page.evaluate(()=>HK.state.money),freshCash-6);
+ assert.equal(await page.locator('#sidebar [data-frisch-stand-sorte=cherries]').count(),1,'Stall view lists the basket');
+ await page.locator('#sidebar').screenshot({path:shots+'/frischware-stand.png'}).catch(()=>{});
+ await page.evaluate(()=>HK.UI.action({action:'ruralopen',site:'poultry'}));freshCash=await page.evaluate(()=>HK.state.money);
+ await page.locator('#sidebar [data-action=frischkaufen][data-sorte=eggs]:not([data-qty="1"])').click();
+ assert.equal(await page.evaluate(()=>HK.state.frisch.stand.eggs),6);assert.equal(await page.evaluate(()=>HK.state.money),freshCash-24);
+ assert.equal(await page.evaluate(()=>HK.state.warehouse.stock.eggs),undefined,'Fresh produce never enters the warehouse');
+ await page.evaluate(()=>HK.UI.sceneClick({kind:'building',building:HK.BUILDING.church,panel:'church'}));
+ assert.equal(await page.locator('#sidebar .korb-gift').count(),0,'Basket control without baskets');
+ await page.evaluate(()=>{HK.state.frisch.koerbe={apples:2,cabbage:1};HK.UI.renderAll();});
+ assert(await page.locator('#sidebar .korb-gift').count()>=1,'Basket control missing in the person row');
+ await page.locator('#sidebar [data-korb-sorte=priest]').selectOption('cabbage');await page.evaluate(()=>HK.UI.renderAll());
+ assert.equal(await page.locator('#sidebar [data-korb-sorte=priest]').inputValue(),'cabbage','Basket choice survives a redraw');
+ await page.locator('#sidebar [data-korb-sorte=priest]').selectOption('apples');
+ const loyal=await page.evaluate(()=>HK.state.persons.priest.loyalty);freshCash=await page.evaluate(()=>HK.state.money);
+ await page.locator('#sidebar [data-action=korbschenken][data-person=priest]').click();
+ assert.deepEqual(await page.evaluate(()=>HK.state.frisch.koerbe),{apples:1,cabbage:1});
+ const gained=await page.evaluate(()=>HK.state.persons.priest.loyalty)-loyal;assert(gained>=4&&gained<=8,'Basket gift raises loyalty by 4 to 8: '+gained);assert.equal(await page.evaluate(()=>HK.state.money),freshCash,'A basket costs no money');
+ const pureFresh=await page.evaluate(()=>HK.serialize(HK.state));
+ for(let i=0;i<3;i++)await page.evaluate(()=>{for(const site of HK.FRISCH_SITES){HK.UI.action({action:'ruralopen',site});HK.UI.panel_rural();}HK.UI.action({action:'tradepage',panel:'marketStalls'});HK.UI.panel_marketStalls();HK.UI.sceneClick({kind:'building',building:HK.BUILDING.church,panel:'church'});HK.UI.renderAll();});
+ assert.equal(await page.evaluate(()=>HK.serialize(HK.state)),pureFresh,'Rendering fresh produce views changes the game state');
+ for(const width of [320,390])for(const lang of ['de','en']){
+  await page.setViewportSize({width,height:900});await page.evaluate(lang=>HK.setLang(lang),lang);
+  for(const view of [...['poultry','gardenfarm','orchard'].map(site=>({action:'ruralopen',site})),{action:'tradepage',panel:'marketStalls'},{church:true}]){
+   await page.evaluate(v=>{if(v.church)HK.UI.sceneClick({kind:'building',building:HK.BUILDING.church,panel:'church'});else HK.UI.action(v);HK.UI.renderAll();},view);
+   assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),'Fresh produce overflow '+JSON.stringify(view)+'/'+width+'/'+lang);
+   assert(await page.evaluate(()=>[...document.querySelectorAll('#sidebar')].every(e=>e.scrollWidth<=e.clientWidth+1)),'Fresh produce inner overflow '+JSON.stringify(view)+'/'+width+'/'+lang);
+   const text=await page.locator('#sidebar').textContent();assert(!text.includes('NaN')&&!text.includes('undefined')&&!/frisch[A-Z_]/.test(text),'Missing text '+JSON.stringify(view)+'/'+lang);
+  }
+  if(lang==='de'&&width===390){await page.evaluate(()=>HK.UI.action({action:'tradepage',panel:'marketStalls'}));await page.locator('#side').screenshot({path:shots+'/frischware-stand-390.png'}).catch(()=>{});}
+ }
+ await page.setViewportSize({width:1600,height:1100});await page.evaluate(()=>HK.setLang('de'));
+ assert.deepEqual(errors,[]);console.log(JSON.stringify({result:'PASS',mapSites:sites.length,visibleWorkers:sites.length,stableCamera:true,purchases:true,deliveries:true,reservations:true,craftProduction:true,cropChoice:true,legacy:true,languages:2,widths:4,ruralSubpages:5,millLease:true,forwardHarvest:true,freshProduce:true,errors}));
 }finally{await browser.close();}})().catch(e=>{console.error(e);process.exitCode=1;});

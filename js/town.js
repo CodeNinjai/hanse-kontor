@@ -253,6 +253,12 @@ for (const b of [
   // at the end of the quarry lane, clear of the cattle pasture and the stonemason's bench.
   {id:'hopgarden', kind:'hopyard', x:15.0,y:-13.0,w:2.0,d:1.4,h:1.3,name:{de:'Hopfengarten',en:'Hop garden'}},
   {id:'malthouse', kind:'eave', x:47.2,y:19.2,w:1.4,d:1.0,h:.8,wall:'#c0aa84',roof:'#6e5a46',name:{de:'Mälzerei',en:'Malthouse'}},
+  // Fresh produce (8.10): the hen house stands on the meadow just north of the
+  // fishermen's village; kitchen garden and orchard follow the coast towards the
+  // hamlet, clear of the village fields, the shore and the sheep pasture.
+  {id:'poultry', kind:'poultry', x:9.3,y:-6.75,w:1.2,d:.9,h:.75,wall:'#b7a27c',roof:'#7a6247',name:{de:'Hühnerhof am Fischerdorf',en:'Hen yard by the fishing village'}},
+  {id:'gardenfarm', kind:'garden', x:8.2,y:-10.9,w:2.0,d:1.4,h:.55,name:{de:'Gemüsegarten',en:'Kitchen garden'}},
+  {id:'orchard', kind:'orchard', x:8.5,y:-13.4,w:2.0,d:1.6,h:1.0,name:{de:'Obstgarten',en:'Orchard'}},
 ]) { b.panel='rural'; HK.RURAL_BUILDINGS[b.id]=HK.BUILDING[b.id]=b; HK.BUILDINGS.push(b); }
 // Short access lanes end alongside the premises, never through a building or field.
 const ruralRoads = [
@@ -327,6 +333,9 @@ HK.RURAL_WORKERS = [
   {site:'quarry',task:'pick',x:49.3,y:17.1,color:'#948065'},
   {site:'hopgarden',task:'harvest',x:16.1,y:-11.3,color:'#6f7f4a'},
   {site:'malthouse',task:'sack',good:'malt',x:47.9,y:20.7,color:'#94795a'},
+  {site:'poultry',task:'feed',x:10.7,y:-5.5,color:'#a1805a'},
+  {site:'gardenfarm',task:'hoe',x:9.3,y:-9.1,color:'#7b8a55'},
+  {site:'orchard',task:'fruit',x:10.9,y:-12.1,color:'#8e6f52'},
 ];
 // Small family groups in two clearings; calves and does have no antlers.
 HK.RURAL_DEER = [[25.2,-13.8,'deer'],[26.05,-13.15,'hind'],[25.45,-12.9,'fawn'],[23.3,-15.4,'hind'],[24.05,-15.05,'fawn']];

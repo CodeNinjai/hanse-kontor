@@ -121,7 +121,8 @@ HK.ruralDay=function(st){
   }
   R.deliveries=R.deliveries.filter(d=>d.status==='waiting'||st.day-d.finished<=30);
   for(const [id,s] of Object.entries(R.sites)){
-    const d=HK.RURAL_SITES[id];if(d.regrow)s.resource=Math.min(d.resource,s.resource+d.regrow);
+    const d=HK.RURAL_SITES[id];if(d.fresh)continue; // Frischware-Betriebe (frischware.js) erzeugen Körbe statt Waren.
+    if(d.regrow)s.resource=Math.min(d.resource,s.resource+d.regrow);
     if(!s.active||st.day<s.next)continue;
     s.next=st.day+d.period;
     const src=s.owner?st.warehouse:st.town;
